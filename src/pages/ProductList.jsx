@@ -68,10 +68,10 @@ export default function ProductList() {
   const categoriesList = ['all', 'sarees', 'kurtis', 'lehengas', 'dresses'];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-12">
+    <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-6 sm:pt-8 pb-12 lg:pb-16">
       
       {/* Breadcrumbs */}
-      <nav className="text-[10px] font-sans text-brand-navy/50 uppercase tracking-[0.2em] mb-6 flex items-center flex-wrap gap-2">
+      <nav className="text-[10px] font-sans text-brand-navy/50 uppercase tracking-[0.2em] mb-4 flex items-center flex-wrap gap-2">
         <Link to="/" className="hover:text-brand-teal transition-colors">Home</Link>
         <span>/</span>
         <Link to="/products" className="hover:text-brand-teal transition-colors">Shop</Link>
@@ -86,12 +86,12 @@ export default function ProductList() {
       </nav>
 
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-brand-powder/60">
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 pb-4 border-b border-brand-powder/60">
         <div>
-          <h1 className="text-3xl sm:text-4xl lg:text-[2.5rem] font-serif font-light text-brand-navy tracking-wider uppercase leading-tight mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-light text-brand-navy tracking-wider uppercase leading-tight mb-1">
             {searchQuery ? `Results for "${searchQuery}"` : (selectedCategory === 'all' ? 'The Collections' : selectedCategory)}
           </h1>
-          <p className="font-sans text-xs text-brand-navy/60 font-medium uppercase tracking-[0.18em]">
+          <p className="font-sans text-[11px] text-brand-navy/60 font-medium uppercase tracking-[0.18em]">
             Showing {displayProducts.length} Premium Pieces
           </p>
         </div>

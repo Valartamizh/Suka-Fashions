@@ -7,9 +7,9 @@ export default function BrandStory() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-20 sm:py-24 bg-white border-b border-brand-powder/30 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+    <section ref={sectionRef} className="py-12 lg:py-16 bg-white border-b border-brand-powder/30 overflow-hidden">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
 
           {/* ── Left: Photography ──────────────────────── */}
           <div className="reveal relative">
@@ -28,47 +28,47 @@ export default function BrandStory() {
             </div>
 
             {/* Stat badge */}
-            <div className="absolute bottom-6 -right-4 lg:-right-6 bg-brand-tealDark text-white px-6 py-4 shadow-xl z-20 rounded-sm">
-              <span className="font-serif text-2xl font-bold text-brand-powder block">10K+</span>
-              <span className="font-sans text-[10px] tracking-[0.18em] uppercase text-white/70">Happy Women</span>
+            <div className="absolute bottom-6 -right-4 lg:-right-6 bg-brand-tealDark text-white px-5 py-3 shadow-xl z-20 rounded-sm">
+              <span className="font-serif text-xl sm:text-2xl font-bold text-brand-powder block">10K+</span>
+              <span className="font-sans text-[9px] tracking-[0.18em] uppercase text-white/70">Happy Women</span>
             </div>
           </div>
 
           {/* ── Right: Content ────────────────────────── */}
           <div className="flex flex-col justify-center items-start reveal reveal-delay-2">
-            <span className="font-sans text-[10px] tracking-[0.3em] text-brand-teal uppercase font-semibold mb-5">
+            <span className="font-sans text-[10px] tracking-[0.3em] text-brand-teal uppercase font-semibold mb-3">
               Our Purpose
             </span>
 
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[2.8rem] font-light text-brand-navy leading-tight uppercase mb-6">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy leading-tight uppercase mb-4">
               More than fashion,<br />
               <span className="italic font-medium">it's a movement.</span>
             </h2>
 
-            <p className="font-sans text-sm sm:text-[15px] text-brand-navy/60 leading-loose font-light mb-5 max-w-lg">
+            <p className="font-sans text-xs sm:text-sm text-brand-navy/60 leading-relaxed font-light mb-3 max-w-lg">
               At Suka Fashions, we celebrate femininity, empower women artisans, and create fashion that makes a difference.
             </p>
-            <p className="font-sans text-sm text-brand-navy/50 leading-loose font-light mb-9 max-w-lg">
+            <p className="font-sans text-xs sm:text-sm text-brand-navy/50 leading-relaxed font-light mb-6 max-w-lg">
               Each weave carries the legacy of traditional Indian craftsmanship — blended with contemporary sensibility for the independent, confident woman of today.
             </p>
 
             {/* Stats row */}
-            <div className="flex items-center gap-8 mb-9 pb-7 border-b border-brand-powder/60 w-full">
+            <div className="flex items-center gap-6 sm:gap-8 mb-6 pb-5 border-b border-brand-powder/60 w-full">
               {[
                 { value: '10K+', label: 'Happy Customers' },
                 { value: '200+', label: 'Artisan Families' },
                 { value: '5★',   label: 'Avg. Rating'      },
               ].map((stat) => (
                 <div key={stat.label} className="flex flex-col">
-                  <span className="font-serif text-xl sm:text-2xl font-bold text-brand-teal">{stat.value}</span>
-                  <span className="font-sans text-[10px] tracking-wider text-brand-navy/50 uppercase">{stat.label}</span>
+                  <span className="font-serif text-lg sm:text-xl font-bold text-brand-teal">{stat.value}</span>
+                  <span className="font-sans text-[9px] tracking-wider text-brand-navy/50 uppercase">{stat.label}</span>
                 </div>
               ))}
             </div>
 
             <Link
               to="/about"
-              className="inline-flex items-center gap-2.5 bg-brand-navy hover:bg-brand-tealDark text-white font-sans text-[10px] tracking-[0.22em] uppercase font-semibold py-4 px-8 transition-all duration-300 rounded-sm group"
+              className="inline-flex items-center gap-2.5 bg-brand-navy hover:bg-brand-tealDark text-white font-sans text-[10px] tracking-[0.22em] uppercase font-semibold py-3.5 px-7 transition-all duration-300 rounded-sm group"
             >
               OUR STORY
               <ArrowRight size={13} strokeWidth={2} className="group-hover:translate-x-1 transition-transform duration-200" />

@@ -16,12 +16,12 @@ export default function OccasionSection() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-20 bg-white border-b border-brand-powder/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+    <section ref={sectionRef} className="py-10 lg:py-14 bg-white border-b border-brand-powder/30">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Heading */}
-        <div className="text-center mb-12 reveal">
-          <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-3">
+        <div className="text-center mb-8 reveal">
+          <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
             Style For Every Moment
           </p>
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
@@ -38,7 +38,7 @@ export default function OccasionSection() {
               <Link
                 key={occ.name}
                 to={occ.path}
-                className={`reveal reveal-delay-${Math.min(idx + 1, 5)} group flex flex-col items-center py-7 px-4 border border-brand-powder/40 bg-brand-powderLight/30 rounded-sm hover:border-brand-teal/40 hover:bg-brand-powderLight hover:shadow-md transition-all duration-300`}
+                className={`reveal reveal-delay-${Math.min(idx + 1, 5)} group flex flex-col items-center py-5 px-3 border border-brand-powder/40 bg-brand-powderLight/30 rounded-sm hover:border-brand-teal/40 hover:bg-brand-powderLight hover:shadow-md transition-all duration-300`}
               >
                 {/* Icon circle */}
                 <div className="w-13 h-13 flex items-center justify-center rounded-full border border-brand-teal/20 bg-white mb-4 group-hover:border-brand-teal/50 group-hover:bg-brand-powder/40 transition-all duration-300 group-hover:scale-110">

@@ -50,11 +50,11 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="bg-white pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10 text-left">
+    <div className="bg-white pb-14 lg:pb-18">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-6 sm:pt-8 pb-10 text-left">
         
         {/* Breadcrumbs */}
-        <nav className="text-[10px] font-sans text-brand-navy/50 uppercase tracking-[0.2em] mb-8 lg:mb-10 flex items-center flex-wrap gap-2">
+        <nav className="text-[10px] font-sans text-brand-navy/50 uppercase tracking-[0.2em] mb-5 lg:mb-6 flex items-center flex-wrap gap-2">
           <Link to="/" className="hover:text-brand-teal transition-colors">Home</Link>
           <span>/</span>
           <Link to="/products" className="hover:text-brand-teal transition-colors">Shop</Link>
@@ -266,12 +266,12 @@ export default function ProductDetail() {
 
       {/* ── Related Products ───────────────────────────────────────────── */}
       {relatedProducts.length > 0 && (
-        <div className="border-t border-brand-powder/40 bg-brand-cream/30 py-16 sm:py-20 mt-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 text-center">
-            <h3 className="font-serif text-2xl sm:text-3xl font-light text-brand-navy mb-2 uppercase tracking-wider">
+        <div className="border-t border-brand-powder/40 bg-brand-cream/30 py-10 lg:py-14 mt-8">
+          <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 text-center">
+            <h3 className="font-serif text-2xl sm:text-3xl font-light text-brand-navy mb-1.5 uppercase tracking-wider">
               Complete The Look
             </h3>
-            <p className="font-sans text-[10px] tracking-[0.25em] uppercase text-brand-navy/50 font-semibold mb-10">
+            <p className="font-sans text-[10px] tracking-[0.25em] uppercase text-brand-navy/50 font-semibold mb-7">
               You May Also Like
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">

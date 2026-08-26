@@ -40,11 +40,11 @@ export default function PromoBanner() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-20 bg-brand-cream/40 border-b border-brand-powder/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+    <section ref={sectionRef} className="py-12 lg:py-16 bg-brand-cream/40 border-b border-brand-powder/30">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Section label */}
-        <div className="text-center mb-10 reveal">
+        <div className="text-center mb-8 reveal">
           <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
             Featured Collections
           </p>
@@ -63,7 +63,7 @@ export default function PromoBanner() {
               style={{ background: b.bg, borderColor: b.border }}
             >
               {/* Text column */}
-              <div className="flex flex-col justify-center p-8 sm:p-10 flex-1 z-10">
+              <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-9 flex-1 z-10">
                 <span
                   className="font-sans text-[9px] tracking-[0.3em] uppercase font-semibold mb-3"
                   style={{ color: b.accentColor }}

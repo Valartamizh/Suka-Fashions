@@ -18,7 +18,7 @@ export default function Newsletter() {
   };
 
   return (
-    <section className="relative py-16 sm:py-20 overflow-hidden" style={{ background: '#004D50' }}>
+    <section className="relative py-12 lg:py-16 overflow-hidden" style={{ background: '#004D50' }}>
 
       {/* Decorative blobs */}
       <div className="absolute top-0 left-0 w-80 h-80 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: '#006B70', transform: 'translate(-40%, -40%)' }} />
@@ -32,17 +32,17 @@ export default function Newsletter() {
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 text-center">
 
-        <p className="font-sans text-[10px] tracking-[0.32em] text-brand-powder/70 uppercase font-medium mb-4">
+        <p className="font-sans text-[10px] tracking-[0.32em] text-brand-powder/70 uppercase font-medium mb-3">
           Newsletter
         </p>
 
-        <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-white tracking-wider uppercase mb-4">
+        <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-white tracking-wider uppercase mb-3">
           Stay in Style
         </h2>
 
-        <div className="w-10 h-[1px] bg-brand-powder/40 mx-auto mb-5" />
+        <div className="w-10 h-[1px] bg-brand-powder/40 mx-auto mb-4" />
 
-        <p className="font-sans text-sm text-brand-powder/70 font-light mb-9 leading-relaxed max-w-md mx-auto">
+        <p className="font-sans text-xs sm:text-sm text-brand-powder/70 font-light mb-7 leading-relaxed max-w-md mx-auto">
           Subscribe to get special offers, new arrivals and exclusive updates — delivered straight to your inbox.
         </p>
 

@@ -13,15 +13,15 @@ export default function Account() {
   ];
 
   return (
-    <div className="bg-brand-cream/20 min-h-screen py-10 lg:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+    <div className="bg-brand-cream/20 min-h-[85vh] pt-6 sm:pt-8 pb-12 lg:pb-16">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
         
         {/* Header */}
-        <div className="mb-10 pb-6 border-b border-brand-powder/60">
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-brand-navy tracking-wider uppercase mb-2">
+        <div className="mb-6 pb-4 border-b border-brand-powder/60">
+          <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-1">
             My Account
           </h1>
-          <p className="font-sans text-sm text-brand-navy/60">
+          <p className="font-sans text-xs sm:text-sm text-brand-navy/60">
             Welcome back, Aditi Sharma
           </p>
         </div>

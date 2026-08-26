@@ -31,11 +31,11 @@ export default function Checkout() {
   };
 
   return (
-    <div className="bg-brand-cream/20 min-h-screen pb-20">
+    <div className="bg-brand-cream/20 min-h-[85vh] pb-16">
       
       {/* Checkout Header (Minimal) */}
-      <div className="bg-white border-b border-brand-powder/60 py-5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex justify-between items-center">
+      <div className="bg-white border-b border-brand-powder/60 py-4">
+        <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 flex justify-between items-center">
           <Link to="/" className="font-serif text-xl sm:text-2xl font-bold tracking-wider text-brand-navy">
             Suka <span className="font-sans text-[9px] tracking-[0.3em] text-brand-teal uppercase ml-1">Fashions</span>
           </Link>
@@ -45,14 +45,14 @@ export default function Checkout() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 lg:py-12">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-6 sm:pt-8 pb-12 lg:pb-16">
         <div className="flex flex-col-reverse lg:flex-row gap-10 lg:gap-16">
           
           {/* Left: Steps Form */}
           <div className="lg:w-[55%] xl:w-[60%]">
             
             {/* Stepper */}
-            <div className="flex items-center justify-between mb-10 relative">
+            <div className="flex items-center justify-between mb-7 relative">
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[1px] bg-brand-powder/60 z-0" />
               {STEPS.map((step, idx) => (
                 <div key={step.id} className="relative z-10 flex flex-col items-center gap-2 bg-brand-cream/20 px-2">

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Search, User, Heart, ShoppingBag, ChevronDown } from 'lucide-react';
+import { Menu, X, Search, User, Heart, ShoppingBag, ChevronDown, LogOut } from 'lucide-react';
 import logo from '../assets/logo.jpg';
 import SearchOverlay from './SearchOverlay';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { name: 'New Arrivals', path: '/products' },
@@ -57,7 +58,15 @@ const navItems = [
 const WISHLIST_COUNT = 2;
 const CART_COUNT     = 3;
 
+/** Returns 2-letter initials from a full name, e.g. "Aditi Sharma" → "AS" */
+function getInitials(name = '') {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return parts[0]?.slice(0, 2).toUpperCase() || 'U';
+}
+
 export default function Navbar() {
+  const { user, isLoggedIn, logout } = useAuth();
   const [mobileOpen,     setMobileOpen]     = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileExpanded, setMobileExpanded] = useState(null);
@@ -99,28 +108,28 @@ export default function Navbar() {
           scrolled ? 'shadow-[0_4px_20px_rgba(0,0,0,0.06)]' : 'shadow-none border-b border-brand-powder/40'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-          <div className={`flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-[64px]' : 'h-[76px] lg:h-[84px]'}`}>
+        <div className="max-w-[1600px] mx-auto px-8 lg:px-10 xl:px-14 2xl:px-16">
+          <div className={`flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-[76px]' : 'h-[94px] lg:h-[102px]'}`}>
 
             {/* ── Logo ─────────────────────────────────────── */}
-            <Link to="/" className="flex items-center gap-3 flex-shrink-0">
+            <Link to="/" className="flex items-center gap-3.5 flex-shrink-0">
               <img
                 src={logo}
                 alt="Suka Fashions Logo"
-                className={`rounded-full object-cover border border-brand-powder shadow-sm transition-all duration-300 ${scrolled ? 'h-10 w-10' : 'h-11 w-11 sm:h-13 sm:w-13'}`}
+                className={`rounded-full object-cover border border-brand-powder shadow-sm transition-all duration-300 ${scrolled ? 'h-11 w-11' : 'h-12 w-12 sm:h-13 sm:w-13 lg:h-14 lg:w-14'}`}
               />
               <div className="flex flex-col leading-none">
-                <span className={`font-serif font-bold tracking-wider text-brand-navy transition-all duration-300 ${scrolled ? 'text-xl' : 'text-xl sm:text-2xl'}`}>
+                <span className={`font-serif font-bold tracking-wider text-brand-navy transition-all duration-300 ${scrolled ? 'text-xl lg:text-2xl' : 'text-2xl lg:text-3xl'}`}>
                   Suka
                 </span>
-                <span className="font-sans text-[8px] sm:text-[9px] tracking-[0.3em] text-brand-teal font-semibold uppercase">
+                <span className="font-sans text-[8px] sm:text-[9.5px] tracking-[0.3em] text-brand-teal font-semibold uppercase mt-0.5">
                   FASHIONS
                 </span>
               </div>
             </Link>
 
             {/* ── Center Nav (Desktop) ──────────────────────── */}
-            <div className="hidden lg:flex items-center gap-7 xl:gap-8 h-full">
+            <div className="hidden lg:flex items-center gap-8 xl:gap-10 2xl:gap-11 h-full">
               {navItems.map((item) => (
                 <div
                   key={item.name}
@@ -130,7 +139,7 @@ export default function Navbar() {
                 >
                   <Link
                     to={item.path}
-                    className={`flex items-center gap-0.5 font-sans text-[11px] xl:text-xs uppercase tracking-[0.16em] font-medium transition-colors duration-200 ${
+                    className={`flex items-center gap-0.5 font-sans text-[13px] xl:text-sm uppercase tracking-[0.18em] font-medium transition-colors duration-200 ${
                       item.highlight
                         ? 'text-red-500 hover:text-red-600'
                         : 'text-brand-navy hover:text-brand-teal'
@@ -139,7 +148,7 @@ export default function Navbar() {
                     <span className="nav-link-underline">{item.name}</span>
                     {item.dropdown && (
                       <ChevronDown
-                        size={11}
+                        size={12}
                         strokeWidth={2}
                         className={`ml-0.5 transition-transform duration-250 ${
                           activeDropdown === item.name ? 'rotate-180 text-brand-teal' : 'text-brand-navy/40'
@@ -205,37 +214,145 @@ export default function Navbar() {
             </div>
 
             {/* ── Right Icons (Desktop) ─────────────────────── */}
-            <div className="hidden lg:flex items-center gap-5">
+            <div className="hidden lg:flex items-center gap-6 xl:gap-7">
+              {/* Search */}
               <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search"
-                className="text-brand-navy hover:text-brand-teal transition-colors duration-200"
+                className="flex flex-col items-center gap-0.5 text-brand-navy hover:text-brand-teal transition-colors duration-200 group"
               >
-                <Search size={19} strokeWidth={1.6} />
+                <Search size={21} strokeWidth={1.6} />
+                <span className="font-sans text-[9px] text-brand-navy/55 font-medium tracking-wide leading-none group-hover:text-brand-teal transition-colors">Search</span>
               </button>
               
-              <Link to="/login" aria-label="My Account" className="text-brand-navy hover:text-brand-teal transition-colors duration-200">
-                <User size={19} strokeWidth={1.6} />
-              </Link>
+              {/* Account Dropdown */}
+              <div
+                className="relative h-full flex items-center"
+                onMouseEnter={() => openDropdown('account')}
+                onMouseLeave={() => closeDropdown()}
+              >
+                <Link
+                  to={isLoggedIn ? '/account' : '/login'}
+                  aria-label="My Account"
+                  className="flex flex-col items-center gap-0.5 transition-colors duration-200 group"
+                >
+                  {isLoggedIn ? (
+                    <>
+                      {/* Teal initials avatar */}
+                      <div
+                        className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-brand-teal flex items-center justify-center shadow-sm border-2 border-brand-powder group-hover:border-brand-tealDark transition-colors duration-200"
+                        aria-label={`Account: ${user?.name}`}
+                      >
+                        <span className="font-sans text-[12px] font-bold text-white tracking-wide">
+                          {getInitials(user?.name || '')}
+                        </span>
+                      </div>
+                      <span className="font-sans text-[9px] text-brand-navy/60 font-medium tracking-wide max-w-[64px] truncate leading-none">
+                        {user?.name?.split(' ')[0] || 'Account'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <User size={21} strokeWidth={1.6} className="text-brand-navy group-hover:text-brand-teal transition-colors" />
+                      <span className="font-sans text-[9px] text-brand-navy/55 font-medium tracking-wide leading-none group-hover:text-brand-teal transition-colors">Account</span>
+                    </>
+                  )}
+                </Link>
+
+                {/* Account Menu Panel */}
+                {activeDropdown === 'account' && (
+                  <div
+                    className="absolute top-[100%] right-0 mt-0 w-52 bg-white border border-brand-powder/60 shadow-xl rounded-b-sm z-50 py-3 animate-in fade-in zoom-in-95"
+                    onMouseEnter={() => openDropdown('account')}
+                    onMouseLeave={() => closeDropdown()}
+                  >
+                    <div className="px-4 pb-2.5 mb-2 border-b border-brand-powder/40">
+                      <span className="font-sans text-[9px] uppercase tracking-widest text-brand-teal font-bold block">
+                        {isLoggedIn ? 'Hi, Welcome' : 'Suka Account'}
+                      </span>
+                      <span className="font-serif text-sm text-brand-navy font-semibold truncate block">
+                        {isLoggedIn ? user?.name || 'Customer' : 'Guest User'}
+                      </span>
+                    </div>
+
+                    {isLoggedIn ? (
+                      <div className="flex flex-col text-left">
+                        <Link
+                          to="/account"
+                          onClick={() => setActiveDropdown(null)}
+                          className="px-4 py-2 font-sans text-xs tracking-wider text-brand-navy/75 hover:text-brand-teal hover:bg-brand-powderLight transition-colors"
+                        >
+                          My Account
+                        </Link>
+                        <Link
+                          to="/account"
+                          onClick={() => setActiveDropdown(null)}
+                          className="px-4 py-2 font-sans text-xs tracking-wider text-brand-navy/75 hover:text-brand-teal hover:bg-brand-powderLight transition-colors"
+                        >
+                          My Orders
+                        </Link>
+                        <Link
+                          to="/wishlist"
+                          onClick={() => setActiveDropdown(null)}
+                          className="px-4 py-2 font-sans text-xs tracking-wider text-brand-navy/75 hover:text-brand-teal hover:bg-brand-powderLight transition-colors"
+                        >
+                          Wishlist
+                        </Link>
+                        <button
+                          onClick={() => { logout(); setActiveDropdown(null); }}
+                          className="w-full text-left px-4 py-2 font-sans text-xs tracking-wider text-red-500 hover:bg-red-50 transition-colors flex items-center justify-between mt-1 border-t border-brand-powder/40 pt-2"
+                        >
+                          <span>Logout</span>
+                          <LogOut size={13} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="px-4 py-2">
+                        <Link
+                          to="/login"
+                          onClick={() => setActiveDropdown(null)}
+                          className="w-full block text-center bg-brand-navy hover:bg-brand-teal text-white py-2 rounded-sm font-sans text-[10px] uppercase tracking-widest font-semibold transition-colors shadow-sm"
+                        >
+                          Login / Register
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Wishlist */}
-              <Link to="/wishlist" aria-label="Wishlist" className="relative text-brand-navy hover:text-brand-teal transition-colors duration-200">
-                <Heart size={19} strokeWidth={1.6} />
-                {WISHLIST_COUNT > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-brand-teal text-white text-[8px] font-sans font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">
-                    {WISHLIST_COUNT}
-                  </span>
-                )}
+              <Link
+                to="/wishlist"
+                aria-label="Wishlist"
+                className="flex flex-col items-center gap-0.5 text-brand-navy hover:text-brand-teal transition-colors duration-200 group"
+              >
+                <div className="relative">
+                  <Heart size={21} strokeWidth={1.6} />
+                  {WISHLIST_COUNT > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-brand-teal text-white text-[8px] font-sans font-bold rounded-full h-3.5 w-3.5 flex items-center justify-center border border-white">
+                      {WISHLIST_COUNT}
+                    </span>
+                  )}
+                </div>
+                <span className="font-sans text-[9px] text-brand-navy/55 font-medium tracking-wide leading-none group-hover:text-brand-teal transition-colors">Wishlist</span>
               </Link>
 
               {/* Cart */}
-              <Link to="/cart" aria-label="Shopping bag" className="relative text-brand-navy hover:text-brand-teal transition-colors duration-200">
-                <ShoppingBag size={19} strokeWidth={1.6} />
-                {CART_COUNT > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-brand-teal text-white text-[8px] font-sans font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">
-                    {CART_COUNT}
-                  </span>
-                )}
+              <Link
+                to="/cart"
+                aria-label="Shopping bag"
+                className="flex flex-col items-center gap-0.5 text-brand-navy hover:text-brand-teal transition-colors duration-200 group"
+              >
+                <div className="relative">
+                  <ShoppingBag size={21} strokeWidth={1.6} />
+                  {CART_COUNT > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-brand-teal text-white text-[8px] font-sans font-bold rounded-full h-3.5 w-3.5 flex items-center justify-center border border-white">
+                      {CART_COUNT}
+                    </span>
+                  )}
+                </div>
+                <span className="font-sans text-[9px] text-brand-navy/55 font-medium tracking-wide leading-none group-hover:text-brand-teal transition-colors">Cart</span>
               </Link>
             </div>
 
@@ -342,12 +459,29 @@ export default function Navbar() {
         </div>
 
         <div className="p-6 border-t border-brand-powder/50 bg-brand-cream/30 space-y-4">
-          <Link to="/login" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.18em] text-brand-navy font-semibold hover:text-brand-teal">
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-brand-powder shadow-sm">
-              <User size={15} strokeWidth={2} />
+          {isLoggedIn ? (
+            <div className="flex items-center justify-between">
+              <Link to="/account" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.18em] text-brand-navy font-semibold hover:text-brand-teal">
+                <div className="w-8 h-8 rounded-full bg-brand-teal text-white flex items-center justify-center shadow-sm">
+                  <User size={15} strokeWidth={2} />
+                </div>
+                <div>
+                  <span className="block text-brand-navy font-bold">{user?.name || 'My Account'}</span>
+                  <span className="block text-[9px] text-brand-teal lowercase tracking-normal">{user?.phone}</span>
+                </div>
+              </Link>
+              <button onClick={() => { logout(); setMobileOpen(false); }} className="text-red-500 hover:text-red-600 p-1" aria-label="Logout">
+                <LogOut size={16} />
+              </button>
             </div>
-            Sign In / Register
-          </Link>
+          ) : (
+            <Link to="/login" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.18em] text-brand-navy font-semibold hover:text-brand-teal">
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-brand-powder shadow-sm">
+                <User size={15} strokeWidth={2} />
+              </div>
+              Sign In / Register
+            </Link>
+          )}
           <div className="pt-2">
             <p className="font-sans text-[9px] tracking-[0.25em] uppercase text-brand-teal font-bold opacity-80">
               Women Based • Women Empowered

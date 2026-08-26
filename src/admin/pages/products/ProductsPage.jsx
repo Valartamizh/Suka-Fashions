@@ -1,0 +1,281 @@
+// ProductsPage — /admin/products
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { Plus, Search, Filter, MoreVertical, Edit, Eye, Copy, PackagePlus, Archive, Trash2, SlidersHorizontal } from 'lucide-react';
+import AdminPageHeader from '../../components/ui/AdminPageHeader';
+import StatusBadge from '../../components/ui/StatusBadge';
+import Pagination from '../../components/ui/Pagination';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import EmptyState from '../../components/ui/EmptyState';
+import { adminProducts } from '../../data/adminProducts';
+
+const PAGE_SIZE = 6;
+const CATEGORIES = ['All', 'Sarees', 'Lehengas', 'Kurtis', 'Dresses', 'Co-ords', 'Dupattas'];
+const STATUSES = ['All', 'active', 'draft', 'archived', 'out-of-stock'];
+const SORT_OPTIONS = [
+  { label: 'Newest', value: 'newest' },
+  { label: 'Oldest', value: 'oldest' },
+  { label: 'Price: Low → High', value: 'price-asc' },
+  { label: 'Price: High → Low', value: 'price-desc' },
+  { label: 'Stock: Low → High', value: 'stock-asc' },
+  { label: 'Best Selling', value: 'best' },
+];
+
+function ActionsMenu({ product, onDelete }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+      >
+        <MoreVertical size={15} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-8 w-40 bg-white rounded-xl border border-slate-100 shadow-xl z-20 py-1">
+            {[
+              { icon: Eye, label: 'View', action: () => {} },
+              { icon: Edit, label: 'Edit', action: () => {} },
+              { icon: Copy, label: 'Duplicate', action: () => {} },
+              { icon: PackagePlus, label: 'Update Stock', action: () => {} },
+              { icon: Archive, label: 'Archive', action: () => {} },
+            ].map(item => (
+              <button
+                key={item.label}
+                onClick={() => { item.action(); setOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                <item.icon size={13} className="text-slate-400" />
+                {item.label}
+              </button>
+            ))}
+            <div className="border-t border-slate-100 my-1" />
+            <button
+              onClick={() => { onDelete(); setOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 size={13} className="text-red-400" />
+              Delete
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function ProductsPage() {
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('All');
+  const [status, setStatus] = useState('All');
+  const [sort, setSort] = useState('newest');
+  const [page, setPage] = useState(1);
+  const [deleteModal, setDeleteModal] = useState(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const filtered = useMemo(() => {
+    let list = [...adminProducts];
+    if (search) list = list.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
+    if (category !== 'All') list = list.filter(p => p.category === category);
+    if (status !== 'All') list = list.filter(p => p.status === status || (status === 'out-of-stock' && p.stock === 0));
+    switch (sort) {
+      case 'oldest': list.sort((a, b) => a.createdAt.localeCompare(b.createdAt)); break;
+      case 'price-asc': list.sort((a, b) => a.price - b.price); break;
+      case 'price-desc': list.sort((a, b) => b.price - a.price); break;
+      case 'stock-asc': list.sort((a, b) => a.stock - b.stock); break;
+      case 'best': list.sort((a, b) => b.unitsSold - a.unitsSold); break;
+      default: list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    }
+    return list;
+  }, [search, category, status, sort]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  return (
+    <div className="space-y-5">
+      <AdminPageHeader
+        title="Products"
+        subtitle="Manage your complete Suka Fashions catalogue."
+      >
+        <Link
+          to="/admin/products/add"
+          className="flex items-center gap-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+        >
+          <Plus size={14} />
+          Add Product
+        </Link>
+      </AdminPageHeader>
+
+      {/* Filters bar */}
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
+        <div className="flex flex-wrap gap-3 items-center">
+          {/* Search */}
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex-1 min-w-[180px] max-w-xs">
+            <Search size={13} className="text-slate-400 flex-shrink-0" />
+            <input
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              placeholder="Search products..."
+              className="bg-transparent text-xs text-slate-700 placeholder-slate-400 outline-none w-full"
+            />
+          </div>
+
+          {/* Category filter */}
+          <select
+            value={category}
+            onChange={e => { setCategory(e.target.value); setPage(1); }}
+            className="border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 bg-white focus:outline-none focus:border-brand-teal"
+          >
+            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+          </select>
+
+          {/* Status filter */}
+          <select
+            value={status}
+            onChange={e => { setStatus(e.target.value); setPage(1); }}
+            className="border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 bg-white focus:outline-none focus:border-brand-teal"
+          >
+            {STATUSES.map(s => <option key={s} value={s}>{s === 'All' ? 'All Statuses' : s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+          </select>
+
+          {/* Sort */}
+          <select
+            value={sort}
+            onChange={e => setSort(e.target.value)}
+            className="border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 bg-white focus:outline-none focus:border-brand-teal ml-auto"
+          >
+            {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+
+        {/* Active filters summary */}
+        {(search || category !== 'All' || status !== 'All') && (
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Filters:</span>
+            {search && (
+              <span className="bg-brand-powder text-brand-teal text-xs px-2.5 py-0.5 rounded-full font-medium">
+                "{search}"
+              </span>
+            )}
+            {category !== 'All' && (
+              <span className="bg-brand-powder text-brand-teal text-xs px-2.5 py-0.5 rounded-full font-medium">{category}</span>
+            )}
+            {status !== 'All' && (
+              <span className="bg-brand-powder text-brand-teal text-xs px-2.5 py-0.5 rounded-full font-medium capitalize">{status}</span>
+            )}
+            <button
+              onClick={() => { setSearch(''); setCategory('All'); setStatus('All'); setPage(1); }}
+              className="text-xs text-red-500 hover:underline font-semibold"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Products table */}
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                {['Product', 'SKU', 'Category', 'Price', 'Stock', 'Status', 'Featured', 'Updated', ''].map(h => (
+                  <th key={h} className="px-4 py-3.5 text-left font-semibold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <EmptyState
+                      icon={Package}
+                      title="No products found"
+                      description="Try adjusting your search or filters."
+                    />
+                  </td>
+                </tr>
+              ) : paginated.map(product => (
+                <tr key={product.id} className="hover:bg-slate-50/60 transition-colors group">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-10 h-12 object-cover rounded-lg border border-slate-100 flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800 truncate max-w-[160px]">{product.name}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{product.category} · {product.subcategory}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{product.sku}</td>
+                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{product.category}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className="font-bold text-slate-800">₹{product.price.toLocaleString('en-IN')}</span>
+                    {product.mrp > product.price && (
+                      <span className="text-[10px] text-slate-400 line-through ml-1">₹{product.mrp.toLocaleString('en-IN')}</span>
+                    )}
+                  </td>
+                  <td className={`px-4 py-3 font-bold ${product.stock === 0 ? 'text-red-500' : product.stock <= 5 ? 'text-amber-500' : 'text-slate-700'}`}>
+                    {product.stock}
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={product.stock === 0 ? 'out-of-stock' : product.status} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs font-semibold ${product.featured ? 'text-brand-teal' : 'text-slate-300'}`}>
+                      {product.featured ? '★ Yes' : '—'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{product.updatedAt}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <Link
+                        to={`/admin/products/add`}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-brand-powder text-slate-400 hover:text-brand-teal transition-colors"
+                        title="Edit"
+                      >
+                        <Edit size={13} />
+                      </Link>
+                      <ActionsMenu
+                        product={product}
+                        onDelete={() => setDeleteModal(product)}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {paginated.length > 0 && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalItems={filtered.length}
+            pageSize={PAGE_SIZE}
+          />
+        )}
+      </div>
+
+      {/* Delete confirm */}
+      <ConfirmModal
+        isOpen={!!deleteModal}
+        onClose={() => setDeleteModal(null)}
+        onConfirm={() => {}}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${deleteModal?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete Product"
+        variant="danger"
+      />
+    </div>
+  );
+}

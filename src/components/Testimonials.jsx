@@ -48,12 +48,12 @@ export default function Testimonials() {
   const t = testimonials[active];
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-20 bg-brand-cream/50 border-b border-brand-powder/30 overflow-hidden">
+    <section ref={sectionRef} className="py-10 lg:py-14 bg-brand-cream/50 border-b border-brand-powder/30 overflow-hidden">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10">
 
         {/* Heading */}
-        <div className="text-center mb-12 reveal">
-          <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-3">
+        <div className="text-center mb-8 reveal">
+          <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
             What They Say
           </p>
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
@@ -66,7 +66,7 @@ export default function Testimonials() {
         <div className="reveal reveal-delay-1">
           <div
             key={active}
-            className="relative bg-white border border-brand-powder/60 rounded-sm px-8 sm:px-16 py-12 text-center shadow-sm"
+            className="relative bg-white border border-brand-powder/60 rounded-sm px-6 sm:px-12 py-8 sm:py-10 text-center shadow-sm"
             style={{ animation: 'heroFadeIn 0.5s ease both' }}
           >
             {/* Large decorative quote mark */}

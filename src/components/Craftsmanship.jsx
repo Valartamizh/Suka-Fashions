@@ -30,32 +30,32 @@ export default function Craftsmanship() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-20 sm:py-24 bg-white border-y border-brand-powder/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+    <section ref={sectionRef} className="py-12 lg:py-16 bg-white border-y border-brand-powder/50">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Section Heading */}
-        <div className="text-center mb-16 reveal">
-          <p className="font-sans text-[10px] tracking-[0.3em] text-brand-teal uppercase font-semibold mb-4">
+        <div className="text-center mb-10 reveal">
+          <p className="font-sans text-[10px] tracking-[0.3em] text-brand-teal uppercase font-semibold mb-3">
             The Suka Standard
           </p>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-brand-navy tracking-wider uppercase mb-5">
+          <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-4">
             Crafted With Care
           </h2>
           <div className="w-16 h-[1.5px] bg-brand-teal mx-auto" />
-          <p className="mt-6 font-sans text-sm sm:text-base text-brand-navy/60 font-light max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-4 font-sans text-xs sm:text-sm text-brand-navy/60 font-light max-w-2xl mx-auto leading-relaxed">
             Our commitment to quality goes beyond the surface. It's woven into every fiber of our collections.
           </p>
         </div>
 
         {/* 3-Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
           {craftsmanshipData.map((item, index) => {
             const Icon = item.icon;
             return (
               <div key={item.id} className={`reveal reveal-delay-${index + 1} flex flex-col items-center text-center group`}>
                 
                 {/* Image Circle */}
-                <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden mb-8 border border-brand-powder shadow-sm relative">
+                <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden mb-5 border border-brand-powder shadow-sm relative">
                   <img 
                     src={item.image} 
                     alt={item.title}

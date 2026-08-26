@@ -69,20 +69,20 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* ── Product info ───────────────────────────────── */}
-      <div className="p-4 flex flex-col flex-grow text-left">
+      <div className="p-3 sm:p-3.5 flex flex-col flex-grow text-left">
 
         {/* Brand label */}
-        <span className="font-sans text-[8px] tracking-[0.22em] text-brand-teal font-semibold uppercase mb-1">
+        <span className="font-sans text-[8px] tracking-[0.22em] text-brand-teal font-semibold uppercase mb-0.5">
           SUKA FASHIONS
         </span>
 
         {/* Name */}
-        <h3 className="font-serif text-sm sm:text-[15px] text-brand-navy font-medium mb-2.5 group-hover:text-brand-teal line-clamp-2 leading-snug transition-colors duration-200">
+        <h3 className="font-serif text-sm sm:text-[14px] text-brand-navy font-medium mb-1.5 group-hover:text-brand-teal line-clamp-2 leading-snug transition-colors duration-200">
           {product.name}
         </h3>
 
         {/* Stars + review count */}
-        <div className="flex items-center gap-1.5 mb-3">
+        <div className="flex items-center gap-1.5 mb-2">
           <div className="flex items-center">
             {[1, 2, 3, 4, 5].map((s) => (
               <Star

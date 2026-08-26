@@ -30,12 +30,12 @@ export default function Cart() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-20 text-center">
-        <div className="max-w-md mx-auto bg-brand-cream/30 border border-brand-powder/50 p-10 rounded-sm">
-          <p className="font-sans text-[10px] tracking-[0.25em] text-brand-teal uppercase font-semibold mb-4">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-8 pb-16 text-center">
+        <div className="max-w-md mx-auto bg-brand-cream/30 border border-brand-powder/50 p-8 sm:p-10 rounded-sm">
+          <p className="font-sans text-[10px] tracking-[0.25em] text-brand-teal uppercase font-semibold mb-3">
             Your Bag is Empty
           </p>
-          <h2 className="font-serif text-3xl text-brand-navy font-light mb-6 uppercase tracking-wider">
+          <h2 className="font-serif text-2xl text-brand-navy font-light mb-5 uppercase tracking-wider">
             Nothing to see here yet
           </h2>
           <Link
@@ -50,10 +50,10 @@ export default function Cart() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 lg:py-16">
+    <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-6 sm:pt-8 pb-12 lg:pb-16">
       
-      <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-brand-navy tracking-wider uppercase mb-8 lg:mb-12">
-        Shopping Bag <span className="font-sans text-lg sm:text-2xl text-brand-navy/40 ml-2">({cartItems.length})</span>
+      <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-6 lg:mb-8">
+        Shopping Bag <span className="font-sans text-base sm:text-xl text-brand-navy/40 ml-2">({cartItems.length})</span>
       </h1>
 
       <div className="flex flex-col lg:flex-row gap-10 lg:gap-16">

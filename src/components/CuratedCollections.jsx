@@ -34,11 +34,11 @@ export default function CuratedCollections() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-20 bg-brand-cream/40 border-b border-brand-powder/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+    <section ref={sectionRef} className="py-10 lg:py-14 bg-brand-cream/40 border-b border-brand-powder/30">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 pb-4 border-b border-brand-powder/40 reveal">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-3 border-b border-brand-powder/40 reveal">
           <div>
             <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
               Handpicked For You

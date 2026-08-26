@@ -2,12 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Home, Search, Heart, ShoppingBag, User } from 'lucide-react';
 
-// Components
+// Customer Components
 import AnnouncementBar from './components/AnnouncementBar';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
-// Pages
+// Customer Pages
 import Homepage     from './pages/Homepage';
 import ProductList  from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
@@ -17,8 +17,25 @@ import Checkout     from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
 import Login        from './pages/Login';
 import Account      from './pages/Account';
-import Admin        from './pages/Admin';
 import NotFound     from './pages/NotFound';
+
+// ─── Admin System ────────────────────────────────────────────────────────────
+import { AdminAuthProvider } from './admin/context/AdminAuthContext';
+import AdminLayout from './admin/components/layout/AdminLayout';
+import AdminLogin from './admin/pages/AdminLogin';
+import AdminDashboard from './admin/pages/AdminDashboard';
+import ProductsPage from './admin/pages/products/ProductsPage';
+import AddProductPage from './admin/pages/products/AddProductPage';
+import CategoriesPage from './admin/pages/products/CategoriesPage';
+import InventoryPage from './admin/pages/InventoryPage';
+import OrdersPage from './admin/pages/OrdersPage';
+import OrderDetailPage from './admin/pages/OrderDetailPage';
+import CustomersPage from './admin/pages/CustomersPage';
+import CustomerDetailPage from './admin/pages/CustomerDetailPage';
+import ReviewsPage from './admin/pages/ReviewsPage';
+import ContentPage from './admin/pages/ContentPage';
+import UsersPage from './admin/pages/UsersPage';
+import SettingsPage from './admin/pages/SettingsPage';
 
 // Dummy counts (replace with context/state later)
 const WISHLIST_COUNT = 2;
@@ -88,7 +105,6 @@ function MainLayout() {
           <Route path="/order-success"          element={<OrderSuccess />}  />
           <Route path="/login"                  element={<Login />}         />
           <Route path="/account/*"              element={<Account />}       />
-          <Route path="/admin"                  element={<Admin />}         />
           <Route path="*"                       element={<NotFound />}      />
         </Routes>
       </main>
@@ -100,10 +116,37 @@ function MainLayout() {
   );
 }
 
+import { AuthProvider } from './context/AuthContext';
+
 export default function App() {
   return (
-    <Router>
-      <MainLayout />
-    </Router>
+    <AuthProvider>
+      <AdminAuthProvider>
+        <Router>
+          <Routes>
+            {/* ─── Admin Routes (standalone, no customer nav/footer) ───── */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<ProductsPage />} />
+              <Route path="products/add" element={<AddProductPage />} />
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="inventory" element={<InventoryPage />} />
+              <Route path="orders" element={<OrdersPage />} />
+              <Route path="orders/:id" element={<OrderDetailPage />} />
+              <Route path="customers" element={<CustomersPage />} />
+              <Route path="customers/:id" element={<CustomerDetailPage />} />
+              <Route path="reviews" element={<ReviewsPage />} />
+              <Route path="content" element={<ContentPage />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
+
+            {/* ─── Customer Storefront ────────────────────────────────── */}
+            <Route path="/*" element={<MainLayout />} />
+          </Routes>
+        </Router>
+      </AdminAuthProvider>
+    </AuthProvider>
   );
 }

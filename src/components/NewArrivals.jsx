@@ -10,13 +10,13 @@ export default function NewArrivals() {
   const newArrivals = products.filter((p) => p.isNew).slice(0, 4);
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-20 bg-white border-b border-brand-powder/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+    <section ref={sectionRef} className="py-12 lg:py-16 bg-white border-b border-brand-powder/30">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Header row */}
-        <div className="flex justify-between items-end mb-10 pb-4 border-b border-brand-powder/40 reveal">
+        <div className="flex justify-between items-end mb-7 pb-3 border-b border-brand-powder/40 reveal">
           <div>
-            <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
+            <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-1.5">
               Just In
             </p>
             <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">

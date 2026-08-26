@@ -17,13 +17,13 @@ export default function Wishlist() {
 
   if (wishlistItems.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-20 text-center">
-        <div className="max-w-md mx-auto bg-brand-cream/30 border border-brand-powder/50 p-10 rounded-sm">
-          <Heart size={40} strokeWidth={1} className="mx-auto text-brand-navy/20 mb-6" />
-          <p className="font-sans text-[10px] tracking-[0.25em] text-brand-teal uppercase font-semibold mb-4">
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-8 pb-16 text-center">
+        <div className="max-w-md mx-auto bg-brand-cream/30 border border-brand-powder/50 p-8 sm:p-10 rounded-sm">
+          <Heart size={36} strokeWidth={1} className="mx-auto text-brand-navy/20 mb-4" />
+          <p className="font-sans text-[10px] tracking-[0.25em] text-brand-teal uppercase font-semibold mb-3">
             Your Wishlist is Empty
           </p>
-          <h2 className="font-serif text-2xl text-brand-navy font-light mb-6 uppercase tracking-wider">
+          <h2 className="font-serif text-2xl text-brand-navy font-light mb-5 uppercase tracking-wider">
             Save your favorite pieces here
           </h2>
           <Link
@@ -38,11 +38,11 @@ export default function Wishlist() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 lg:py-12">
+    <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-6 sm:pt-8 pb-12 lg:pb-16">
       
-      <div className="flex justify-between items-end mb-8 pb-4 border-b border-brand-powder/60">
+      <div className="flex justify-between items-end mb-6 pb-3 border-b border-brand-powder/60">
         <div>
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-brand-navy tracking-wider uppercase mb-2">
+          <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-1">
             Wishlist
           </h1>
           <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-navy/60 font-medium">

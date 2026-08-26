@@ -12,7 +12,7 @@ export default function OrderSuccess() {
   const orderId = 'ORD-' + Math.floor(Math.random() * 900000 + 100000);
 
   return (
-    <div className="bg-brand-cream/20 min-h-[80vh] flex items-center py-20">
+    <div className="bg-brand-cream/20 min-h-[75vh] flex items-center py-10 lg:py-14">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
         <div className="bg-white border border-brand-powder/60 rounded-sm shadow-sm p-8 sm:p-12 text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">

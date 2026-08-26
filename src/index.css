@@ -130,3 +130,30 @@
 /* ─── Letter spacing utilities ───────────────────────────────────────────── */
 .tracking-supreme { letter-spacing: 0.32em; }
 .tracking-luxe    { letter-spacing: 0.22em; }
+
+/* ─── Instagram marquee infinite scroll ──────────────────────────────────── */
+@keyframes marquee {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee 36s linear infinite;
+}
+
+.marquee-viewport:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    overflow-x: auto;
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+}
