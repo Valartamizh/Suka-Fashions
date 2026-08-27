@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { products } from '../data/products';
 import { Star, Heart, ShoppingBag, Truck, RefreshCw, ChevronDown, Check, Ruler, ThumbsUp, MessageSquare, X, Send, ZoomIn, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 // Color name mapping
 const COLOR_NAMES = {
@@ -88,6 +90,8 @@ const MOCK_PRODUCT_REVIEWS = [
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   const [product, setProduct] = useState(null);
   
   // Interactive States
@@ -95,6 +99,7 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState(0); // index
   const [quantity, setQuantity] = useState(1);
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { addToCart } = useCart();
   const [addedToCart, setAddedToCart] = useState(false);
   
   // Image Lightbox Preview State
@@ -166,8 +171,33 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = () => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+    addToCart(product, quantity, selectedSize, currentColorName);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 3000);
+  };
+
+  const handleBuyNowWhatsApp = () => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+    const whatsappMsg = encodeURIComponent(
+      `*ORDER INQUIRY - SUKA FASHIONS* 🛍️\n` +
+      `-----------------------------------\n` +
+      `*Item:* ${product.name}\n` +
+      `*Category:* ${product.category}\n` +
+      `*Color:* ${currentColorName}\n` +
+      `*Size:* ${selectedSize}\n` +
+      `*Quantity:* ${quantity}\n` +
+      `*Price:* ₹${(product.price * quantity).toLocaleString('en-IN')}\n` +
+      `-----------------------------------\n` +
+      `Hi, I would like to buy this item. Please assist me with delivery and checkout!`
+    );
+    window.open(`https://wa.me/919876543210?text=${whatsappMsg}`, '_blank');
   };
 
   const toggleAccordion = (accId) => {
@@ -185,9 +215,24 @@ export default function ProductDetail() {
     setReviewsList(prev => prev.map(r => r.id === reviewId ? { ...r, helpfulCount: r.helpfulCount + 1 } : r));
   };
 
+  const validateReview = () => {
+    const errs = {};
+    if (!newReview.name.trim() || newReview.name.trim().length < 2) {
+      errs.name = 'Your name is required (minimum 2 letters)';
+    }
+    if (!newReview.title.trim() || newReview.title.trim().length < 3) {
+      errs.title = 'Review title is required (minimum 3 letters)';
+    }
+    if (!newReview.comment.trim() || newReview.comment.trim().length < 10) {
+      errs.comment = 'Review comment must be at least 10 characters long';
+    }
+    setReviewErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleReviewSubmit = (e) => {
     e.preventDefault();
-    if (!newReview.name || !newReview.comment) return;
+    if (!validateReview()) return;
     
     const createdReview = {
       id: Date.now(),
@@ -196,7 +241,7 @@ export default function ProductDetail() {
       rating: Number(newReview.rating),
       date: 'Just now',
       verified: true,
-      title: newReview.title || 'Great Product',
+      title: newReview.title || 'Great Product!',
       content: newReview.comment,
       helpfulCount: 0,
     };
@@ -207,6 +252,7 @@ export default function ProductDetail() {
       setReviewSubmitted(false);
       setReviewModalOpen(false);
       setNewReview({ rating: 5, name: '', title: '', comment: '' });
+      setReviewErrors({});
     }, 2000);
   };
 
@@ -393,31 +439,42 @@ export default function ProductDetail() {
                 </div>
               )}
 
-              {/* Add to Cart & Wishlist */}
-              <div className="flex gap-4 mb-8">
-                <div className="flex items-center border border-brand-powder rounded-sm w-[100px] flex-shrink-0 bg-white">
-                  <button onClick={() => setQuantity(prev => prev > 1 ? prev - 1 : 1)} className="w-8 h-12 font-sans text-lg text-brand-navy/60 hover:text-brand-teal transition-colors flex items-center justify-center">-</button>
-                  <span className="flex-1 text-center font-sans text-xs text-brand-navy font-medium">{quantity}</span>
-                  <button onClick={() => setQuantity(prev => prev + 1)} className="w-8 h-12 font-sans text-lg text-brand-navy/60 hover:text-brand-teal transition-colors flex items-center justify-center">+</button>
+              {/* Add to Cart & Buy Now Buttons */}
+              <div className="flex flex-col gap-3 mb-8">
+                <div className="flex gap-3">
+                  <div className="flex items-center border border-brand-powder rounded-sm w-[90px] flex-shrink-0 bg-white">
+                    <button onClick={() => setQuantity(prev => prev > 1 ? prev - 1 : 1)} className="w-7 h-12 font-sans text-lg text-brand-navy/60 hover:text-brand-teal transition-colors flex items-center justify-center">-</button>
+                    <span className="flex-1 text-center font-sans text-xs text-brand-navy font-medium">{quantity}</span>
+                    <button onClick={() => setQuantity(prev => prev + 1)} className="w-7 h-12 font-sans text-lg text-brand-navy/60 hover:text-brand-teal transition-colors flex items-center justify-center">+</button>
+                  </div>
+
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-sm transition-all duration-300 font-sans text-[10px] font-bold tracking-[0.2em] uppercase shadow-md ${
+                      product.stock === 0 ? 'bg-brand-powder text-brand-navy/40 cursor-not-allowed' :
+                      addedToCart ? 'bg-emerald-600 text-white shadow-lg' : 'bg-brand-teal hover:bg-brand-tealDark text-white hover:shadow-xl'
+                    }`}
+                  >
+                    {addedToCart ? <Check size={16} strokeWidth={2.5} /> : <ShoppingBag size={15} strokeWidth={2} />}
+                    <span>{product.stock === 0 ? 'Sold Out' : (addedToCart ? 'Added' : 'Add to Bag')}</span>
+                  </button>
+
+                  <button
+                    onClick={() => toggleWishlist(product)}
+                    className="w-12 h-[50px] flex-shrink-0 flex items-center justify-center border border-brand-powder rounded-sm text-brand-navy hover:text-brand-teal hover:border-brand-teal transition-all duration-300 bg-white shadow-sm"
+                  >
+                    <Heart size={18} strokeWidth={isInWishlist(product.id) ? 0 : 1.5} className={isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''} />
+                  </button>
                 </div>
 
+                {/* Direct Buy Now via WhatsApp Button */}
                 <button
-                  onClick={handleAddToCart}
+                  onClick={handleBuyNowWhatsApp}
                   disabled={product.stock === 0}
-                  className={`flex-1 flex items-center justify-center gap-3 py-3.5 rounded-sm transition-all duration-300 font-sans text-[10px] font-bold tracking-[0.2em] uppercase shadow-md ${
-                    product.stock === 0 ? 'bg-brand-powder text-brand-navy/40 cursor-not-allowed' :
-                    addedToCart ? 'bg-emerald-600 text-white shadow-lg' : 'bg-brand-teal hover:bg-brand-tealDark text-white hover:shadow-xl'
-                  }`}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-sm font-sans text-[10px] uppercase tracking-[0.2em] font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                 >
-                  {addedToCart ? <Check size={16} strokeWidth={2.5} /> : <ShoppingBag size={15} strokeWidth={2} />}
-                  <span>{product.stock === 0 ? 'Sold Out' : (addedToCart ? 'Added' : 'Add to Bag')}</span>
-                </button>
-
-                <button
-                  onClick={() => toggleWishlist(product)}
-                  className="w-12 h-[50px] flex-shrink-0 flex items-center justify-center border border-brand-powder rounded-sm text-brand-navy hover:text-brand-teal hover:border-brand-teal transition-all duration-300 bg-white shadow-sm"
-                >
-                  <Heart size={18} strokeWidth={isInWishlist(product.id) ? 0 : 1.5} className={isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''} />
+                  <MessageSquare size={16} /> Buy Now (Order via WhatsApp)
                 </button>
               </div>
 
@@ -715,37 +772,59 @@ export default function ProductDetail() {
                   <label className="font-sans text-xs font-semibold text-brand-navy block mb-1">Your Name *</label>
                   <input
                     type="text"
-                    required
                     placeholder="e.g. Ananya Sharma"
-                    className="w-full border border-slate-200 rounded-sm px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-brand-teal"
+                    className={`w-full border rounded-sm px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-brand-teal ${
+                      reviewErrors.name ? 'border-red-500' : 'border-slate-200'
+                    }`}
                     value={newReview.name}
-                    onChange={e => setNewReview({ ...newReview, name: e.target.value })}
+                    onChange={e => {
+                      setNewReview({ ...newReview, name: e.target.value });
+                      if (reviewErrors.name) setReviewErrors({ ...reviewErrors, name: '' });
+                    }}
                   />
+                  {reviewErrors.name && (
+                    <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {reviewErrors.name}</p>
+                  )}
                 </div>
 
                 {/* Title */}
                 <div>
-                  <label className="font-sans text-xs font-semibold text-brand-navy block mb-1">Review Headline</label>
+                  <label className="font-sans text-xs font-semibold text-brand-navy block mb-1">Review Headline *</label>
                   <input
                     type="text"
                     placeholder="e.g. Gorgeous embroidery and fabric"
-                    className="w-full border border-slate-200 rounded-sm px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-brand-teal"
+                    className={`w-full border rounded-sm px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-brand-teal ${
+                      reviewErrors.title ? 'border-red-500' : 'border-slate-200'
+                    }`}
                     value={newReview.title}
-                    onChange={e => setNewReview({ ...newReview, title: e.target.value })}
+                    onChange={e => {
+                      setNewReview({ ...newReview, title: e.target.value });
+                      if (reviewErrors.title) setReviewErrors({ ...reviewErrors, title: '' });
+                    }}
                   />
+                  {reviewErrors.title && (
+                    <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {reviewErrors.title}</p>
+                  )}
                 </div>
 
                 {/* Comment */}
                 <div>
                   <label className="font-sans text-xs font-semibold text-brand-navy block mb-1">Your Review *</label>
                   <textarea
-                    required
                     rows={4}
                     placeholder="Tell us about the fabric, fit, color accuracy, and overall experience..."
-                    className="w-full border border-slate-200 rounded-sm px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-brand-teal resize-none"
+                    className={`w-full border rounded-sm px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-brand-teal resize-none ${
+                      reviewErrors.comment ? 'border-red-500' : 'border-slate-200'
+                    }`}
                     value={newReview.comment}
-                    onChange={e => setNewReview({ ...newReview, comment: e.target.value })}
+                    onChange={e => {
+                      setNewReview({ ...newReview, comment: e.target.value });
+                      if (reviewErrors.comment) setReviewErrors({ ...reviewErrors, comment: '' });
+                    }}
                   />
+                  {reviewErrors.comment && (
+                    <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {reviewErrors.comment}</p>
+                  )}
                 </div>
 
                 <button

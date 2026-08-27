@@ -16,12 +16,11 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = (phone) => {
+  const login = (phone, name = 'Pooja', email = '') => {
     const userData = {
       phone,
-      name: 'Aditi Sharma',
-      email: 'aditi.sharma@example.com',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=80&auto=format&fit=crop&crop=face',
+      name: name || 'Pooja',
+      email: email || `${(name || 'pooja').toLowerCase().replace(/\s+/g, '')}@example.com`,
     };
     setUser(userData);
     try {
@@ -29,6 +28,23 @@ export function AuthProvider({ children }) {
     } catch (e) {
       console.error('Error saving user', e);
     }
+  };
+
+  const updateUser = (updatedFields) => {
+    setUser((prevUser) => {
+      const current = prevUser || {
+        phone: '+91 98765 43210',
+        name: 'Pooja',
+        email: 'pooja@example.com',
+      };
+      const newUserData = { ...current, ...updatedFields };
+      try {
+        localStorage.setItem('suka_user', JSON.stringify(newUserData));
+      } catch (e) {
+        console.error('Error updating user', e);
+      }
+      return newUserData;
+    });
   };
 
   const logout = () => {
@@ -41,7 +57,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

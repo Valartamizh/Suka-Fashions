@@ -1,19 +1,53 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, X, LogIn, Lock } from 'lucide-react';
-import { products } from '../data/products';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function Wishlist() {
   const { isLoggedIn } = useAuth();
-  const [wishlistItems, setWishlistItems] = useState([products[2], products[4], products[7]]);
+  const { wishlistItems, toggleWishlist, clearWishlist } = useWishlist();
+  const { addToCart } = useCart();
 
-  const removeFromWishlist = (id) => {
-    setWishlistItems(items => items.filter(item => item.id !== id));
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    onConfirm: () => {},
+  });
+
+  const requestRemoveFromWishlist = (product) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove from Wishlist?',
+      message: `Are you sure you want to remove "${product.name}" from your wishlist?`,
+      confirmText: 'Remove Item',
+      onConfirm: () => {
+        toggleWishlist(product);
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
-  const moveToCart = (id) => {
-    removeFromWishlist(id);
+  const requestClearWishlist = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Clear Entire Wishlist?',
+      message: 'Are you sure you want to remove all saved items from your wishlist?',
+      confirmText: 'Clear Wishlist',
+      onConfirm: () => {
+        clearWishlist();
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
+  };
+
+  const moveToCart = (product) => {
+    addToCart(product, 1);
+    toggleWishlist(product);
   };
 
   // If customer is not logged in, prompt to log in
@@ -80,8 +114,8 @@ export default function Wishlist() {
           </p>
         </div>
         <button 
-          onClick={() => setWishlistItems([])}
-          className="hidden sm:block font-sans text-[10px] uppercase tracking-widest text-brand-navy/40 hover:text-red-500 transition-colors"
+          onClick={requestClearWishlist}
+          className="hidden sm:block font-sans text-[10px] uppercase tracking-widest text-brand-navy/40 hover:text-red-500 transition-colors cursor-pointer"
         >
           Clear All
         </button>
@@ -99,8 +133,8 @@ export default function Wishlist() {
               
               {/* Remove Button */}
               <button 
-                onClick={() => removeFromWishlist(item.id)}
-                className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-brand-navy/50 hover:text-red-500 transition-colors shadow-sm"
+                onClick={() => requestRemoveFromWishlist(item)}
+                className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-brand-navy/50 hover:text-red-500 transition-colors shadow-sm cursor-pointer"
                 aria-label="Remove from wishlist"
               >
                 <X size={16} strokeWidth={1.5} />
@@ -127,8 +161,8 @@ export default function Wishlist() {
               
               {/* Add to Cart Action */}
               <button
-                onClick={() => moveToCart(item.id)}
-                className="mt-auto w-full py-2.5 sm:py-3 border border-brand-navy text-brand-navy font-sans text-[10px] uppercase tracking-[0.15em] font-semibold hover:bg-brand-navy hover:text-white transition-colors rounded-sm flex items-center justify-center gap-2"
+                onClick={() => moveToCart(item)}
+                className="mt-auto w-full py-2.5 sm:py-3 border border-brand-navy text-brand-navy font-sans text-[10px] uppercase tracking-[0.15em] font-semibold hover:bg-brand-navy hover:text-white transition-colors rounded-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 <ShoppingBag size={14} /> Move to Bag
               </button>
@@ -137,6 +171,16 @@ export default function Wishlist() {
           </div>
         ))}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
 
     </div>
   );

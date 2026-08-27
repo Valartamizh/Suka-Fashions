@@ -1,11 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, Star, ShoppingBag } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import fallbackImage from '../assets/saree_golden.jpg';
 
 export default function ProductCard({ product }) {
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { addToCart } = useCart();
   const wishlisted = isInWishlist(product.id);
 
   const handleWishlistClick = (e) => {
@@ -59,12 +64,24 @@ export default function ProductCard({ product }) {
         />
 
         {/* Quick Add overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-brand-teal/95 py-3 text-center translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!isLoggedIn) {
+              navigate('/login');
+              return;
+            }
+            addToCart(product, 1);
+          }}
+          className="absolute bottom-0 left-0 right-0 w-full bg-brand-teal/95 py-3 text-center translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10 cursor-pointer"
+        >
           <span className="inline-flex items-center gap-2 font-sans text-[10px] tracking-[0.2em] font-semibold text-white uppercase">
             <ShoppingBag size={13} strokeWidth={2} />
             QUICK ADD
           </span>
-        </div>
+        </button>
       </div>
 
       {/* ── Product info ───────────────────────────────── */}

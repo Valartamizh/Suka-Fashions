@@ -54,36 +54,41 @@ export default function OtpVerification({ phone, onChangePhone, onSuccess }) {
   };
 
   return (
-    <div className="w-full flex flex-col justify-between p-6 sm:p-8 lg:p-10 text-left animate-in fade-in duration-300">
-      
+    <div className="w-full h-full min-h-[560px] lg:min-h-[640px] flex flex-col justify-between p-6 sm:p-10 lg:p-12 text-left self-stretch animate-in fade-in duration-300">
+
       <div>
-        {/* Header with back arrow */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Header with back arrow and Big Logo */}
+        <div className="flex items-center justify-between mb-8">
           <button
             type="button"
             onClick={onChangePhone}
-            className="flex items-center gap-1.5 font-sans text-xs text-brand-navy/60 hover:text-brand-teal transition-colors"
+            className="flex items-center gap-2 font-sans text-xs text-brand-navy/70 hover:text-brand-teal font-semibold transition-colors bg-brand-powderLight px-3 py-1.5 rounded-full border border-brand-powder/60"
           >
-            <ArrowLeft size={16} /> Back
+            <ArrowLeft size={15} /> Back
           </button>
-          <img src={logo} alt="Suka Logo" className="w-7 h-7 rounded-full border border-brand-powder" />
+          <div className="w-14 h-14 rounded-full p-0.5 border-2 border-brand-teal/30 shadow-md bg-white flex items-center justify-center">
+            <img src={logo} alt="Suka Logo" className="w-full h-full rounded-full object-cover" />
+          </div>
         </div>
 
         {/* Heading & Target Phone */}
-        <div className="mb-4">
+        <div className="mb-6">
+          <span className="font-sans text-[9px] uppercase tracking-[0.25em] font-extrabold text-brand-teal bg-brand-teal/10 px-3 py-1 rounded-full inline-block mb-2">
+            ✦ STEP 2 OF 2: VERIFICATION ✦
+          </span>
           <h1 className="font-serif text-2xl sm:text-3xl text-brand-navy font-light mb-1.5">
-            Verify Your Number
+            Verify Your Mobile Number
           </h1>
           <p className="font-sans text-xs text-brand-navy/60 font-light leading-relaxed">
-            We've sent a 6-digit OTP to{' '}
-            <span className="font-semibold text-brand-navy">{maskedPhone}</span>
+            Enter the 6-digit verification code sent to{' '}
+            <span className="font-semibold text-brand-navy tracking-wider">{maskedPhone}</span>
           </p>
           <button
             type="button"
             onClick={onChangePhone}
-            className="font-sans text-[10px] uppercase tracking-wider text-brand-teal font-semibold hover:underline mt-1 block"
+            className="font-sans text-[10px] uppercase tracking-wider text-brand-teal font-bold hover:underline mt-1 block"
           >
-            Change Number
+            Change Phone Number
           </button>
         </div>
 
@@ -100,14 +105,14 @@ export default function OtpVerification({ phone, onChangePhone, onSuccess }) {
 
         {/* Error or Resent notification */}
         {error && (
-          <p className="font-sans text-[11px] text-red-500 font-medium mb-3 animate-in fade-in">
-            {error}
+          <p className="font-sans text-[11px] text-red-500 font-medium mb-4 animate-in fade-in flex items-center gap-1">
+            ⚠️ {error}
           </p>
         )}
 
         {resentMsg && (
-          <p className="font-sans text-[11px] text-brand-teal font-semibold flex items-center gap-1 mb-3 animate-in fade-in">
-            <CheckCircle2 size={13} /> A new OTP has been sent.
+          <p className="font-sans text-[11px] text-brand-teal font-semibold flex items-center gap-1 mb-4 animate-in fade-in">
+            <CheckCircle2 size={14} /> A new OTP code has been sent successfully.
           </p>
         )}
 
@@ -121,9 +126,9 @@ export default function OtpVerification({ phone, onChangePhone, onSuccess }) {
             <button
               type="button"
               onClick={handleResend}
-              className="font-sans text-xs font-semibold text-brand-teal hover:text-brand-tealDark hover:underline uppercase tracking-wider"
+              className="font-sans text-xs font-bold text-brand-teal hover:text-brand-tealDark hover:underline uppercase tracking-wider"
             >
-              Resend OTP
+              Resend OTP Code
             </button>
           )}
         </div>
@@ -133,23 +138,22 @@ export default function OtpVerification({ phone, onChangePhone, onSuccess }) {
           type="button"
           onClick={handleVerify}
           disabled={!isValidOtp || loading}
-          className={`w-full py-3.5 rounded-sm font-sans text-[10px] font-bold tracking-[0.22em] uppercase transition-all duration-200 shadow-md ${
-            !isValidOtp || loading
+          className={`w-full py-4 rounded-md font-sans text-[11px] font-bold tracking-[0.25em] uppercase transition-all duration-300 shadow-md ${!isValidOtp || loading
               ? 'bg-brand-powder/70 text-brand-navy/35 cursor-not-allowed shadow-none'
-              : 'bg-brand-teal hover:bg-brand-tealDark text-white hover:shadow-lg active:scale-[0.99]'
-          }`}
+              : 'bg-brand-teal hover:bg-brand-tealDark text-white hover:shadow-xl active:scale-[0.99] shadow-brand-teal/20'
+            }`}
         >
           {loading ? (
-            <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            'VERIFY & CONTINUE'
+            'VERIFY & COMPLETE LOGIN →'
           )}
         </button>
 
         {/* Demo Helper notice */}
-        <div className="mt-4 p-2.5 bg-brand-powderLight border border-brand-powder/60 rounded-sm text-center">
-          <p className="font-sans text-[10px] text-brand-teal font-medium">
-            Demo OTP code: <span className="font-bold tracking-widest text-brand-navy">123456</span>
+        <div className="mt-5 p-3 bg-brand-powderLight/80 border border-brand-powder/60 rounded-md text-center">
+          <p className="font-sans text-[10.5px] text-brand-teal font-medium">
+            💡 Demo OTP code: <span className="font-bold tracking-widest text-brand-navy text-xs ml-1">123456</span>
           </p>
         </div>
 

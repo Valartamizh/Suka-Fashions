@@ -60,11 +60,12 @@ const columns = [
     id:    'about',
     title: 'About',
     links: [
-      { name: 'About Us',          path: '/about'   },
-      { name: 'Our Story',         path: '/about'   },
-      { name: 'Careers',           path: '/careers' },
-      { name: 'Privacy Policy',    path: '/privacy' },
-      { name: 'Terms & Conditions', path: '/terms'  },
+      { name: 'About Us',          path: '/about'       },
+      { name: 'Our Story',         path: '/about'       },
+      { name: 'Careers',           path: '/careers'     },
+      { name: 'Privacy Policy',    path: '/privacy'     },
+      { name: 'Terms & Conditions', path: '/terms'      },
+      { name: 'Admin Portal',      path: '/admin/login' },
     ],
   },
 ];
@@ -192,15 +193,61 @@ export default function Footer() {
 
             <div className={`mt-4 lg:block space-y-4 ${customerOpen ? 'block' : 'hidden'}`}>
               {[
-                { Icon: Phone, text: '+91 98765 43210',        label: 'Phone' },
-                { Icon: Mail,  text: 'care@sukafashions.com',   label: 'Email' },
-                { Icon: Clock, text: 'Mon–Sat, 10 AM – 7 PM',  label: 'Hours' },
-              ].map(({ Icon, text, label }) => (
-                <div key={label} className="flex items-start gap-2.5">
-                  <Icon size={14} strokeWidth={1.6} className="text-brand-teal mt-0.5 flex-shrink-0" />
-                  <span className="font-sans text-[11px] text-brand-powder/55 leading-snug">{text}</span>
-                </div>
-              ))}
+                { 
+                  Icon: Phone, 
+                  text: '+91 98765 43210', 
+                  label: 'Phone', 
+                  href: 'tel:+919876543210' 
+                },
+                { 
+                  Icon: Mail,  
+                  text: 'care@sukafashions.com', 
+                  label: 'Email', 
+                  href: 'mailto:care@sukafashions.com' 
+                },
+                { 
+                  Icon: InstagramIcon, 
+                  text: '@sukafashions (Instagram DM)', 
+                  label: 'Instagram', 
+                  href: 'https://instagram.com/sukafashions', 
+                  isSvg: true,
+                  isExternal: true 
+                },
+                { 
+                  Icon: Clock, 
+                  text: 'Mon–Sat, 10 AM – 7 PM', 
+                  label: 'Hours' 
+                },
+              ].map(({ Icon, text, label, href, isSvg, isExternal }) => {
+                const content = (
+                  <div className="flex items-start gap-2.5 group/item">
+                    {isSvg ? (
+                      <InstagramIcon />
+                    ) : (
+                      <Icon size={14} strokeWidth={1.6} className="text-brand-teal group-hover/item:text-white transition-colors mt-0.5 flex-shrink-0" />
+                    )}
+                    <span className={`font-sans text-[11px] leading-snug transition-colors ${href ? 'text-brand-powder/80 group-hover/item:text-white hover:underline' : 'text-brand-powder/55'}`}>
+                      {text}
+                    </span>
+                  </div>
+                );
+
+                if (href) {
+                  return (
+                    <a
+                      key={label}
+                      href={href}
+                      target={isExternal ? '_blank' : undefined}
+                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                      className="block"
+                    >
+                      {content}
+                    </a>
+                  );
+                }
+
+                return <div key={label}>{content}</div>;
+              })}
             </div>
           </div>
 

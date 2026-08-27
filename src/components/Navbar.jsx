@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, User, Heart, ShoppingBag, ChevronDown, LogOut } from 'lucide-react';
 import logo from '../assets/logo.jpg';
 import SearchOverlay from './SearchOverlay';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
+import { products } from '../data/products';
+import ConfirmationModal from './ConfirmationModal';
 
 // Import local assets for mega menu cards
 import sareeGolden from '../assets/saree_golden.jpg';
@@ -85,9 +89,6 @@ const navItems = [
   { name: 'Sale', path: '/category/sale', highlight: true },
 ];
 
-const WISHLIST_COUNT = 2;
-const CART_COUNT     = 3;
-
 export default function Navbar() {
   const [scrolled, setScrolled]               = useState(false);
   const [searchOpen, setSearchOpen]           = useState(false);
@@ -96,11 +97,43 @@ export default function Navbar() {
   const [mobileExpanded, setMobileExpanded]   = useState(null);
   const [accountDropdown, setAccountDropdown] = useState(false);
 
+  // Live Header Search States
+  const [searchQuery, setSearchQuery]         = useState('');
+  const [searchFocused, setSearchFocused]     = useState(false);
+  const searchRef                             = useRef(null);
+
   const location = useLocation();
+  const navigate = useNavigate();
   const dropdownTimerRef = useRef(null);
   const accountRef       = useRef(null);
 
   const { user, isLoggedIn, logout } = useAuth();
+  const { wishlistCount } = useWishlist();
+  const { cartCount } = useCart();
+
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    onConfirm: () => {},
+  });
+
+  const handleLogoutRequest = () => {
+    setAccountDropdown(false);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirm Sign Out?',
+      message: 'Are you sure you want to sign out of your account?',
+      confirmText: 'Sign Out',
+      onConfirm: () => {
+        logout();
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        navigate('/');
+      },
+    });
+  };
 
   // Scroll listener for sticky compact navbar
   useEffect(() => {
@@ -114,18 +147,39 @@ export default function Navbar() {
     setMobileOpen(false);
     setActiveDropdown(null);
     setAccountDropdown(false);
+    setSearchFocused(false);
   }, [location.pathname]);
 
-  // Close account dropdown on click outside
+  // Close account dropdown & search popover on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (accountRef.current && !accountRef.current.contains(e.target)) {
         setAccountDropdown(false);
       }
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchFocused(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const searchResults = searchQuery.trim()
+    ? products.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.fabric && p.fabric.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (p.occasion && p.occasion.toLowerCase().includes(searchQuery.toLowerCase()))
+      ).slice(0, 5)
+    : [];
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setSearchFocused(false);
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   const handleMouseEnter = (name) => {
     if (dropdownTimerRef.current) clearTimeout(dropdownTimerRef.current);
@@ -260,13 +314,149 @@ export default function Navbar() {
               })}
             </nav>
 
-            {/* ── Icons Right ────────────────────────────────── */}
+            {/* ── Right Section: Integrated Live Search & Account Icons ── */}
             <div className="flex items-center gap-2 sm:gap-4 lg:gap-5">
 
-              {/* Search */}
+              {/* Desktop & Tablet Live Search Input */}
+              <div className="relative hidden md:block w-48 lg:w-64 xl:w-72" ref={searchRef}>
+                <form onSubmit={handleSearchSubmit} className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setSearchFocused(true);
+                    }}
+                    onFocus={() => setSearchFocused(true)}
+                    placeholder="Search sarees, kurtis, lehengas..."
+                    className="w-full bg-brand-cream/40 hover:bg-brand-cream/80 focus:bg-white border border-brand-powder/70 focus:border-brand-teal rounded-full py-2 pl-9 pr-8 font-sans text-xs text-brand-navy placeholder:text-brand-navy/40 focus:outline-none focus:ring-2 focus:ring-brand-teal/20 transition-all duration-300 shadow-2xs"
+                  />
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-navy/50" />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-navy/40 hover:text-brand-navy p-1"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </form>
+
+                {/* Live Results Popover Dropdown */}
+                {searchFocused && (
+                  <div className="absolute top-full right-0 mt-2 bg-white border border-brand-powder/70 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 text-left w-[360px] sm:w-[400px]">
+                    
+                    {searchQuery.trim() === '' ? (
+                      /* Initial state: Popular Searches & Quick Categories */
+                      <div className="p-4 space-y-4">
+                        <div>
+                          <span className="font-sans text-[9px] uppercase tracking-[0.2em] font-extrabold text-brand-teal block mb-2.5">
+                            🔥 POPULAR SEARCHES
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {['Silk Sarees', 'Organza Saree', 'Banarasi', 'Bridal Lehenga', 'Kurti Sets', 'Anarkali'].map(term => (
+                              <button
+                                key={term}
+                                type="button"
+                                onClick={() => {
+                                  setSearchQuery(term);
+                                  setSearchFocused(true);
+                                }}
+                                className="font-sans text-[10.5px] text-brand-navy bg-brand-cream/50 hover:bg-brand-teal hover:text-white border border-brand-powder/60 px-3 py-1 rounded-full transition-all cursor-pointer"
+                              >
+                                {term}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="border-t border-brand-powder/50 pt-3">
+                          <span className="font-sans text-[9px] uppercase tracking-[0.2em] font-extrabold text-brand-teal block mb-2">
+                            ✨ QUICK CATEGORIES
+                          </span>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {[
+                              { name: 'Sarees', path: '/category/sarees' },
+                              { name: 'Kurtis', path: '/category/kurtis' },
+                              { name: 'Lehengas', path: '/category/lehengas' },
+                              { name: 'Dresses', path: '/category/dresses' },
+                            ].map(cat => (
+                              <Link
+                                key={cat.name}
+                                to={cat.path}
+                                onClick={() => setSearchFocused(false)}
+                                className="font-sans text-xs text-brand-navy hover:text-brand-teal py-1 px-2.5 rounded-md hover:bg-brand-powderLight transition-colors flex items-center justify-between"
+                              >
+                                <span>{cat.name}</span>
+                                <span className="text-[10px] text-brand-navy/30">→</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      /* Instant Live Results */
+                      <div>
+                        <div className="px-4 py-2 bg-brand-cream/30 border-b border-brand-powder/50 flex justify-between items-center">
+                          <span className="font-sans text-[9px] uppercase tracking-[0.2em] font-bold text-brand-teal">
+                            MATCHING PRODUCTS ({searchResults.length})
+                          </span>
+                          <span className="font-sans text-[9px] text-brand-navy/40">Press Enter for all</span>
+                        </div>
+
+                        <div className="divide-y divide-brand-powder/40 max-h-[320px] overflow-y-auto">
+                          {searchResults.map(item => (
+                            <Link
+                              key={item.id}
+                              to={`/product/${item.slug || item.id}`}
+                              onClick={() => setSearchFocused(false)}
+                              className="flex items-center gap-3 p-3 hover:bg-brand-powderLight/60 transition-colors group"
+                            >
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-12 h-14 object-cover rounded-xs border border-brand-powder/50 flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <span className="font-sans text-[8px] uppercase tracking-wider font-semibold text-brand-teal block">
+                                  {item.category}
+                                </span>
+                                <h4 className="font-serif text-xs text-brand-navy font-medium truncate group-hover:text-brand-teal transition-colors">
+                                  {item.name}
+                                </h4>
+                                <p className="font-sans text-xs font-bold text-brand-navy mt-0.5">
+                                  ₹{item.price.toLocaleString('en-IN')}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleSearchSubmit}
+                          className="w-full py-2.5 bg-brand-teal text-white font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-center hover:bg-brand-tealDark transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          View All Results for "{searchQuery}" →
+                        </button>
+                      </div>
+                    ) : (
+                      /* No Results State */
+                      <div className="p-6 text-center">
+                        <p className="font-serif text-sm text-brand-navy mb-1">No products found</p>
+                        <p className="font-sans text-xs text-brand-navy/50">Try searching for 'Saree', 'Lehenga', or 'Silk'</p>
+                      </div>
+                    )}
+
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Quick Search Button */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-2 text-brand-navy hover:text-brand-teal transition-colors rounded-full hover:bg-brand-powderLight"
+                className="p-2 md:hidden text-brand-navy hover:text-brand-teal transition-colors rounded-full hover:bg-brand-powderLight"
                 aria-label="Search catalog"
               >
                 <Search size={20} strokeWidth={1.7} />
@@ -276,10 +466,18 @@ export default function Navbar() {
               <div className="relative hidden sm:block" ref={accountRef}>
                 <button
                   onClick={() => setAccountDropdown(!accountDropdown)}
-                  className="p-2 text-brand-navy hover:text-brand-teal transition-colors rounded-full hover:bg-brand-powderLight flex items-center gap-1"
+                  className="p-1 text-brand-navy hover:text-brand-teal transition-colors rounded-full flex items-center justify-center gap-1 cursor-pointer"
                   aria-label="Account menu"
                 >
-                  <User size={20} strokeWidth={1.7} />
+                  {isLoggedIn && user?.name ? (
+                    <div className="w-8 h-8 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xs shadow-sm uppercase tracking-wider ring-2 ring-brand-teal/20">
+                      {user.name.trim().charAt(0)}
+                    </div>
+                  ) : (
+                    <div className="p-1 text-brand-navy hover:text-brand-teal">
+                      <User size={20} strokeWidth={1.7} />
+                    </div>
+                  )}
                 </button>
 
                 {accountDropdown && (
@@ -292,7 +490,7 @@ export default function Navbar() {
                         </div>
                         <Link to="/account" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">My Profile & Orders</Link>
                         <Link to="/wishlist" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">Wishlist</Link>
-                        <button onClick={() => { logout(); setAccountDropdown(false); }} className="w-full text-left px-4 py-2 font-sans text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-brand-powder/40 mt-1">
+                        <button onClick={handleLogoutRequest} className="w-full text-left px-4 py-2 font-sans text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-brand-powder/40 mt-1 cursor-pointer">
                           <LogOut size={13} /> Logout
                         </button>
                       </>
@@ -312,9 +510,11 @@ export default function Navbar() {
                 aria-label="Wishlist"
               >
                 <Heart size={20} strokeWidth={1.7} />
-                <span className="absolute top-1 right-1 bg-brand-teal text-white font-sans text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                  {WISHLIST_COUNT}
-                </span>
+                {wishlistCount > 0 && (
+                  <span className="absolute top-1 right-1 bg-brand-teal text-white font-sans text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
               </Link>
 
               {/* Cart */}
@@ -324,9 +524,11 @@ export default function Navbar() {
                 aria-label="Shopping Bag"
               >
                 <ShoppingBag size={20} strokeWidth={1.7} />
-                <span className="absolute top-1 right-1 bg-brand-navy text-white font-sans text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                  {CART_COUNT}
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute top-1 right-1 bg-brand-navy text-white font-sans text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
 
               {/* Mobile Hamburger */}
@@ -387,6 +589,15 @@ export default function Navbar() {
           </div>
         </div>
       )}
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </>
   );
 }

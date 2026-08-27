@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Heart, Package, Zap } from 'lucide-react';
 import logo from '../../assets/logo.jpg';
 
-export default function PhoneLoginForm({ onSendOtp }) {
+export default function PhoneLoginForm({ onSendOtp, onSwitchToRegister }) {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,46 +29,63 @@ export default function PhoneLoginForm({ onSendOtp }) {
     // Simulate short network delay
     setTimeout(() => {
       setLoading(false);
-      onSendOtp(phone);
+      onSendOtp({ phone });
     }, 400);
   };
 
   return (
-    <div className="w-full flex flex-col justify-between p-6 sm:p-8 lg:p-10 text-left">
-      
+    <div className="w-full h-full min-h-[560px] lg:min-h-[640px] flex flex-col justify-between p-6 sm:p-10 lg:p-12 text-left self-stretch">
+
       <div>
-        {/* Suka logo header */}
-        <div className="flex items-center gap-2.5 mb-6">
-          <img src={logo} alt="Suka Fashions Logo" className="w-8 h-8 rounded-full border border-brand-powder shadow-sm" />
-          <span className="font-serif font-bold text-brand-navy text-lg tracking-wider">
-            Suka <span className="font-sans text-[8px] tracking-[0.28em] text-brand-teal uppercase ml-1">Fashions</span>
-          </span>
+        {/* Prominent BIG Brand Logo Header */}
+        <div className="flex flex-col items-center sm:items-start text-center sm:text-left mb-8">
+          <Link to="/" className="group flex flex-col sm:flex-row items-center gap-4 mb-4">
+            <div className="relative w-20 h-20 sm:w-22 sm:h-22 rounded-full p-1 border-2 border-brand-teal/30 shadow-md group-hover:border-brand-teal transition-all bg-white flex items-center justify-center">
+              <img
+                src={logo}
+                alt="Suka Fashions Brand Logo"
+                className="w-full h-full object-cover rounded-full shadow-inner"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-serif font-light text-2xl sm:text-3xl text-brand-navy tracking-wider">
+                Suka <span className="font-semibold text-brand-teal">Fashions</span>
+              </span>
+              <span className="font-sans text-[9px] tracking-[0.35em] text-brand-navy/50 font-bold uppercase mt-1">
+                LUXURY ETHNIC WEAR
+              </span>
+            </div>
+          </Link>
+
+          <div className="w-12 h-0.5 bg-gradient-to-r from-brand-teal to-brand-powder rounded-full my-2 hidden sm:block" />
         </div>
 
         {/* Heading & Subtitle */}
-        <div className="mb-6">
+        <div className="mb-7">
+          <span className="font-sans text-[9px] uppercase tracking-[0.25em] font-extrabold text-brand-teal bg-brand-teal/10 px-3 py-1 rounded-full inline-block mb-2">
+            ✦ QUICK STOREFRONT ACCESS ✦
+          </span>
           <h1 className="font-serif text-2xl sm:text-3xl text-brand-navy font-light mb-1.5">
             Welcome to Suka
           </h1>
           <p className="font-sans text-xs text-brand-navy/60 font-light">
-            Login or create an account to continue
+            Enter your mobile number to sign in or create a new account
           </p>
         </div>
 
         {/* Phone Input Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block font-sans text-[10px] uppercase tracking-[0.2em] font-semibold text-brand-navy mb-2">
+            <label className="block font-sans text-[10px] uppercase tracking-[0.22em] font-bold text-brand-navy mb-2">
               Mobile Number *
             </label>
 
             {/* Custom +91 prefix input */}
-            <div className={`flex items-center border rounded-sm bg-white transition-all ${
-              error ? 'border-red-400 ring-1 ring-red-400' : 'border-brand-powder focus-within:border-brand-teal focus-within:ring-1 focus-within:ring-brand-teal'
-            }`}>
-              <div className="px-3 py-3 border-r border-brand-powder/60 bg-brand-cream/30 text-brand-navy font-sans text-xs font-semibold flex items-center gap-1 select-none">
-                <span className="text-brand-navy/70">+91</span>
-                <span className="text-brand-navy/30">|</span>
+            <div className={`flex items-center border rounded-md bg-white transition-all shadow-xs ${error ? 'border-red-400 ring-2 ring-red-400/20' : 'border-brand-powder/80 focus-within:border-brand-teal focus-within:ring-2 focus-within:ring-brand-teal/20'
+              }`}>
+              <div className="px-4 py-3.5 border-r border-brand-powder/60 bg-brand-cream/40 text-brand-navy font-sans text-sm font-semibold flex items-center gap-1.5 select-none rounded-l-md">
+                <span className="text-brand-navy font-bold">+91</span>
+                <span className="text-brand-navy/20">|</span>
               </div>
               <input
                 type="tel"
@@ -77,20 +94,20 @@ export default function PhoneLoginForm({ onSendOtp }) {
                 maxLength={10}
                 value={phone}
                 onChange={handlePhoneChange}
-                placeholder="98765 43210"
-                className="w-full px-3 py-3 font-sans text-sm text-brand-navy placeholder-brand-navy/30 outline-none bg-transparent"
+                placeholder="Enter 10-digit mobile number"
+                className="w-full px-4 py-3.5 font-sans text-sm text-brand-navy placeholder-brand-navy/35 outline-none bg-transparent font-medium tracking-wider"
                 aria-label="Mobile Number"
               />
             </div>
 
             {error && (
-              <p className="font-sans text-[11px] text-red-500 mt-1.5 font-medium animate-in fade-in">
-                {error}
+              <p className="font-sans text-[11px] text-red-500 mt-2 font-medium animate-in fade-in flex items-center gap-1">
+                ⚠️ {error}
               </p>
             )}
 
-            <p className="font-sans text-[10px] text-brand-navy/50 mt-1.5 tracking-wide">
-              We'll send you a one-time password to verify your number.
+            <p className="font-sans text-[10.5px] text-brand-navy/55 mt-2 tracking-wide font-light">
+              We'll send a 6-digit OTP via SMS to verify your mobile number.
             </p>
           </div>
 
@@ -98,34 +115,47 @@ export default function PhoneLoginForm({ onSendOtp }) {
           <button
             type="submit"
             disabled={!isValid || loading}
-            className={`w-full py-3.5 rounded-sm font-sans text-[10px] font-bold tracking-[0.22em] uppercase transition-all duration-200 shadow-md ${
-              !isValid || loading
+            className={`w-full py-4 rounded-md font-sans text-[11px] font-bold tracking-[0.25em] uppercase transition-all duration-300 shadow-md ${!isValid || loading
                 ? 'bg-brand-powder/70 text-brand-navy/35 cursor-not-allowed shadow-none'
-                : 'bg-brand-teal hover:bg-brand-tealDark text-white hover:shadow-lg active:scale-[0.99]'
-            }`}
+                : 'bg-brand-teal hover:bg-brand-tealDark text-white hover:shadow-xl active:scale-[0.99] shadow-brand-teal/20'
+              }`}
           >
             {loading ? (
-              <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              'CONTINUE'
+              'CONTINUE TO LOGIN →'
             )}
           </button>
         </form>
 
+        {/* Register Prompt for New Users */}
+        <div className="mt-5 pt-4 border-t border-brand-powder/40 text-center sm:text-left">
+          <p className="font-sans text-xs text-brand-navy/60">
+            New customer at Suka Fashions?{' '}
+            <button
+              type="button"
+              onClick={onSwitchToRegister}
+              className="font-bold text-brand-teal hover:underline cursor-pointer"
+            >
+              Create an Account / Register
+            </button>
+          </p>
+        </div>
+
         {/* Terms & Privacy */}
-        <p className="font-sans text-[10px] text-brand-navy/40 mt-4 leading-relaxed text-center sm:text-left">
+        <p className="font-sans text-[10px] text-brand-navy/45 mt-4 leading-relaxed text-center sm:text-left">
           By continuing, you agree to Suka Fashions'{' '}
-          <Link to="/terms" className="text-brand-teal hover:underline font-medium">Terms & Conditions</Link>{' '}
+          <Link to="/terms" className="text-brand-teal hover:underline font-semibold">Terms & Conditions</Link>{' '}
           and{' '}
-          <Link to="/privacy" className="text-brand-teal hover:underline font-medium">Privacy Policy</Link>.
+          <Link to="/privacy" className="text-brand-teal hover:underline font-semibold">Privacy Policy</Link>.
         </p>
       </div>
 
       {/* Customer Benefits */}
-      <div className="mt-6 pt-4 border-t border-brand-powder/40 flex items-center justify-between text-[9px] font-sans text-brand-navy/55 uppercase tracking-wider">
-        <span className="flex items-center gap-1"><Heart size={11} className="text-brand-teal" /> Save Favourites</span>
-        <span className="flex items-center gap-1"><Package size={11} className="text-brand-teal" /> Track Orders</span>
-        <span className="flex items-center gap-1"><Zap size={11} className="text-brand-teal" /> Faster Checkout</span>
+      <div className="mt-8 pt-5 border-t border-brand-powder/50 flex flex-wrap items-center justify-between gap-2 text-[9.5px] font-sans text-brand-navy/70 font-semibold uppercase tracking-wider">
+        <span className="flex items-center gap-1.5 bg-brand-powderLight/60 px-2.5 py-1 rounded-full"><Heart size={12} className="text-brand-teal" /> Save Favorites</span>
+        <span className="flex items-center gap-1.5 bg-brand-powderLight/60 px-2.5 py-1 rounded-full"><Package size={12} className="text-brand-teal" /> Track Orders</span>
+        <span className="flex items-center gap-1.5 bg-brand-powderLight/60 px-2.5 py-1 rounded-full"><Zap size={12} className="text-brand-teal" /> Express Checkout</span>
       </div>
 
     </div>

@@ -18,6 +18,16 @@ import OrderSuccess from './pages/OrderSuccess';
 import Login        from './pages/Login';
 import Account      from './pages/Account';
 import NotFound     from './pages/NotFound';
+import About        from './pages/About';
+import Contact      from './pages/Contact';
+import ShippingPolicy from './pages/ShippingPolicy';
+import ReturnsExchanges from './pages/ReturnsExchanges';
+import FAQs         from './pages/FAQs';
+import SizeGuide    from './pages/SizeGuide';
+import TrackOrder   from './pages/TrackOrder';
+import Careers      from './pages/Careers';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
 
 // ─── Admin System ────────────────────────────────────────────────────────────
 import { AdminAuthProvider } from './admin/context/AdminAuthContext';
@@ -37,18 +47,20 @@ import ContentPage from './admin/pages/ContentPage';
 import UsersPage from './admin/pages/UsersPage';
 import SettingsPage from './admin/pages/SettingsPage';
 
-// Dummy counts (replace with context/state later)
-const WISHLIST_COUNT = 2;
-const CART_COUNT     = 3;
+import { WishlistProvider, useWishlist } from './context/WishlistContext';
+import { CartProvider, useCart } from './context/CartContext';
+import { OrderProvider } from './context/OrderContext';
 
 function MobileBottomNav() {
   const location = useLocation();
+  const { wishlistCount } = useWishlist();
+  const { cartCount } = useCart();
 
   const tabs = [
     { to: '/',         Icon: Home,        label: 'Home'    },
     { to: '/products', Icon: Search,      label: 'Search'  },
-    { to: '/wishlist', Icon: Heart,       label: 'Wishlist', badge: WISHLIST_COUNT },
-    { to: '/cart',     Icon: ShoppingBag, label: 'Bag',      badge: CART_COUNT    },
+    { to: '/wishlist', Icon: Heart,       label: 'Wishlist', badge: wishlistCount },
+    { to: '/cart',     Icon: ShoppingBag, label: 'Bag',      badge: cartCount    },
     { to: '/account',  Icon: User,        label: 'Account'  },
   ];
 
@@ -95,17 +107,27 @@ function MainLayout() {
       {/* Page content */}
       <main className="flex-grow pb-16 lg:pb-0">
         <Routes>
-          <Route path="/"                       element={<Homepage />}      />
-          <Route path="/products"               element={<ProductList />}   />
-          <Route path="/category/:categoryName" element={<ProductList />}   />
-          <Route path="/product/:id"            element={<ProductDetail />} />
-          <Route path="/wishlist"               element={<Wishlist />}      />
-          <Route path="/cart"                   element={<Cart />}          />
-          <Route path="/checkout"               element={<Checkout />}      />
-          <Route path="/order-success"          element={<OrderSuccess />}  />
-          <Route path="/login"                  element={<Login />}         />
-          <Route path="/account/*"              element={<Account />}       />
-          <Route path="*"                       element={<NotFound />}      />
+          <Route path="/"                       element={<Homepage />}         />
+          <Route path="/products"               element={<ProductList />}      />
+          <Route path="/category/:categoryName" element={<ProductList />}      />
+          <Route path="/product/:id"            element={<ProductDetail />}    />
+          <Route path="/wishlist"               element={<Wishlist />}         />
+          <Route path="/cart"                   element={<Cart />}             />
+          <Route path="/checkout"               element={<Checkout />}         />
+          <Route path="/order-success"          element={<OrderSuccess />}     />
+          <Route path="/login"                  element={<Login />}            />
+          <Route path="/account/*"              element={<Account />}          />
+          <Route path="/about"                  element={<About />}            />
+          <Route path="/contact"                element={<Contact />}          />
+          <Route path="/shipping"               element={<ShippingPolicy />}    />
+          <Route path="/returns"                element={<ReturnsExchanges />} />
+          <Route path="/faqs"                   element={<FAQs />}             />
+          <Route path="/size-guide"             element={<SizeGuide />}        />
+          <Route path="/track-order"            element={<TrackOrder />}       />
+          <Route path="/careers"                element={<Careers />}          />
+          <Route path="/privacy"                element={<PrivacyPolicy />}    />
+          <Route path="/terms"                  element={<TermsConditions />}   />
+          <Route path="*"                       element={<NotFound />}         />
         </Routes>
       </main>
 
@@ -117,39 +139,42 @@ function MainLayout() {
 }
 
 import { AuthProvider } from './context/AuthContext';
-import { WishlistProvider } from './context/WishlistContext';
 
 export default function App() {
   return (
     <AuthProvider>
-      <WishlistProvider>
-        <AdminAuthProvider>
-          <Router>
-            <Routes>
-              {/* ─── Admin Routes (standalone, no customer nav/footer) ───── */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="products" element={<ProductsPage />} />
-                <Route path="products/add" element={<AddProductPage />} />
-                <Route path="categories" element={<CategoriesPage />} />
-                <Route path="inventory" element={<InventoryPage />} />
-                <Route path="orders" element={<OrdersPage />} />
-                <Route path="orders/:id" element={<OrderDetailPage />} />
-                <Route path="customers" element={<CustomersPage />} />
-                <Route path="customers/:id" element={<CustomerDetailPage />} />
-                <Route path="reviews" element={<ReviewsPage />} />
-                <Route path="content" element={<ContentPage />} />
-                <Route path="users" element={<UsersPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-              </Route>
+      <AdminAuthProvider>
+        <Router>
+          <WishlistProvider>
+            <CartProvider>
+              <OrderProvider>
+                <Routes>
+                  {/* ─── Admin Routes (standalone, no customer nav/footer) ───── */}
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="products" element={<ProductsPage />} />
+                    <Route path="products/add" element={<AddProductPage />} />
+                    <Route path="categories" element={<CategoriesPage />} />
+                    <Route path="inventory" element={<InventoryPage />} />
+                    <Route path="orders" element={<OrdersPage />} />
+                    <Route path="orders/:id" element={<OrderDetailPage />} />
+                    <Route path="customers" element={<CustomersPage />} />
+                    <Route path="customers/:id" element={<CustomerDetailPage />} />
+                    <Route path="reviews" element={<ReviewsPage />} />
+                    <Route path="content" element={<ContentPage />} />
+                    <Route path="users" element={<UsersPage />} />
+                    <Route path="settings" element={<SettingsPage />} />
+                  </Route>
 
-              {/* ─── Customer Storefront ────────────────────────────────── */}
-              <Route path="/*" element={<MainLayout />} />
-            </Routes>
-          </Router>
-        </AdminAuthProvider>
-      </WishlistProvider>
+                  {/* ─── Customer Storefront ────────────────────────────────── */}
+                  <Route path="/*" element={<MainLayout />} />
+                </Routes>
+              </OrderProvider>
+            </CartProvider>
+          </WishlistProvider>
+        </Router>
+      </AdminAuthProvider>
     </AuthProvider>
   );
 }

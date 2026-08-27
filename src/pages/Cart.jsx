@@ -1,27 +1,56 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Heart, ArrowRight, ShieldCheck, Truck } from 'lucide-react';
-import { products } from '../data/products';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function Cart() {
-  // Mock cart data
-  const [cartItems, setCartItems] = useState([
-    { ...products[0], cartId: 1, quantity: 1, selectedSize: 'Free Size' },
-    { ...products[1], cartId: 2, quantity: 2, selectedSize: 'Free Size' },
-  ]);
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
+  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
-  const updateQuantity = (id, delta) => {
-    setCartItems(items => items.map(item => {
-      if (item.cartId === id) {
-        const newQ = item.quantity + delta;
-        return { ...item, quantity: newQ > 0 ? newQ : 1 };
-      }
-      return item;
-    }));
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    onConfirm: () => {},
+  });
+
+  const requestRemoveItem = (item) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Item from Bag?',
+      message: `Are you sure you want to remove "${item.name}" from your shopping bag?`,
+      confirmText: 'Remove Item',
+      onConfirm: () => {
+        removeFromCart(item.cartId);
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
-  const removeItem = (id) => {
-    setCartItems(items => items.filter(item => item.cartId !== id));
+  const handleMoveToWishlist = (item) => {
+    if (!isInWishlist(item.id)) {
+      toggleWishlist(item);
+    }
+    removeFromCart(item.cartId);
+  };
+
+  const requestClearCart = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Clear Shopping Bag?',
+      message: 'Are you sure you want to clear all items from your shopping bag?',
+      confirmText: 'Clear Bag',
+      onConfirm: () => {
+        clearCart();
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -51,16 +80,16 @@ export default function Cart() {
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-6 sm:pt-8 pb-12 lg:pb-16">
-      
+
       <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-6 lg:mb-8">
         Shopping Bag <span className="font-sans text-base sm:text-xl text-brand-navy/40 ml-2">({cartItems.length})</span>
       </h1>
 
       <div className="flex flex-col lg:flex-row gap-10 lg:gap-16">
-        
+
         {/* Left: Cart Items */}
         <div className="lg:w-[60%] xl:w-[65%]">
-          
+
           {/* Free Shipping Progress */}
           <div className="bg-brand-powderLight border border-brand-powder/60 p-4 rounded-sm mb-6">
             {subtotal >= 1999 ? (
@@ -73,9 +102,9 @@ export default function Cart() {
                   Add <span className="font-semibold text-brand-navy">₹{1999 - subtotal}</span> more to unlock <span className="font-semibold text-brand-teal">Free Shipping</span>
                 </p>
                 <div className="w-full bg-brand-powder h-1.5 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-brand-teal h-full transition-all duration-500" 
-                    style={{ width: `${Math.min((subtotal / 1999) * 100, 100)}%` }} 
+                  <div
+                    className="bg-brand-teal h-full transition-all duration-500"
+                    style={{ width: `${Math.min((subtotal / 1999) * 100, 100)}%` }}
                   />
                 </div>
               </div>
@@ -85,7 +114,7 @@ export default function Cart() {
           <div className="border-t border-brand-powder/60">
             {cartItems.map((item) => (
               <div key={item.cartId} className="flex gap-4 sm:gap-6 py-6 border-b border-brand-powder/60 relative">
-                
+
                 {/* Product Image */}
                 <Link to={`/product/${item.slug}`} className="w-24 sm:w-32 flex-shrink-0 aspect-[3/4] bg-brand-cream border border-brand-powder/40 rounded-sm overflow-hidden group">
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -103,13 +132,13 @@ export default function Cart() {
                       </Link>
                     </div>
                   </div>
-                  
+
                   <div className="font-sans text-xs text-brand-navy/60 mb-4 space-y-1">
                     <p>Size: <span className="font-medium text-brand-navy">{item.selectedSize}</span></p>
                   </div>
 
                   <div className="mt-auto flex flex-wrap items-end justify-between gap-4">
-                    
+
                     {/* Quantity Control */}
                     <div className="flex items-center border border-brand-powder rounded-sm bg-white h-9">
                       <button onClick={() => updateQuantity(item.cartId, -1)} className="w-8 h-full font-sans text-brand-navy/60 hover:text-brand-teal transition-colors flex items-center justify-center">-</button>
@@ -132,13 +161,23 @@ export default function Cart() {
                   </div>
                 </div>
 
-                {/* Actions (Absolute Top Right for desktop, inline for mobile if needed, keeping simple here) */}
+                {/* Actions */}
                 <div className="absolute top-6 right-0 flex flex-col gap-3">
-                  <button onClick={() => removeItem(item.cartId)} className="text-brand-navy/40 hover:text-red-500 transition-colors p-1" aria-label="Remove">
+                  <button
+                    onClick={() => requestRemoveItem(item)}
+                    className="text-brand-navy/40 hover:text-red-500 transition-colors p-1 cursor-pointer"
+                    aria-label="Remove item"
+                    title="Remove Item"
+                  >
                     <Trash2 size={16} strokeWidth={1.5} />
                   </button>
-                  <button className="text-brand-navy/40 hover:text-brand-teal transition-colors p-1" aria-label="Move to wishlist">
-                    <Heart size={16} strokeWidth={1.5} />
+                  <button
+                    onClick={() => handleMoveToWishlist(item)}
+                    className="text-brand-navy/40 hover:text-brand-teal transition-colors p-1 cursor-pointer"
+                    aria-label="Move to wishlist"
+                    title="Move to Wishlist"
+                  >
+                    <Heart size={16} strokeWidth={1.5} className={isInWishlist(item.id) ? 'fill-red-500 text-red-500' : ''} />
                   </button>
                 </div>
 
@@ -153,7 +192,7 @@ export default function Cart() {
             <h2 className="font-sans text-xs uppercase tracking-[0.2em] font-bold text-brand-navy mb-6 pb-4 border-b border-brand-powder/60">
               Order Summary
             </h2>
-            
+
             <div className="space-y-4 mb-6 pb-6 border-b border-brand-powder/60">
               <div className="flex justify-between font-sans text-sm text-brand-navy/70">
                 <span>Subtotal</span>
@@ -172,6 +211,12 @@ export default function Cart() {
 
             <Link
               to="/checkout"
+              onClick={(e) => {
+                if (!isLoggedIn) {
+                  e.preventDefault();
+                  navigate('/login');
+                }
+              }}
               className="w-full flex items-center justify-center gap-2 bg-brand-navy text-white py-4 font-sans text-[10px] uppercase tracking-[0.2em] font-semibold hover:bg-brand-teal transition-colors rounded-sm shadow-md mb-4"
             >
               Proceed to Checkout <ArrowRight size={14} />
@@ -184,6 +229,16 @@ export default function Cart() {
         </div>
 
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

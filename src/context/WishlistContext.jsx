@@ -7,12 +7,20 @@ const WishlistContext = createContext();
 
 export function WishlistProvider({ children }) {
   const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
+  // Clear wishlist when logged out
+  React.useEffect(() => {
+    if (!isLoggedIn) {
+      setWishlistItems([]);
+    }
+  }, [isLoggedIn]);
+
   const toggleWishlist = (product) => {
     if (!isLoggedIn) {
-      setLoginModalOpen(true);
+      navigate('/login');
       return false;
     }
 
