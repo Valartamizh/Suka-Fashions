@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useReveal } from '../hooks/useReveal';
+import sareeBeigeMaroonFull from '../assets/saree_beige_maroon_full.jpg';
 
 export default function BrandStory() {
   const sectionRef = useReveal();
@@ -11,18 +12,18 @@ export default function BrandStory() {
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
 
-          {/* ── Left: Photography ──────────────────────── */}
+          {/* ── Left: Photography (Fitted Portrait Ratio & object-top so full model is visible) ──────────────────────── */}
           <div className="reveal relative">
             {/* Offset decorative border */}
             <div className="absolute -top-4 -left-4 w-full h-full border border-brand-teal/15 rounded-sm pointer-events-none z-0" />
 
-            <div className="relative z-10 aspect-[5/4] overflow-hidden rounded-sm shadow-xl border border-brand-powder/40 bg-brand-cream">
+            <div className="relative z-10 aspect-[3/4] sm:aspect-[4/5] max-h-[560px] mx-auto overflow-hidden rounded-sm shadow-xl border border-brand-powder/40 bg-brand-cream">
               {/* Subtle overlay */}
               <div className="absolute inset-0 bg-brand-teal/5 z-10 pointer-events-none" />
               <img
-                src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=900&auto=format&fit=crop"
+                src={sareeBeigeMaroonFull}
                 alt="Women artisans weaving premium Indian fabric at Suka Fashions"
-                className="w-full h-full object-cover transition-transform duration-[6s] hover:scale-105"
+                className="w-full h-full object-cover object-top transition-transform duration-[6s] hover:scale-105"
                 loading="lazy"
               />
             </div>

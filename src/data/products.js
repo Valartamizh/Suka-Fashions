@@ -1,16 +1,26 @@
-// Import local premium assets for high-fidelity catalog representation
+// Import local premium assets for 100% reliable high-fidelity catalog representation
 import lehengaRed from '../assets/lehenga_red.jpg';
 import lehengaPink from '../assets/lehenga_pink.jpg';
+import lehengaMint from '../assets/lehenga_mint.jpg';
 import sareeGolden from '../assets/saree_golden.jpg';
 import sareeBeigeMaroon from '../assets/saree_beige_maroon.jpg';
+import sareeBeigeMaroonFull from '../assets/saree_beige_maroon_full.jpg';
+import sareeBeigeMaroonFull2 from '../assets/saree_beige_maroon_full2.jpg';
+import sareeBeigeOrange from '../assets/saree_beige_orange.jpg';
+import sareeBeigePink from '../assets/saree_beige_pink.jpg';
 import anarkaliBlack from '../assets/anarkali_black.jpg';
+import anarkaliBlackMulticolor from '../assets/anarkali_black_multicolor.jpg';
 import kurtiPurplePrinted from '../assets/kurti_purple_printed.jpg';
 import kurtiPurpleMaroon from '../assets/kurti_purple_maroon.jpg';
+import kurtiBrownPrinted from '../assets/kurti_brown_printed.jpg';
+import kurtiTealPrinted from '../assets/kurti_teal_printed.jpg';
 import dressNavy from '../assets/dress_navy.jpg';
 import dressWhite from '../assets/dress_white.jpg';
+import gownBlue from '../assets/gown_blue.jpg';
 import coordSet from '../assets/coord_set.jpg';
 import dupattaSilk from '../assets/dupatta_silk.jpg';
 import festiveSuit from '../assets/festive_suit.jpg';
+import suitBlackColoredDupatta from '../assets/suit_black_colored_dupatta.jpg';
 
 export const products = [
   // ─── SAREES (6) ─────────────────────────────────────────────────────────────
@@ -47,8 +57,8 @@ export const products = [
     reviewsCount: 56,
     isNew: false,
     isBestSeller: true,
-    image: 'https://images.unsplash.com/photo-1610030470224-34537bb26732?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop',
+    image: sareeBeigeMaroonFull,
+    imageHover: sareeGolden,
     description: 'A traditional masterpiece handwoven in pure silk, featuring majestic gold zari borders and intricate temple patterns.',
     colors: ['#D4AF37'],
     sizes: ['Free Size'],
@@ -68,8 +78,8 @@ export const products = [
     reviewsCount: 45,
     isNew: true,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1596783074918-c84cb06531ca?q=80&w=600&auto=format&fit=crop',
+    image: sareeBeigePink,
+    imageHover: sareeBeigeMaroonFull2,
     description: 'A soft blush pink silk saree that drapes like a dream. Features minimalistic silver zari work for a contemporary look.',
     colors: ['#F8C8DC'],
     sizes: ['Free Size'],
@@ -89,8 +99,8 @@ export const products = [
     reviewsCount: 89,
     isNew: false,
     isBestSeller: true,
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop',
+    image: sareeBeigeOrange,
+    imageHover: sareeGolden,
     description: 'Modern pre-draped ruffle saree in deep navy georgette. Ready to wear in a minute.',
     colors: ['#0F1E2E'],
     sizes: ['Free Size'],
@@ -110,8 +120,8 @@ export const products = [
     reviewsCount: 150,
     isNew: false,
     isBestSeller: true,
-    image: 'https://images.unsplash.com/photo-1610030470224-34537bb26732?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop',
+    image: sareeBeigeMaroonFull2,
+    imageHover: sareeBeigeMaroon,
     description: 'Classic maroon Banarasi silk with all-over golden brocade work, ideal for bridal wear.',
     colors: ['#800000'],
     sizes: ['Free Size'],
@@ -131,8 +141,8 @@ export const products = [
     reviewsCount: 65,
     isNew: true,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop',
+    image: sareeBeigeMaroon,
+    imageHover: sareeGolden,
     description: 'Breathable pure handloom cotton saree in mustard yellow, perfect for daily wear or office wear.',
     colors: ['#FFDB58'],
     sizes: ['Free Size'],
@@ -196,8 +206,8 @@ export const products = [
     reviewsCount: 34,
     isNew: true,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1596783074918-c84cb06531ca?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1608748010899-18f300247112?q=80&w=600&auto=format&fit=crop',
+    image: kurtiTealPrinted,
+    imageHover: kurtiBrownPrinted,
     description: 'A rich emerald green straight kurti with subtle sequence work on the neckline.',
     colors: ['#50C878'],
     sizes: ['S', 'M', 'L'],
@@ -217,8 +227,8 @@ export const products = [
     reviewsCount: 201,
     isNew: false,
     isBestSeller: true,
-    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?q=80&w=600&auto=format&fit=crop',
+    image: kurtiBrownPrinted,
+    imageHover: kurtiPurplePrinted,
     description: 'Authentic Lucknowi chikankari hand embroidery on pure georgette fabric. Inner slip included.',
     colors: ['#FFFFFF'],
     sizes: ['S', 'M', 'L', 'XL'],
@@ -238,8 +248,8 @@ export const products = [
     reviewsCount: 55,
     isNew: false,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1608748010899-18f300247112?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1610030469668-93535c17b6b3?q=80&w=600&auto=format&fit=crop',
+    image: kurtiPurpleMaroon,
+    imageHover: kurtiTealPrinted,
     description: 'Smart and formal A-line kurti in solid black, featuring a Mandarin collar and 3/4 sleeves.',
     colors: ['#000000'],
     sizes: ['M', 'L', 'XL', 'XXL'],
@@ -282,8 +292,8 @@ export const products = [
     reviewsCount: 30,
     isNew: false,
     isBestSeller: true,
-    image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1596783074918-c84cb06531ca?q=80&w=600&auto=format&fit=crop',
+    image: lehengaPink,
+    imageHover: lehengaMint,
     description: 'Live your fairytale in this light pink organza lehenga, showcasing delicate watercolor floral prints and a shimmering sequined border.',
     colors: ['#FFB6C1'],
     sizes: ['Custom', 'Free Size'],
@@ -303,8 +313,8 @@ export const products = [
     reviewsCount: 78,
     isNew: true,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1596783074918-c84cb06531ca?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop',
+    image: lehengaMint,
+    imageHover: lehengaRed,
     description: 'Bright and joyful mustard yellow lehenga set, ideal for Haldi and Mehendi ceremonies.',
     colors: ['#FFDB58'],
     sizes: ['Custom', 'Free Size'],
@@ -324,8 +334,8 @@ export const products = [
     reviewsCount: 15,
     isNew: false,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1596783074918-c84cb06531ca?q=80&w=600&auto=format&fit=crop',
+    image: lehengaRed,
+    imageHover: lehengaPink,
     description: 'The quintessential red bridal lehenga in heavy raw silk, heavily embroidered with zardosi and dabka work.',
     colors: ['#FF0000'],
     sizes: ['Custom'],
@@ -368,8 +378,8 @@ export const products = [
     reviewsCount: 112,
     isNew: false,
     isBestSeller: true,
-    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?q=80&w=600&auto=format&fit=crop',
+    image: dressWhite,
+    imageHover: gownBlue,
     description: 'Understated luxury in pure ivory handloom cotton, accented with subtle silver zari weaving and a sheer organza dupatta.',
     colors: ['#FFFFF0'],
     sizes: ['M', 'L', 'XL'],
@@ -410,8 +420,8 @@ export const products = [
     reviewsCount: 22,
     isNew: false,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop',
+    image: gownBlue,
+    imageHover: dressNavy,
     description: 'Exude royalty in this deep maroon velvet gown featuring minimal gold embellishments.',
     colors: ['#800000'],
     sizes: ['S', 'M', 'L', 'XL'],
@@ -431,8 +441,8 @@ export const products = [
     reviewsCount: 66,
     isNew: true,
     isBestSeller: true,
-    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop',
-    imageHover: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop',
+    image: dressNavy,
+    imageHover: dressWhite,
     description: 'Chic powder blue knee-length tunic dress with subtle white thread embroidery.',
     colors: ['#B0E0E6'],
     sizes: ['M', 'L', 'XL', 'XXL'],
@@ -455,7 +465,7 @@ export const products = [
     isNew: true,
     isBestSeller: true,
     image: coordSet,
-    imageHover: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop',
+    imageHover: suitBlackColoredDupatta,
     description: 'Elevate your contemporary ethnic look with this printed fusion co-ord set. Comfortable chic design featuring a matching tunic and trousers.',
     colors: ['#3A5A40'],
     sizes: ['S', 'M', 'L', 'XL'],
@@ -475,7 +485,7 @@ export const products = [
     reviewsCount: 22,
     isNew: false,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop',
+    image: suitBlackColoredDupatta,
     imageHover: coordSet,
     description: 'Chic indigo blue block printed cotton set, combining traditional craft with modern utility.',
     colors: ['#0F2C59'],
@@ -499,7 +509,7 @@ export const products = [
     isNew: true,
     isBestSeller: true,
     image: dupattaSilk,
-    imageHover: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop',
+    imageHover: sareeBeigeMaroon,
     description: 'Heavy silk Banarasi dupatta with beautiful golden floral weaves and traditional border borders.',
     colors: ['#DC143C', '#D4AF37'],
     sizes: ['Free Size'],
@@ -519,8 +529,8 @@ export const products = [
     reviewsCount: 19,
     isNew: false,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop',
-    imageHover: dupattaSilk,
+    image: dupattaSilk,
+    imageHover: sareeBeigeOrange,
     description: 'Vibrant Punjabi phulkari hand embroidery on soft georgette base.',
     colors: ['#FF8C00'],
     sizes: ['Free Size'],
@@ -543,7 +553,7 @@ export const products = [
     isNew: true,
     isBestSeller: true,
     image: festiveSuit,
-    imageHover: 'https://images.unsplash.com/photo-1596783074918-c84cb06531ca?q=80&w=600&auto=format&fit=crop',
+    imageHover: suitBlackColoredDupatta,
     description: 'Elegant emerald green salwar suit with beautiful gold neck embroidery and silk pants.',
     colors: ['#0B6623'],
     sizes: ['S', 'M', 'L', 'XL'],
@@ -563,7 +573,7 @@ export const products = [
     reviewsCount: 33,
     isNew: false,
     isBestSeller: false,
-    image: 'https://images.unsplash.com/photo-1596783074918-c84cb06531ca?q=80&w=600&auto=format&fit=crop',
+    image: suitBlackColoredDupatta,
     imageHover: festiveSuit,
     description: 'Charming festive Anarkali suit set with heavy borders and net dupatta.',
     colors: ['#FFB6C1'],

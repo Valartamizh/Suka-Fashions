@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useReveal } from '../hooks/useReveal';
 
+// Import local assets for 100% reliable image loading
+import sareeGolden from '../assets/saree_golden.jpg';
+import kurtiPurplePrinted from '../assets/kurti_purple_printed.jpg';
+
 const banners = [
   {
     id:          'saree-edit',
@@ -13,8 +17,8 @@ const banners = [
     body:        'Handcrafted weaves for modern celebrations. Timeless silk, organza & cotton sarees.',
     cta:         'SHOP SAREES',
     ctaPath:     '/category/sarees',
-    image:       'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=700&auto=format&fit=crop',
-    imageAlt:    'Elegant woman in premium teal saree',
+    image:       sareeGolden,
+    imageAlt:    'Elegant woman in premium golden saree',
     bg:          '#EAF5F6',
     border:      '#C8E8EB',
     accentColor: '#006B70',
@@ -28,8 +32,8 @@ const banners = [
     body:        'Premium breathable fabric sets for every occasion — from morning to evening.',
     cta:         'SHOP KURTIS',
     ctaPath:     '/category/kurtis',
-    image:       'https://images.unsplash.com/photo-1608748010899-18f300247112?q=80&w=700&auto=format&fit=crop',
-    imageAlt:    'Elegant woman in pink kurti set',
+    image:       kurtiPurplePrinted,
+    imageAlt:    'Elegant woman in purple printed kurti set',
     bg:          '#FBF1EE',
     border:      '#F0DDD8',
     accentColor: '#B05A42',
@@ -63,7 +67,7 @@ export default function PromoBanner() {
               style={{ background: b.bg, borderColor: b.border }}
             >
               {/* Text column */}
-              <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-9 flex-1 z-10">
+              <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-9 flex-1 z-10 text-left">
                 <span
                   className="font-sans text-[9px] tracking-[0.3em] uppercase font-semibold mb-3"
                   style={{ color: b.accentColor }}
@@ -94,12 +98,12 @@ export default function PromoBanner() {
                 </Link>
               </div>
 
-              {/* Image column */}
+              {/* Image column (object-top positioning) */}
               <div className="w-full sm:w-[46%] h-64 sm:h-auto overflow-hidden flex-shrink-0">
                 <img
                   src={b.image}
                   alt={b.imageAlt}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                   loading="lazy"
                 />
               </div>

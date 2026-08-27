@@ -117,36 +117,39 @@ function MainLayout() {
 }
 
 import { AuthProvider } from './context/AuthContext';
+import { WishlistProvider } from './context/WishlistContext';
 
 export default function App() {
   return (
     <AuthProvider>
-      <AdminAuthProvider>
-        <Router>
-          <Routes>
-            {/* ─── Admin Routes (standalone, no customer nav/footer) ───── */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="products" element={<ProductsPage />} />
-              <Route path="products/add" element={<AddProductPage />} />
-              <Route path="categories" element={<CategoriesPage />} />
-              <Route path="inventory" element={<InventoryPage />} />
-              <Route path="orders" element={<OrdersPage />} />
-              <Route path="orders/:id" element={<OrderDetailPage />} />
-              <Route path="customers" element={<CustomersPage />} />
-              <Route path="customers/:id" element={<CustomerDetailPage />} />
-              <Route path="reviews" element={<ReviewsPage />} />
-              <Route path="content" element={<ContentPage />} />
-              <Route path="users" element={<UsersPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
+      <WishlistProvider>
+        <AdminAuthProvider>
+          <Router>
+            <Routes>
+              {/* ─── Admin Routes (standalone, no customer nav/footer) ───── */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="products" element={<ProductsPage />} />
+                <Route path="products/add" element={<AddProductPage />} />
+                <Route path="categories" element={<CategoriesPage />} />
+                <Route path="inventory" element={<InventoryPage />} />
+                <Route path="orders" element={<OrdersPage />} />
+                <Route path="orders/:id" element={<OrderDetailPage />} />
+                <Route path="customers" element={<CustomersPage />} />
+                <Route path="customers/:id" element={<CustomerDetailPage />} />
+                <Route path="reviews" element={<ReviewsPage />} />
+                <Route path="content" element={<ContentPage />} />
+                <Route path="users" element={<UsersPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
 
-            {/* ─── Customer Storefront ────────────────────────────────── */}
-            <Route path="/*" element={<MainLayout />} />
-          </Routes>
-        </Router>
-      </AdminAuthProvider>
+              {/* ─── Customer Storefront ────────────────────────────────── */}
+              <Route path="/*" element={<MainLayout />} />
+            </Routes>
+          </Router>
+        </AdminAuthProvider>
+      </WishlistProvider>
     </AuthProvider>
   );
 }

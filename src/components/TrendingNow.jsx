@@ -2,26 +2,31 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../hooks/useReveal';
 
+// Import local assets for 100% reliable image loading
+import kurtiTealPrinted from '../assets/kurti_teal_printed.jpg';
+import sareeBeigeMaroonFull2 from '../assets/saree_beige_maroon_full2.jpg';
+import festiveSuit from '../assets/festive_suit.jpg';
+
 const trending = [
   {
     id: 1,
     title: 'Modern Classics',
     subtitle: 'Everyday styles reimagined.',
-    image: 'https://images.unsplash.com/photo-1608748010899-18f300247112?q=80&w=600&auto=format&fit=crop',
+    image: kurtiTealPrinted,
     link: '/category/kurtis'
   },
   {
     id: 2,
     title: 'Wedding Edit',
     subtitle: 'The bridal trousseau.',
-    image: 'https://images.unsplash.com/photo-1596783074918-c84cb06531ca?q=80&w=600&auto=format&fit=crop',
+    image: sareeBeigeMaroonFull2,
     link: '/category/occasion'
   },
   {
     id: 3,
     title: 'Festive Essentials',
     subtitle: 'Celebrate in style.',
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop',
+    image: festiveSuit,
     link: '/category/occasion'
   }
 ];
@@ -50,12 +55,12 @@ export default function TrendingNow() {
             <Link 
               key={item.id} 
               to={item.link}
-              className={`reveal reveal-delay-${index + 1} group relative block w-full aspect-[4/5] sm:aspect-[3/4] overflow-hidden rounded-sm bg-brand-cream border border-brand-powder/50`}
+              className={`reveal reveal-delay-${index + 1} group relative block w-full aspect-[3/4] overflow-hidden rounded-sm bg-brand-cream border border-brand-powder/50`}
             >
               <img 
                 src={item.image} 
                 alt={item.title}
-                className="w-full h-full object-cover transition-transform duration-[2000ms] ease-out group-hover:scale-105"
+                className="w-full h-full object-cover object-top transition-transform duration-[2000ms] ease-out group-hover:scale-105"
                 loading="lazy"
               />
               
@@ -63,7 +68,7 @@ export default function TrendingNow() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
 
               {/* Text Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-6 lg:p-8">
+              <div className="absolute inset-0 flex flex-col justify-end p-6 lg:p-8 text-left">
                 <span className="font-sans text-[10px] tracking-widest text-brand-powder uppercase mb-2 block transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                   Explore Collection
                 </span>

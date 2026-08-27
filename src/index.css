@@ -99,19 +99,16 @@
 }
 .zoom-image-wrapper:hover img { transform: scale(1.06); }
 
-/* ─── Product card hover image swap via CSS ─────────────────────────────── */
-.product-img-primary,
-.product-img-hover {
-  position: absolute;
-  inset: 0;
+/* ─── Product card smooth image zoom on hover (no image swap) ────────── */
+.product-img-primary {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 0.55s ease;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.product-img-hover { opacity: 0; }
-.product-card-imgs:hover .product-img-primary { opacity: 0; }
-.product-card-imgs:hover .product-img-hover   { opacity: 1; }
+.group:hover .product-img-primary {
+  transform: scale(1.06);
+}
 
 /* ─── Section divider line ───────────────────────────────────────────────── */
 .section-divider {

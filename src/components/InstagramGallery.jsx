@@ -1,61 +1,37 @@
 import React from 'react';
 import { useReveal } from '../hooks/useReveal';
 
+// Import local assets for 100% reliable image loading
+import sareeGolden from '../assets/saree_golden.jpg';
+import lehengaRed from '../assets/lehenga_red.jpg';
+import lehengaPink from '../assets/lehenga_pink.jpg';
+import anarkaliBlack from '../assets/anarkali_black.jpg';
+import coordSet from '../assets/coord_set.jpg';
+import dressNavy from '../assets/dress_navy.jpg';
+import dupattaSilk from '../assets/dupatta_silk.jpg';
+import festiveSuit from '../assets/festive_suit.jpg';
+
 const InstagramSVG = ({ size = 24 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
   </svg>
 );
 
-// Verified high-quality ethnic fashion images
-const FALLBACK =
-  'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop';
-
 const instagramImages = [
-  {
-    url: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop',
-    alt: 'Teal saree editorial — Suka Fashions',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop',
-    alt: 'Bridal lehenga close-up — Suka Fashions',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop',
-    alt: 'Ivory handloom anarkali — Suka Fashions',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop',
-    alt: 'Blush pink co-ord set — Suka Fashions',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop',
-    alt: 'Elegant kurta look — Suka Fashions',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop',
-    alt: 'Traditional ethnic wear — Suka Fashions',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=600&auto=format&fit=crop',
-    alt: 'Embroidered dupatta — Suka Fashions',
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1536766820879-059fec98ec0a?q=80&w=600&auto=format&fit=crop',
-    alt: 'Indian fashion editorial — Suka Fashions',
-  },
+  { url: sareeGolden, alt: 'Teal saree editorial — Suka Fashions' },
+  { url: lehengaRed, alt: 'Bridal lehenga close-up — Suka Fashions' },
+  { url: anarkaliBlack, alt: 'Ivory handloom anarkali — Suka Fashions' },
+  { url: lehengaPink, alt: 'Blush pink co-ord set — Suka Fashions' },
+  { url: dressNavy, alt: 'Elegant kurta look — Suka Fashions' },
+  { url: coordSet, alt: 'Traditional ethnic wear — Suka Fashions' },
+  { url: dupattaSilk, alt: 'Embroidered dupatta — Suka Fashions' },
+  { url: festiveSuit, alt: 'Indian fashion editorial — Suka Fashions' },
 ];
 
 // Duplicate for seamless infinite loop
 const trackImages = [...instagramImages, ...instagramImages];
 
 function MarqueeImage({ img }) {
-  const handleError = (e) => {
-    if (e.target.src !== FALLBACK) {
-      e.target.src = FALLBACK;
-    }
-  };
-
   return (
     <a
       href="https://instagram.com/sukafashions"
@@ -69,7 +45,6 @@ function MarqueeImage({ img }) {
       <img
         src={img.url}
         alt={img.alt}
-        onError={handleError}
         loading="lazy"
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
       />

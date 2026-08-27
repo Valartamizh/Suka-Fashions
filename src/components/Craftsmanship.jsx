@@ -2,27 +2,32 @@ import React from 'react';
 import { useReveal } from '../hooks/useReveal';
 import { Feather, Scissors, Sparkles } from 'lucide-react';
 
+// Import local assets for 100% reliable image loading
+import dupattaSilk from '../assets/dupatta_silk.jpg';
+import sareeBeigeMaroon from '../assets/saree_beige_maroon.jpg';
+import dressWhite from '../assets/dress_white.jpg';
+
 const craftsmanshipData = [
   {
     id: 1,
     icon: Feather,
     title: 'Thoughtful Fabrics',
     description: 'We source only the finest pure silks, breathable cottons, and lightweight organzas to ensure every piece feels as beautiful as it looks.',
-    image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=400&auto=format&fit=crop'
+    image: dupattaSilk
   },
   {
     id: 2,
     icon: Scissors,
     title: 'Fine Craftsmanship',
     description: 'Every stitch, sequin, and zari weave is carefully placed by skilled artisans who have perfected their craft over generations.',
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400&auto=format&fit=crop'
+    image: sareeBeigeMaroon
   },
   {
     id: 3,
     icon: Sparkles,
     title: 'Designed for Comfort',
     description: 'True elegance means never compromising on comfort. Our silhouettes are tailored to flatter and move with you gracefully.',
-    image: 'https://images.unsplash.com/photo-1608748010899-18f300247112?q=80&w=400&auto=format&fit=crop'
+    image: dressWhite
   }
 ];
 
@@ -54,12 +59,12 @@ export default function Craftsmanship() {
             return (
               <div key={item.id} className={`reveal reveal-delay-${index + 1} flex flex-col items-center text-center group`}>
                 
-                {/* Image Circle */}
+                {/* Image Circle (object-top positioning) */}
                 <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden mb-5 border border-brand-powder shadow-sm relative">
                   <img 
                     src={item.image} 
                     alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-brand-navy/10 group-hover:bg-transparent transition-colors duration-500" />

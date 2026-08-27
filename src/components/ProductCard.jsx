@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Star, ShoppingBag } from 'lucide-react';
+import { useWishlist } from '../context/WishlistContext';
+import fallbackImage from '../assets/saree_golden.jpg';
 
 export default function ProductCard({ product }) {
-  const [wishlisted, setWishlisted] = useState(false);
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const wishlisted = isInWishlist(product.id);
 
-  const toggleWishlist = (e) => {
+  const handleWishlistClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setWishlisted((w) => !w);
+    toggleWishlist(product);
+  };
+
+  const handleImageError = (e) => {
+    e.target.onerror = null;
+    e.target.src = fallbackImage;
   };
 
   return (
@@ -17,7 +25,7 @@ export default function ProductCard({ product }) {
       className="group flex flex-col bg-white border border-brand-powder/50 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-350 rounded-sm relative"
     >
       {/* ── Image area ─────────────────────────────────── */}
-      <div className="relative w-full aspect-[3/4] bg-brand-cream/40 product-card-imgs overflow-hidden">
+      <div className="relative w-full aspect-[3/4] bg-brand-cream/40 overflow-hidden">
 
         {/* NEW badge */}
         {product.isNew && (
@@ -26,9 +34,9 @@ export default function ProductCard({ product }) {
           </span>
         )}
 
-        {/* Wishlist */}
+        {/* Wishlist Button (Protected: Requires Login) */}
         <button
-          onClick={toggleWishlist}
+          onClick={handleWishlistClick}
           aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition-all duration-200 hover:scale-110 active:scale-95"
         >
@@ -41,23 +49,14 @@ export default function ProductCard({ product }) {
           />
         </button>
 
-        {/* Primary image */}
+        {/* Product image (Fitted object-cover object-top, zero image swap, fallback protection) */}
         <img
-          src={product.image}
+          src={product.image || fallbackImage}
           alt={product.name}
-          className="product-img-primary w-full h-full object-cover"
+          onError={handleImageError}
+          className="product-img-primary w-full h-full object-cover object-top"
           loading="lazy"
         />
-
-        {/* Hover image (CSS transition, no JS flicker) */}
-        {product.imageHover && (
-          <img
-            src={product.imageHover}
-            alt={`${product.name} alternate view`}
-            className="product-img-hover w-full h-full object-cover"
-            loading="lazy"
-          />
-        )}
 
         {/* Quick Add overlay */}
         <div className="absolute bottom-0 left-0 right-0 bg-brand-teal/95 py-3 text-center translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">

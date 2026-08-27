@@ -1,4 +1,4 @@
-// AdminLayout — wraps all admin pages with sidebar + header
+// AdminLayout — wraps all admin pages with header + sidebar
 import React, { useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
@@ -14,17 +14,20 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <AdminSidebar
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+      {/* Top Navbar spans full width */}
+      <AdminHeader onMenuToggle={() => setMobileOpen(true)} />
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-[240px]">
-        <AdminHeader onMenuToggle={() => setMobileOpen(true)} />
-        <main className="flex-1 p-4 lg:p-6 overflow-x-hidden">
+      {/* Main area below navbar */}
+      <div className="flex flex-1 min-w-0">
+        {/* Fixed/Sticky Sidebar */}
+        <AdminSidebar
+          mobileOpen={mobileOpen}
+          onMobileClose={() => setMobileOpen(false)}
+        />
+
+        {/* Page Content */}
+        <main className="flex-1 p-6 lg:p-8 overflow-x-hidden min-w-0">
           <Outlet />
         </main>
       </div>

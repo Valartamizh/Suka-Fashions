@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, X } from 'lucide-react';
+import { Heart, ShoppingBag, X, LogIn, Lock } from 'lucide-react';
 import { products } from '../data/products';
+import { useAuth } from '../context/AuthContext';
 
 export default function Wishlist() {
+  const { isLoggedIn } = useAuth();
   const [wishlistItems, setWishlistItems] = useState([products[2], products[4], products[7]]);
 
   const removeFromWishlist = (id) => {
@@ -11,10 +13,38 @@ export default function Wishlist() {
   };
 
   const moveToCart = (id) => {
-    // In a real app, dispatch to cart context
     removeFromWishlist(id);
   };
 
+  // If customer is not logged in, prompt to log in
+  if (!isLoggedIn) {
+    return (
+      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-12 pb-20 text-center">
+        <div className="max-w-md mx-auto bg-white border border-brand-powder/60 p-8 sm:p-10 rounded-sm shadow-md">
+          <div className="w-14 h-14 rounded-full bg-brand-powderLight flex items-center justify-center text-brand-teal mx-auto mb-4">
+            <Lock size={26} strokeWidth={1.5} />
+          </div>
+          <p className="font-sans text-[10px] tracking-[0.25em] text-brand-teal uppercase font-semibold mb-2">
+            PLEASE LOGIN TO CONTINUE
+          </p>
+          <h2 className="font-serif text-2xl sm:text-3xl text-brand-navy font-light mb-3 uppercase tracking-wider">
+            Your Saved Wishlist
+          </h2>
+          <p className="font-sans text-xs text-brand-navy/60 leading-relaxed font-light mb-6">
+            Please log in to your Suka Fashions account to save, view, and sync your favorite items across devices.
+          </p>
+          <Link
+            to="/login"
+            className="inline-flex items-center justify-center gap-2 w-full bg-brand-teal hover:bg-brand-tealDark text-white px-8 py-3.5 font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-all rounded-sm shadow-md"
+          >
+            <LogIn size={15} /> Login / Register to View Wishlist
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // If logged in but empty
   if (wishlistItems.length === 0) {
     return (
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-8 pb-16 text-center">
@@ -38,7 +68,7 @@ export default function Wishlist() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-6 sm:pt-8 pb-12 lg:pb-16">
+    <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-6 sm:pt-8 pb-12 lg:pb-16 text-left">
       
       <div className="flex justify-between items-end mb-6 pb-3 border-b border-brand-powder/60">
         <div>
@@ -64,7 +94,7 @@ export default function Wishlist() {
             {/* Image */}
             <div className="w-full aspect-[3/4] sm:aspect-[4/5] bg-brand-cream border border-brand-powder/40 rounded-sm overflow-hidden relative mb-4">
               <Link to={`/product/${item.slug}`}>
-                <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <img src={item.image} alt={item.name} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" />
               </Link>
               
               {/* Remove Button */}
