@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { products } from '../data/products';
-import { Star, Heart, ShoppingBag, Truck, RefreshCw, ChevronDown, Check, Ruler, ThumbsUp, MessageSquare, X, Send, ZoomIn, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
+import { Star, Heart, ShoppingBag, Truck, RefreshCw, ChevronDown, Check, ThumbsUp, MessageSquare, X, Send, ZoomIn, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -185,6 +185,13 @@ export default function ProductDetail() {
       navigate('/login');
       return;
     }
+    const rawImg = product.image || '';
+    const imgUrl = rawImg.startsWith('http')
+      ? rawImg
+      : rawImg.startsWith('/')
+      ? `${window.location.origin}${rawImg}`
+      : `${window.location.origin}/${rawImg}`;
+
     const whatsappMsg = encodeURIComponent(
       `*ORDER INQUIRY - SUKA FASHIONS* 🛍️\n` +
       `-----------------------------------\n` +
@@ -194,6 +201,7 @@ export default function ProductDetail() {
       `*Size:* ${selectedSize}\n` +
       `*Quantity:* ${quantity}\n` +
       `*Price:* ₹${(product.price * quantity).toLocaleString('en-IN')}\n` +
+      `🖼️ *Image:* ${imgUrl}\n` +
       `-----------------------------------\n` +
       `Hi, I would like to buy this item. Please assist me with delivery and checkout!`
     );
@@ -411,9 +419,6 @@ export default function ProductDetail() {
                     <span className="font-sans text-[10px] font-semibold tracking-[0.2em] uppercase text-brand-navy">
                       Size
                     </span>
-                    <button className="font-sans text-[10px] text-brand-navy/60 hover:text-brand-teal transition-colors uppercase tracking-[0.1em] flex items-center gap-1.5">
-                      <Ruler size={12} /> Size Guide
-                    </button>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {product.sizes.map((size) => (

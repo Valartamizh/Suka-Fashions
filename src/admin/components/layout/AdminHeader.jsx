@@ -1,10 +1,15 @@
-// AdminHeader — Top navbar spanning full width (88px-96px height) with Suka branding and Admin Profile
-import React, { useState, useRef, useEffect } from 'react';
+// AdminHeader — Top navbar spanning full width (88px-96px height) with Suka branding, Admin Profile, and Functional Live Search
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   Search, Bell, Menu, ExternalLink, User, Settings, LogOut, ChevronDown,
+  Package, ShoppingBag, Users, X, ArrowRight
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { adminProducts } from '../../data/adminProducts';
+import { adminOrders } from '../../data/adminOrders';
+import { adminCustomers } from '../../data/adminCustomers';
+import StatusBadge from '../ui/StatusBadge';
 import logo from '../../../assets/logo.jpg';
 
 export default function AdminHeader({ onMenuToggle }) {
@@ -12,18 +17,54 @@ export default function AdminHeader({ onMenuToggle }) {
   const { admin, logout } = useAdminAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+
   const dropRef = useRef(null);
   const notifRef = useRef(null);
+  const searchRef = useRef(null);
 
-  // Close dropdowns on outside click
+  // Close dropdowns & search on outside click
   useEffect(() => {
     const handler = (e) => {
       if (dropRef.current && !dropRef.current.contains(e.target)) setDropdownOpen(false);
       if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+      if (searchRef.current && !searchRef.current.contains(e.target)) setSearchOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  // Compute instant live search results
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return { products: [], orders: [], customers: [] };
+    const q = searchQuery.toLowerCase().trim();
+
+    const matchedProducts = adminProducts.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      p.sku.toLowerCase().includes(q)
+    ).slice(0, 4);
+
+    const matchedOrders = adminOrders.filter(o =>
+      o.id.toLowerCase().includes(q) ||
+      o.customer.name.toLowerCase().includes(q) ||
+      (o.customer.phone && o.customer.phone.includes(q))
+    ).slice(0, 4);
+
+    const matchedCustomers = adminCustomers.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.email.toLowerCase().includes(q) ||
+      c.phone.includes(q)
+    ).slice(0, 4);
+
+    return { products: matchedProducts, orders: matchedOrders, customers: matchedCustomers };
+  }, [searchQuery]);
+
+  const hasResults =
+    searchResults.products.length > 0 ||
+    searchResults.orders.length > 0 ||
+    searchResults.customers.length > 0;
 
   const handleLogout = () => {
     logout();
@@ -66,26 +107,154 @@ export default function AdminHeader({ onMenuToggle }) {
         {/* Center / Right: Search, Actions, Notifications & Admin Profile */}
         <div className="flex items-center gap-3 sm:gap-4 ml-auto">
           
-          {/* Search bar */}
-          <div className="hidden md:flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 w-[320px] lg:w-[400px] focus-within:border-brand-teal focus-within:ring-2 focus-within:ring-brand-teal/10 transition-all">
-            <Search size={16} className="text-slate-400 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder="Search anything..."
-              className="bg-transparent text-xs text-slate-700 placeholder-slate-400 outline-none w-full font-medium"
-            />
+          {/* Global Search bar */}
+          <div className="relative hidden md:block" ref={searchRef}>
+            <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 w-[320px] lg:w-[420px] focus-within:border-brand-teal focus-within:ring-2 focus-within:ring-brand-teal/10 transition-all">
+              <Search size={16} className="text-slate-400 flex-shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onFocus={() => setSearchOpen(true)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(true);
+                }}
+                placeholder="Search products, orders, customers..."
+                className="bg-transparent text-xs text-slate-700 placeholder-slate-400 outline-none w-full font-medium"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-slate-400 hover:text-slate-600 transition-colors p-0.5"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Live Search Popup Overlay */}
+            {searchOpen && searchQuery.trim() !== '' && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl border border-slate-200 shadow-2xl z-50 overflow-hidden max-h-[500px] overflow-y-auto animate-in fade-in zoom-in-95">
+                
+                {hasResults ? (
+                  <div className="divide-y divide-slate-100 text-xs">
+                    
+                    {/* Products Section */}
+                    {searchResults.products.length > 0 && (
+                      <div className="p-3">
+                        <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-brand-teal mb-2 px-1">
+                          <Package size={13} />
+                          <span>Products ({searchResults.products.length})</span>
+                        </div>
+                        <div className="space-y-1">
+                          {searchResults.products.map(p => (
+                            <div
+                              key={p.id}
+                              onClick={() => {
+                                navigate(`/admin/products`);
+                                setSearchOpen(false);
+                              }}
+                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-brand-powder/20 cursor-pointer transition-colors group"
+                            >
+                              <img
+                                src={p.image}
+                                alt={p.name}
+                                className="w-9 h-11 object-cover rounded-md border border-slate-100 flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-slate-800 truncate group-hover:text-brand-teal transition-colors">{p.name}</p>
+                                <p className="text-[10px] text-slate-400 font-mono mt-0.5">{p.sku} · {p.category}</p>
+                              </div>
+                              <span className="font-bold text-slate-900 flex-shrink-0">₹{p.price.toLocaleString('en-IN')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Orders Section */}
+                    {searchResults.orders.length > 0 && (
+                      <div className="p-3">
+                        <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-brand-teal mb-2 px-1">
+                          <ShoppingBag size={13} />
+                          <span>Orders ({searchResults.orders.length})</span>
+                        </div>
+                        <div className="space-y-1">
+                          {searchResults.orders.map(o => (
+                            <div
+                              key={o.id}
+                              onClick={() => {
+                                navigate(`/admin/orders/${o.id}`);
+                                setSearchOpen(false);
+                              }}
+                              className="flex items-center justify-between p-2 rounded-lg hover:bg-brand-powder/20 cursor-pointer transition-colors group"
+                            >
+                              <div className="min-w-0">
+                                <p className="font-mono font-bold text-brand-teal group-hover:underline">#{o.id}</p>
+                                <p className="text-[10px] text-slate-500 font-medium">{o.customer.name}</p>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <StatusBadge status={o.status} />
+                                <span className="font-bold text-slate-900">₹{o.total.toLocaleString('en-IN')}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Customers Section */}
+                    {searchResults.customers.length > 0 && (
+                      <div className="p-3">
+                        <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-brand-teal mb-2 px-1">
+                          <Users size={13} />
+                          <span>Customers ({searchResults.customers.length})</span>
+                        </div>
+                        <div className="space-y-1">
+                          {searchResults.customers.map(c => (
+                            <div
+                              key={c.id}
+                              onClick={() => {
+                                navigate(`/admin/customers/${c.id}`);
+                                setSearchOpen(false);
+                              }}
+                              className="flex items-center justify-between p-2 rounded-lg hover:bg-brand-powder/20 cursor-pointer transition-colors group"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 bg-brand-powder rounded-full flex items-center justify-center text-brand-teal font-bold text-xs">
+                                  {c.name.charAt(0)}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-slate-800 group-hover:text-brand-teal">{c.name}</p>
+                                  <p className="text-[10px] text-slate-400">{c.email}</p>
+                                </div>
+                              </div>
+                              <span className="text-[11px] font-semibold text-slate-500">{c.phone}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-slate-400 text-xs">
+                    <p className="font-semibold text-slate-600">No results found</p>
+                    <p className="mt-1">No matching products, orders or customers for "{searchQuery}"</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* View Store Button */}
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/"
             className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
           >
             <ExternalLink size={14} className="text-slate-500" />
             <span>View Store</span>
-          </a>
+          </Link>
 
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
@@ -163,22 +332,19 @@ export default function AdminHeader({ onMenuToggle }) {
                     <a
                       key={item.label}
                       href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-teal transition-colors"
-                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
                     >
-                      <item.icon size={15} className="text-slate-400" />
+                      <item.icon size={14} className="text-slate-400" />
                       {item.label}
                     </a>
                   ) : (
                     <Link
                       key={item.label}
                       to={item.to}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-teal transition-colors"
                       onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
                     >
-                      <item.icon size={15} className="text-slate-400" />
+                      <item.icon size={14} className="text-slate-400" />
                       {item.label}
                     </Link>
                   )
@@ -186,9 +352,9 @@ export default function AdminHeader({ onMenuToggle }) {
                 <div className="border-t border-slate-100 my-1" />
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors text-left"
                 >
-                  <LogOut size={15} className="text-red-400" />
+                  <LogOut size={14} className="text-red-400" />
                   Logout
                 </button>
               </div>
@@ -196,7 +362,6 @@ export default function AdminHeader({ onMenuToggle }) {
           </div>
 
         </div>
-
       </div>
     </header>
   );

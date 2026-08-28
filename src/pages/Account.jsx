@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Package, MapPin, LogOut, ChevronRight, X, Truck, CheckCircle2, Plus, Edit2, Trash2 as TrashIcon, Check, Lock, LogIn } from 'lucide-react';
+import { User, Package, MapPin, LogOut, ChevronRight, X, Truck, CheckCircle2, Plus, Edit2, Trash2 as TrashIcon, Check, Lock, LogIn, ShieldCheck } from 'lucide-react';
 import { products } from '../data/products';
 import { useOrders } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
@@ -357,10 +357,21 @@ export default function Account() {
                 );
               })}
               
+              <Link
+                to="/admin"
+                className="flex items-center justify-between px-4 py-3 rounded-sm bg-brand-navy text-white hover:bg-brand-teal transition-all duration-200 shadow-sm mt-3"
+              >
+                <div className="flex items-center gap-3">
+                  <ShieldCheck size={18} strokeWidth={1.8} />
+                  <span className="font-sans text-xs uppercase tracking-widest font-semibold">Admin Panel</span>
+                </div>
+                <ChevronRight size={16} />
+              </Link>
+
               <button
                 type="button"
                 onClick={handleSignOutRequest}
-                className="flex items-center gap-3 px-4 py-3 mt-4 text-brand-navy/50 hover:text-red-500 transition-colors w-full text-left cursor-pointer"
+                className="flex items-center gap-3 px-4 py-3 mt-2 text-brand-navy/50 hover:text-red-500 transition-colors w-full text-left cursor-pointer"
               >
                 <LogOut size={18} strokeWidth={1.5} />
                 <span className="font-sans text-xs uppercase tracking-widest font-semibold">Sign Out</span>

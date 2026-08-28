@@ -1,6 +1,6 @@
 // OrdersPage — /admin/orders
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, Eye, Filter } from 'lucide-react';
 import AdminPageHeader from '../components/ui/AdminPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -11,6 +11,7 @@ const PAGE_SIZE = 7;
 const STATUS_TABS = ['All', 'Pending', 'Confirmed', 'Packed', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
 
 export default function OrdersPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusTab, setStatusTab] = useState('All');
   const [paymentFilter, setPaymentFilter] = useState('All');
@@ -95,8 +96,8 @@ export default function OrdersPage() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
-                {['Order ID', 'Customer', 'Items', 'Amount', 'Payment', 'Status', 'Date', 'Actions'].map(h => (
-                  <th key={h} className="px-4 py-3.5 text-left font-semibold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">
+                {['Order ID', 'Customer', 'Items', 'Amount', 'Payment', 'Status', 'Date'].map(h => (
+                  <th key={h} className="px-5 py-3.5 text-left font-semibold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -105,38 +106,34 @@ export default function OrdersPage() {
             <tbody className="divide-y divide-slate-50">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-sm text-slate-400">No orders found.</td>
+                  <td colSpan={7} className="text-center py-12 text-sm text-slate-400">No orders found.</td>
                 </tr>
               ) : paginated.map(order => (
-                <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3.5 font-mono font-bold text-brand-teal text-xs">#{order.id}</td>
-                  <td className="px-4 py-3.5">
+                <tr
+                  key={order.id}
+                  onClick={() => navigate(`/admin/orders/${order.id}`)}
+                  className="hover:bg-brand-powder/20 cursor-pointer transition-colors group"
+                >
+                  <td className="px-5 py-3.5 font-mono font-bold text-brand-teal text-xs group-hover:underline">#{order.id}</td>
+                  <td className="px-5 py-3.5">
                     <div>
-                      <p className="font-semibold text-slate-800 whitespace-nowrap">{order.customer.name}</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">{order.customer.phone}</p>
+                      <p className="font-semibold text-slate-800 whitespace-nowrap group-hover:text-brand-teal transition-colors">{order.customer.name}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{order.customer.phone}</p>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-slate-600">
+                  <td className="px-5 py-3.5 text-slate-600 font-medium">
                     {order.items.length} item{order.items.length > 1 ? 's' : ''}
                   </td>
-                  <td className="px-4 py-3.5 font-bold text-slate-800 whitespace-nowrap">
+                  <td className="px-5 py-3.5 font-bold text-slate-800 whitespace-nowrap">
                     ₹{order.total.toLocaleString('en-IN')}
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-5 py-3.5">
                     <StatusBadge status={order.paymentStatus} />
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-5 py-3.5">
                     <StatusBadge status={order.status} />
                   </td>
-                  <td className="px-4 py-3.5 text-slate-400 whitespace-nowrap">{order.date}</td>
-                  <td className="px-4 py-3.5">
-                    <Link
-                      to={`/admin/orders/${order.id}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-powder hover:bg-brand-teal/20 text-brand-teal text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
-                    >
-                      <Eye size={12} /> View
-                    </Link>
-                  </td>
+                  <td className="px-5 py-3.5 text-slate-400 font-medium whitespace-nowrap">{order.date}</td>
                 </tr>
               ))}
             </tbody>

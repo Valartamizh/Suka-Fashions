@@ -21,7 +21,7 @@ const FAQ_DATA = [
   {
     category: 'Sizing & Customization',
     question: 'How do I select the right size for Kurtis and Dresses?',
-    answer: 'Please consult our detailed Size Guide. We provide bust, waist, hip, and length measurements in both inches and centimeters. If you are between sizes, we recommend opting for the larger size.',
+    answer: 'We provide bust, waist, hip, and length measurements in both inches and centimeters for our products. If you are between sizes, we recommend opting for the larger size.',
   },
   {
     category: 'Shipping & Delivery',

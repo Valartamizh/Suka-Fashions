@@ -480,27 +480,33 @@ export default function Navbar() {
                   )}
                 </button>
 
-                {accountDropdown && (
-                  <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-brand-powder/60 shadow-xl rounded-sm py-2 z-50 animate-in fade-in zoom-in-95">
-                    {isLoggedIn ? (
-                      <>
-                        <div className="px-4 py-2 border-b border-brand-powder/40">
-                          <p className="font-sans text-xs font-semibold text-brand-navy truncate">{user?.name || 'Customer'}</p>
-                          <p className="font-sans text-[10px] text-brand-navy/50 truncate">{user?.email}</p>
-                        </div>
-                        <Link to="/account" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">My Profile & Orders</Link>
-                        <Link to="/wishlist" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">Wishlist</Link>
-                        <button onClick={handleLogoutRequest} className="w-full text-left px-4 py-2 font-sans text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-brand-powder/40 mt-1 cursor-pointer">
-                          <LogOut size={13} /> Logout
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <Link to="/login" className="block px-4 py-2.5 font-sans text-xs font-semibold text-brand-teal hover:bg-brand-powderLight">Login / Register</Link>
-                      </>
+                    {accountDropdown && (
+                      <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-brand-powder/60 shadow-xl rounded-sm py-2 z-50 animate-in fade-in zoom-in-95">
+                        {isLoggedIn ? (
+                          <>
+                            <div className="px-4 py-2 border-b border-brand-powder/40">
+                              <p className="font-sans text-xs font-semibold text-brand-navy truncate">{user?.name || 'Customer'}</p>
+                              <p className="font-sans text-[10px] text-brand-navy/50 truncate">{user?.email}</p>
+                            </div>
+                            <Link to="/account" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">My Profile & Orders</Link>
+                            <Link to="/wishlist" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">Wishlist</Link>
+                            <Link to="/admin" className="block px-4 py-2 font-sans text-xs text-brand-teal font-semibold hover:bg-brand-powderLight border-t border-brand-powder/40 mt-1">
+                              🛡️ Admin Dashboard
+                            </Link>
+                            <button onClick={handleLogoutRequest} className="w-full text-left px-4 py-2 font-sans text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-brand-powder/40 mt-1 cursor-pointer">
+                              <LogOut size={13} /> Logout
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <Link to="/login" className="block px-4 py-2.5 font-sans text-xs font-semibold text-brand-teal hover:bg-brand-powderLight">Login / Register</Link>
+                            <Link to="/admin" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight border-t border-brand-powder/40">
+                              🛡️ Admin Portal
+                            </Link>
+                          </>
+                        )}
+                      </div>
                     )}
-                  </div>
-                )}
               </div>
 
               {/* Wishlist */}

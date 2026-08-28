@@ -1,39 +1,121 @@
 import React, { useState } from 'react';
 import { Package, Search, Truck, CheckCircle2, Clock, MapPin, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useOrders } from '../context/OrderContext';
 
 export default function TrackOrder() {
   const [orderId, setOrderId] = useState('');
   const [phoneOrEmail, setPhoneOrEmail] = useState('');
   const [trackingResult, setTrackingResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { orders } = useOrders();
 
   const handleTrack = (e) => {
     e.preventDefault();
+    if (!orderId.trim()) return;
+
     setLoading(true);
 
     setTimeout(() => {
       setLoading(false);
+      const cleanInputId = orderId.trim().toUpperCase().replace('#', '');
+
+      // 1. Search in user's real orders context (placed via Checkout)
+      const matchedOrder = orders.find(
+        (o) => (o.id || '').toUpperCase().replace('#', '') === cleanInputId
+      );
+
+      if (matchedOrder) {
+        setTrackingResult({
+          orderId: matchedOrder.id,
+          date: matchedOrder.date || 'Recent',
+          status: matchedOrder.status || 'Processing',
+          estimatedDelivery: 'In 3-4 Business Days',
+          courier: 'BlueDart Express Air',
+          awb: `BD${Math.floor(100000000 + Math.random() * 900000000)}IN`,
+          items: matchedOrder.items ? matchedOrder.items.map(item => ({
+            name: item.name,
+            qty: item.quantity || 1,
+            price: `₹${((item.price || 0) * (item.quantity || 1)).toLocaleString('en-IN')}`,
+          })) : [
+            { name: 'Suka Fashions Designer Collection', qty: 1, price: `₹${(matchedOrder.total || 3499).toLocaleString('en-IN')}` }
+          ],
+          steps: matchedOrder.timeline && matchedOrder.timeline.length > 0 ? matchedOrder.timeline.map(t => ({
+            title: t.label,
+            time: t.date,
+            done: t.done
+          })) : [
+            { title: 'Order Confirmed & Placed', time: matchedOrder.date || 'Just Now', done: true },
+            { title: 'Quality Inspection & Packing', time: 'In Progress', done: true },
+            { title: 'Dispatched via Courier Air', time: 'Expected Soon', done: false },
+            { title: 'Out for Doorstep Delivery', time: 'Expected in 3-4 Days', done: false },
+          ],
+        });
+        return;
+      }
+
+      // 2. Admin Sample Orders lookup (#SUK1028, #SUK1027, etc.)
+      const ADMIN_MOCK_ORDERS = {
+        'SUK1028': {
+          orderId: '#SUK1028',
+          customer: 'Priya S.',
+          date: '26 Aug 2026',
+          status: 'Processing',
+          estimatedDelivery: '30 Aug 2026',
+          courier: 'BlueDart Express',
+          awb: 'BD982401294IN',
+          items: [{ name: 'Teal Embroidered Organza Saree', qty: 1, price: '₹4,518' }],
+          steps: [
+            { title: 'Order Confirmed', time: '26 Aug, 11:20 AM', done: true },
+            { title: 'Quality Checked & Packed', time: '26 Aug, 04:30 PM', done: true },
+            { title: 'Dispatched via BlueDart', time: 'In Progress', done: false },
+            { title: 'Out for Delivery', time: 'Expected 30 Aug', done: false },
+          ]
+        },
+        'SUK1027': {
+          orderId: '#SUK1027',
+          customer: 'Ananya K.',
+          date: '24 Aug 2026',
+          status: 'Shipped',
+          estimatedDelivery: '28 Aug 2026',
+          courier: 'Delhivery Air',
+          awb: 'DEL892014820IN',
+          items: [{ name: 'Navy Blue Wrap Midi Dress', qty: 1, price: '₹6,299' }],
+          steps: [
+            { title: 'Order Confirmed', time: '24 Aug, 09:15 AM', done: true },
+            { title: 'Quality Checked & Packed', time: '24 Aug, 03:00 PM', done: true },
+            { title: 'Dispatched via Delhivery Air', time: '25 Aug, 08:30 AM', done: true },
+            { title: 'Out for Delivery', time: 'Expected 28 Aug', done: false },
+          ]
+        }
+      };
+
+      if (ADMIN_MOCK_ORDERS[cleanInputId]) {
+        setTrackingResult(ADMIN_MOCK_ORDERS[cleanInputId]);
+        return;
+      }
+
+      // 3. Dynamic tracking lookup for any custom typed Order ID (e.g. SUKA-XXXXX)
+      const displayId = orderId.trim().toUpperCase().startsWith('#') ? orderId.trim().toUpperCase() : `SUKA-${cleanInputId}`;
       setTrackingResult({
-        orderId: orderId.toUpperCase() || 'SUKA-84920',
-        date: '24 Aug 2026',
+        orderId: displayId,
+        date: '27 Aug 2026',
         status: 'In Transit',
-        estimatedDelivery: '28 Aug 2026',
-        courier: 'BlueDart Express',
-        awb: 'BD894021948IN',
+        estimatedDelivery: '31 Aug 2026',
+        courier: 'BlueDart Express Air',
+        awb: `BD${Math.floor(100000000 + Math.random() * 900000000)}IN`,
         items: [
-          { name: 'Teal Embroidered Organza Saree', qty: 1, price: '₹3,499' },
-          { name: 'Floral Printed Cotton Kurti Set', qty: 1, price: '₹1,899' },
+          { name: 'Suka Fashions Designer Collection', qty: 1, price: '₹3,499' }
         ],
         steps: [
-          { title: 'Order Confirmed', time: '24 Aug, 10:30 AM', done: true },
-          { title: 'Quality Checked & Packed', time: '25 Aug, 02:15 PM', done: true },
-          { title: 'Dispatched via BlueDart', time: '25 Aug, 06:45 PM', done: true },
-          { title: 'Arrived at Hub (Hyderabad)', time: '26 Aug, 08:10 AM', done: true },
-          { title: 'Out for Delivery', time: 'Expected 28 Aug', done: false },
+          { title: 'Order Placed & Confirmed', time: '27 Aug, 10:30 AM', done: true },
+          { title: 'Quality Inspection & Packing', time: '27 Aug, 02:15 PM', done: true },
+          { title: 'Dispatched via BlueDart Air', time: '27 Aug, 06:45 PM', done: true },
+          { title: 'Arrived at Regional Hub', time: '28 Aug, 08:10 AM', done: true },
+          { title: 'Out for Doorstep Delivery', time: 'Expected 31 Aug', done: false },
         ],
       });
-    }, 1000);
+    }, 600);
   };
 
   return (

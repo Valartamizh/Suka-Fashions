@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, ShieldCheck, ChevronRight, MessageSquare, Truck, CreditCard } from 'lucide-react';
+import { Check, ShieldCheck, ChevronRight, MessageSquare, Truck, Plus, X, MapPin } from 'lucide-react';
 import { products } from '../data/products';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -9,8 +9,37 @@ import { useOrders } from '../context/OrderContext';
 const STEPS = [
   { id: 1, name: 'Address' },
   { id: 2, name: 'Delivery' },
-  { id: 3, name: 'Payment' },
-  { id: 4, name: 'Review' }
+  { id: 3, name: 'Review' }
+];
+
+const PUBLIC_PRODUCT_IMAGES = {
+  sarees: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80',
+  kurtis: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=800&q=80',
+  lehengas: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800&q=80',
+  dresses: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80',
+  occasion: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80',
+};
+
+const getProductImageUrl = (item) => {
+  if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
+    return item.image;
+  }
+  const category = (item.category || '').toLowerCase();
+  return PUBLIC_PRODUCT_IMAGES[category] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80';
+};
+
+const DEFAULT_SAVED_ADDRESSES = [
+  {
+    id: 1,
+    name: 'Pooja',
+    street: '123 Fashion Street, Apt 4B',
+    apartment: 'Bandra West',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    pincode: '400050',
+    phone: '+91 98765 43210',
+    isDefault: true,
+  },
 ];
 
 export default function Checkout() {
@@ -26,7 +55,51 @@ export default function Checkout() {
     }
   }, [isLoggedIn, navigate]);
 
-  // Pre-filled Mock Customer Data
+  // Saved Addresses State (Synced with localStorage / Account page)
+  const [addresses, setAddresses] = useState(() => {
+    try {
+      const saved = localStorage.getItem('suka_addresses');
+      return saved ? JSON.parse(saved) : DEFAULT_SAVED_ADDRESSES;
+    } catch (e) {
+      return DEFAULT_SAVED_ADDRESSES;
+    }
+  });
+
+  const [selectedAddressId, setSelectedAddressId] = useState(() => {
+    try {
+      const saved = localStorage.getItem('suka_addresses');
+      const list = saved ? JSON.parse(saved) : DEFAULT_SAVED_ADDRESSES;
+      const def = list.find((a) => a.isDefault) || list[0];
+      return def ? def.id : null;
+    } catch (e) {
+      return 1;
+    }
+  });
+
+  // Address Modal State
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    name: '',
+    street: '',
+    apartment: '',
+    city: '',
+    state: '',
+    pincode: '',
+    phone: '',
+    isDefault: false,
+  });
+  const [addressErrors, setAddressErrors] = useState({});
+
+  // Sync addresses to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('suka_addresses', JSON.stringify(addresses));
+    } catch (e) {
+      console.error('Error saving addresses', e);
+    }
+  }, [addresses]);
+
+  // Pre-filled Customer Form Data
   const [formData, setFormData] = useState({
     email: 'aditi.sharma@example.com',
     firstName: 'Aditi',
@@ -39,8 +112,28 @@ export default function Checkout() {
     phone: '+91 98765 43210',
   });
 
+  // Sync selected address into formData
+  useEffect(() => {
+    if (selectedAddressId) {
+      const addr = addresses.find((a) => a.id === selectedAddressId);
+      if (addr) {
+        const parts = (addr.name || '').trim().split(' ');
+        setFormData((prev) => ({
+          ...prev,
+          firstName: parts[0] || '',
+          lastName: parts.slice(1).join(' ') || '',
+          address: addr.street || '',
+          apartment: addr.apartment || '',
+          city: addr.city || '',
+          state: addr.state || '',
+          pincode: addr.pincode || '',
+          phone: addr.phone || '',
+        }));
+      }
+    }
+  }, [selectedAddressId, addresses]);
+
   const [deliveryMethod, setDeliveryMethod] = useState('standard');
-  const [paymentMethod, setPaymentMethod] = useState('UPI / Netbanking');
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const shipping = deliveryMethod === 'express' ? 250 : 0;
@@ -53,6 +146,68 @@ export default function Checkout() {
     if (checkoutErrors[field]) {
       setCheckoutErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const handleOpenAddAddress = () => {
+    setAddressErrors({});
+    setAddressForm({
+      name: '',
+      street: '',
+      apartment: '',
+      city: '',
+      state: '',
+      pincode: '',
+      phone: '',
+      isDefault: addresses.length === 0,
+    });
+    setAddressModalOpen(true);
+  };
+
+  const validateAddressForm = () => {
+    const errs = {};
+    if (!addressForm.name.trim() || addressForm.name.trim().length < 2) {
+      errs.name = 'Full Name is required (min 2 characters)';
+    }
+    if (!addressForm.street.trim() || addressForm.street.trim().length < 5) {
+      errs.street = 'Street address is required (min 5 characters)';
+    }
+    if (!addressForm.city.trim()) {
+      errs.city = 'City is required';
+    }
+    if (!addressForm.state.trim()) {
+      errs.state = 'State is required';
+    }
+    const pincodeClean = (addressForm.pincode || '').replace(/\D/g, '');
+    if (!pincodeClean || pincodeClean.length !== 6) {
+      errs.pincode = 'Valid 6-digit PIN code required';
+    }
+    const rawDigits = (addressForm.phone || '').replace(/\D/g, '');
+    const phoneDigits = rawDigits.slice(-10);
+    if (!phoneDigits || phoneDigits.length !== 10) {
+      errs.phone = 'Valid 10-digit mobile number required';
+    }
+    setAddressErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSaveAddressSubmit = (e) => {
+    e.preventDefault();
+    if (!validateAddressForm()) return;
+
+    const newAddress = {
+      id: Date.now(),
+      ...addressForm,
+    };
+
+    let updatedList = addresses;
+    if (addressForm.isDefault) {
+      updatedList = addresses.map((a) => ({ ...a, isDefault: false }));
+    }
+
+    const finalAddresses = [...updatedList, newAddress];
+    setAddresses(finalAddresses);
+    setSelectedAddressId(newAddress.id);
+    setAddressModalOpen(false);
   };
 
   const validateStep1 = () => {
@@ -93,15 +248,18 @@ export default function Checkout() {
       if (!validateStep1()) return;
     }
 
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
       window.scrollTo(0, 0);
     } else {
       // Final step submit: Redirect to WhatsApp with complete order breakdown
       const orderId = `SUKA-${Math.floor(10000 + Math.random() * 90000)}`;
       const itemsListText = cartItems
-        .map(item => `• ${item.name} (${item.size}) x${item.quantity} - ₹${(item.price * item.quantity).toLocaleString('en-IN')}`)
-        .join('\n');
+        .map(item => {
+          const imgUrl = getProductImageUrl(item);
+          return `• *${item.name}* (${item.selectedSize || item.size || 'Free Size'}) x${item.quantity} - ₹${(item.price * item.quantity).toLocaleString('en-IN')}\n  📷 *Product Photo:* ${imgUrl}`;
+        })
+        .join('\n\n');
 
       const whatsappMsg = encodeURIComponent(
         `*NEW ORDER PLACED ON SUKA FASHIONS* 🛍️\n` +
@@ -115,7 +273,6 @@ export default function Checkout() {
         `*Subtotal:* ₹${subtotal.toLocaleString('en-IN')}\n` +
         `*Delivery Charge:* ${shipping === 0 ? 'FREE (Standard)' : `₹${shipping} (Express)`}\n` +
         `*TOTAL AMOUNT:* ₹${total.toLocaleString('en-IN')}\n` +
-        `*Payment Choice:* ${paymentMethod}\n` +
         `-----------------------------------\n` +
         `Please confirm my order and share dispatch details. Thank you!`
       );
@@ -128,7 +285,7 @@ export default function Checkout() {
         total: total,
         subtotal: subtotal,
         shipping: shipping,
-        paymentMethod: paymentMethod,
+        paymentMethod: 'WhatsApp Express Checkout',
         items: cartItems.map(item => ({
           ...item,
           selectedSize: item.selectedSize || item.size || 'Free Size',
@@ -205,134 +362,199 @@ export default function Checkout() {
             <div className="bg-white border border-brand-powder/50 rounded-sm p-6 sm:p-8 shadow-sm">
               <form onSubmit={handleNext}>
                 
-                {/* STEP 1: Address (Pre-filled with Mock Data) */}
+                {/* STEP 1: Address */}
                 {currentStep === 1 && (
                   <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="font-serif text-xl sm:text-2xl text-brand-navy">Shipping Address</h2>
-                      <span className="text-[10px] font-sans uppercase text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-sm border border-emerald-200 font-bold">
-                        Pre-filled Mock Customer Data
-                      </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                      <div>
+                        <h2 className="font-serif text-xl sm:text-2xl text-brand-navy">Shipping Address</h2>
+                        <p className="font-sans text-xs text-brand-navy/60 mt-0.5">Select a saved address or add a new delivery location.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleOpenAddAddress}
+                        className="self-start sm:self-auto font-sans text-xs text-brand-teal border border-brand-teal px-4 py-2 rounded-sm hover:bg-brand-teal hover:text-white transition-all uppercase tracking-[0.1em] font-semibold flex items-center gap-1.5 shadow-sm"
+                      >
+                        <Plus size={15} /> Add New Address
+                      </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                      <div className="sm:col-span-2">
-                        <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">Email Address *</label>
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
-                          className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm ${
-                            checkoutErrors.email ? 'border-red-500' : 'border-brand-powder'
-                          }`}
-                        />
-                        {checkoutErrors.email && (
-                          <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.email}</p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">First Name *</label>
-                        <input
-                          type="text"
-                          value={formData.firstName}
-                          onChange={(e) => handleInputChange('firstName', e.target.value)}
-                          className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm ${
-                            checkoutErrors.firstName ? 'border-red-500' : 'border-brand-powder'
-                          }`}
-                        />
-                        {checkoutErrors.firstName && (
-                          <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.firstName}</p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">Last Name</label>
-                        <input
-                          type="text"
-                          value={formData.lastName}
-                          onChange={(e) => handleInputChange('lastName', e.target.value)}
-                          className="w-full border border-brand-powder px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm"
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">Street Address *</label>
-                        <input
-                          type="text"
-                          value={formData.address}
-                          onChange={(e) => handleInputChange('address', e.target.value)}
-                          className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm mb-3 ${
-                            checkoutErrors.address ? 'border-red-500' : 'border-brand-powder'
-                          }`}
-                        />
-                        {checkoutErrors.address && (
-                          <p className="font-sans text-[10px] text-red-500 mb-3 font-semibold">⚠️ {checkoutErrors.address}</p>
-                        )}
-                        <input
-                          type="text"
-                          value={formData.apartment}
-                          onChange={(e) => handleInputChange('apartment', e.target.value)}
-                          placeholder="Apartment, suite, landmark (optional)"
-                          className="w-full border border-brand-powder px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">City *</label>
-                        <input
-                          type="text"
-                          value={formData.city}
-                          onChange={(e) => handleInputChange('city', e.target.value)}
-                          className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm ${
-                            checkoutErrors.city ? 'border-red-500' : 'border-brand-powder'
-                          }`}
-                        />
-                        {checkoutErrors.city && (
-                          <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.city}</p>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">State *</label>
-                          <input
-                            type="text"
-                            value={formData.state}
-                            onChange={(e) => handleInputChange('state', e.target.value)}
-                            className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none rounded-sm bg-white ${
-                              checkoutErrors.state ? 'border-red-500' : 'border-brand-powder'
-                            }`}
-                          />
-                          {checkoutErrors.state && (
-                            <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.state}</p>
-                          )}
+                    {/* Saved Address Cards */}
+                    {addresses.length > 0 && (
+                      <div className="mb-8">
+                        <h3 className="font-sans text-[11px] uppercase tracking-widest font-semibold text-brand-navy/70 mb-3">
+                          Saved Addresses
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {addresses.map((addr) => {
+                            const isSelected = selectedAddressId === addr.id;
+                            return (
+                              <div
+                                key={addr.id}
+                                onClick={() => setSelectedAddressId(addr.id)}
+                                className={`p-4 border rounded-sm cursor-pointer transition-all relative flex flex-col justify-between ${
+                                  isSelected
+                                    ? 'border-brand-teal bg-brand-powderLight/60 shadow-sm ring-1 ring-brand-teal'
+                                    : 'border-brand-powder bg-white hover:border-brand-teal/60'
+                                }`}
+                              >
+                                <div>
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="radio"
+                                        name="selectedAddress"
+                                        checked={isSelected}
+                                        onChange={() => setSelectedAddressId(addr.id)}
+                                        className="w-4 h-4 text-brand-teal focus:ring-brand-teal"
+                                      />
+                                      <span className="font-sans text-sm font-semibold text-brand-navy">
+                                        {addr.name}
+                                      </span>
+                                    </div>
+                                    {addr.isDefault && (
+                                      <span className="bg-brand-teal text-white text-[9px] font-sans font-bold uppercase tracking-wider px-2 py-0.5 rounded-xs">
+                                        Default Address
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="font-sans text-xs text-brand-navy/70 leading-relaxed ml-6">
+                                    {addr.street}{addr.apartment ? `, ${addr.apartment}` : ''}<br />
+                                    {addr.city}, {addr.state} - {addr.pincode}<br />
+                                    Phone: <span className="font-medium text-brand-navy">{addr.phone}</span>
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                        <div>
-                          <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">PIN Code *</label>
+                      </div>
+                    )}
+
+                    {/* Delivery Form Fields */}
+                    <div className="border-t border-brand-powder/60 pt-6">
+                      <h3 className="font-sans text-[11px] uppercase tracking-widest font-semibold text-brand-navy/70 mb-4">
+                        Contact & Address Details
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="sm:col-span-2">
+                          <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">Email Address *</label>
                           <input
-                            type="text"
-                            maxLength={6}
-                            value={formData.pincode}
-                            onChange={(e) => handleInputChange('pincode', e.target.value.replace(/\D/g, ''))}
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => handleInputChange('email', e.target.value)}
                             className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm ${
-                              checkoutErrors.pincode ? 'border-red-500' : 'border-brand-powder'
+                              checkoutErrors.email ? 'border-red-500' : 'border-brand-powder'
                             }`}
                           />
-                          {checkoutErrors.pincode && (
-                            <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.pincode}</p>
+                          {checkoutErrors.email && (
+                            <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.email}</p>
                           )}
                         </div>
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">Mobile Phone Number (WhatsApp Enabled) *</label>
-                        <input
-                          type="tel"
-                          maxLength={10}
-                          value={formData.phone}
-                          onChange={(e) => handleInputChange('phone', e.target.value.replace(/\D/g, ''))}
-                          className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm ${
-                            checkoutErrors.phone ? 'border-red-500' : 'border-brand-powder'
-                          }`}
-                        />
-                        {checkoutErrors.phone && (
-                          <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.phone}</p>
-                        )}
+                        <div>
+                          <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">First Name *</label>
+                          <input
+                            type="text"
+                            value={formData.firstName}
+                            onChange={(e) => handleInputChange('firstName', e.target.value)}
+                            className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm ${
+                              checkoutErrors.firstName ? 'border-red-500' : 'border-brand-powder'
+                            }`}
+                          />
+                          {checkoutErrors.firstName && (
+                            <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.firstName}</p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">Last Name</label>
+                          <input
+                            type="text"
+                            value={formData.lastName}
+                            onChange={(e) => handleInputChange('lastName', e.target.value)}
+                            className="w-full border border-brand-powder px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">Street Address *</label>
+                          <input
+                            type="text"
+                            value={formData.address}
+                            onChange={(e) => handleInputChange('address', e.target.value)}
+                            className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm mb-3 ${
+                              checkoutErrors.address ? 'border-red-500' : 'border-brand-powder'
+                            }`}
+                          />
+                          {checkoutErrors.address && (
+                            <p className="font-sans text-[10px] text-red-500 mb-3 font-semibold">⚠️ {checkoutErrors.address}</p>
+                          )}
+                          <input
+                            type="text"
+                            value={formData.apartment}
+                            onChange={(e) => handleInputChange('apartment', e.target.value)}
+                            placeholder="Apartment, suite, landmark (optional)"
+                            className="w-full border border-brand-powder px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">City *</label>
+                          <input
+                            type="text"
+                            value={formData.city}
+                            onChange={(e) => handleInputChange('city', e.target.value)}
+                            className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm ${
+                              checkoutErrors.city ? 'border-red-500' : 'border-brand-powder'
+                            }`}
+                          />
+                          {checkoutErrors.city && (
+                            <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.city}</p>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">State *</label>
+                            <input
+                              type="text"
+                              value={formData.state}
+                              onChange={(e) => handleInputChange('state', e.target.value)}
+                              className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none rounded-sm bg-white ${
+                                checkoutErrors.state ? 'border-red-500' : 'border-brand-powder'
+                              }`}
+                            />
+                            {checkoutErrors.state && (
+                              <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.state}</p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">PIN Code *</label>
+                            <input
+                              type="text"
+                              maxLength={6}
+                              value={formData.pincode}
+                              onChange={(e) => handleInputChange('pincode', e.target.value.replace(/\D/g, ''))}
+                              className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm ${
+                                checkoutErrors.pincode ? 'border-red-500' : 'border-brand-powder'
+                              }`}
+                            />
+                            {checkoutErrors.pincode && (
+                              <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.pincode}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2">Mobile Phone Number (WhatsApp Enabled) *</label>
+                          <input
+                            type="tel"
+                            maxLength={10}
+                            value={formData.phone}
+                            onChange={(e) => handleInputChange('phone', e.target.value.replace(/\D/g, ''))}
+                            className={`w-full border px-4 py-3 font-sans text-sm text-brand-navy focus:border-brand-teal outline-none transition-all rounded-sm ${
+                              checkoutErrors.phone ? 'border-red-500' : 'border-brand-powder'
+                            }`}
+                          />
+                          {checkoutErrors.phone && (
+                            <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {checkoutErrors.phone}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -374,41 +596,8 @@ export default function Checkout() {
                   </div>
                 )}
 
-                {/* STEP 3: Payment Choice */}
+                {/* STEP 3: Review & WhatsApp Redirect Notice */}
                 {currentStep === 3 && (
-                  <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                    <h2 className="font-serif text-xl sm:text-2xl text-brand-navy mb-6">Select Preferred Payment Method</h2>
-                    <div className="space-y-4">
-                      
-                      <label onClick={() => setPaymentMethod('UPI / Netbanking')} className={`flex items-start gap-4 border p-5 rounded-sm cursor-pointer transition-all ${paymentMethod === 'UPI / Netbanking' ? 'border-brand-teal bg-brand-powderLight' : 'border-brand-powder'}`}>
-                        <input type="radio" name="payment" checked={paymentMethod === 'UPI / Netbanking'} onChange={() => setPaymentMethod('UPI / Netbanking')} className="mt-1 w-4 h-4 text-brand-teal" />
-                        <div className="flex-1">
-                          <span className="font-sans text-sm font-semibold text-brand-navy block mb-1">UPI / Google Pay / PhonePe / Netbanking</span>
-                          <p className="font-sans text-[11px] text-brand-navy/60">Instant payment link sent via WhatsApp upon order confirmation.</p>
-                        </div>
-                      </label>
-
-                      <label onClick={() => setPaymentMethod('Cash on Delivery (COD)')} className={`flex items-start gap-4 border p-5 rounded-sm cursor-pointer transition-all ${paymentMethod === 'Cash on Delivery (COD)' ? 'border-brand-teal bg-brand-powderLight' : 'border-brand-powder'}`}>
-                        <input type="radio" name="payment" checked={paymentMethod === 'Cash on Delivery (COD)'} onChange={() => setPaymentMethod('Cash on Delivery (COD)')} className="mt-1 w-4 h-4 text-brand-teal" />
-                        <div className="flex-1">
-                          <span className="font-sans text-sm font-semibold text-brand-navy block mb-1">Cash on Delivery (COD)</span>
-                          <p className="font-sans text-[11px] text-brand-navy/60">Pay cash directly to the courier executive upon doorstep delivery.</p>
-                        </div>
-                      </label>
-
-                      <label onClick={() => setPaymentMethod('Credit / Debit Card')} className={`flex items-start gap-4 border p-5 rounded-sm cursor-pointer transition-all ${paymentMethod === 'Credit / Debit Card' ? 'border-brand-teal bg-brand-powderLight' : 'border-brand-powder'}`}>
-                        <input type="radio" name="payment" checked={paymentMethod === 'Credit / Debit Card'} onChange={() => setPaymentMethod('Credit / Debit Card')} className="mt-1 w-4 h-4 text-brand-teal" />
-                        <div className="flex-1">
-                          <span className="font-sans text-sm font-medium text-brand-navy block">Credit / Debit Card (Visa, Mastercard, RuPay)</span>
-                        </div>
-                      </label>
-
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 4: Review & WhatsApp Redirect Notice */}
-                {currentStep === 4 && (
                   <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                     <h2 className="font-serif text-xl sm:text-2xl text-brand-navy mb-6">Review & Place Order</h2>
                     
@@ -439,52 +628,17 @@ export default function Checkout() {
 
                       <div className="border border-brand-powder/50 p-5 rounded-sm bg-brand-cream/10">
                         <div className="flex justify-between items-center mb-2 pb-2 border-b border-brand-powder/50">
-                          <h3 className="font-sans text-[10px] uppercase tracking-widest font-semibold text-brand-navy">Delivery & Payment</h3>
+                          <h3 className="font-sans text-[10px] uppercase tracking-widest font-semibold text-brand-navy">Delivery Method</h3>
                           <button type="button" onClick={() => setCurrentStep(2)} className="text-[10px] uppercase text-brand-teal hover:underline font-bold">Edit</button>
                         </div>
                         <p className="font-sans text-xs text-brand-navy/80">
-                          Delivery: <strong>{deliveryMethod === 'express' ? 'Express Courier (₹250)' : 'Standard Free Shipping'}</strong><br/>
-                          Payment: <strong>{paymentMethod}</strong>
+                          Delivery: <strong>{deliveryMethod === 'express' ? 'Express Courier (₹250)' : 'Standard Free Shipping'}</strong>
                         </p>
                       </div>
 
                     </div>
                   </div>
                 )}
-
-                {/* Form Actions */}
-                <div className="mt-10 pt-6 border-t border-brand-powder/60 flex items-center justify-between">
-                  {currentStep > 1 ? (
-                    <button 
-                      type="button" 
-                      onClick={() => setCurrentStep(currentStep - 1)}
-                      className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 hover:text-brand-navy transition-colors font-medium"
-                    >
-                      Back to {STEPS[currentStep - 2].name}
-                    </button>
-                  ) : (
-                    <Link to="/cart" className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 hover:text-brand-navy transition-colors font-medium">
-                      Return to Bag
-                    </Link>
-                  )}
-
-                  <button 
-                    type="submit"
-                    className={`px-8 py-3.5 font-sans text-[10px] uppercase tracking-[0.2em] font-bold rounded-sm shadow-md transition-all flex items-center gap-2.5 ${
-                      currentStep === 4 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg' : 'bg-brand-navy hover:bg-brand-teal text-white'
-                    }`}
-                  >
-                    {currentStep === 4 ? (
-                      <>
-                        <MessageSquare size={16} /> Place Order on WhatsApp
-                      </>
-                    ) : (
-                      <>
-                        Continue <ChevronRight size={14} />
-                      </>
-                    )}
-                  </button>
-                </div>
 
               </form>
             </div>
@@ -536,12 +690,242 @@ export default function Checkout() {
                 </div>
               </div>
 
+              {/* Continue / WhatsApp Place Order Button under Total Amount */}
+              <div className="mt-6 pt-4 border-t border-brand-powder/60">
+                <button 
+                  type="button"
+                  onClick={handleNext}
+                  className={`w-full py-3.5 px-6 font-sans text-[10px] uppercase tracking-[0.2em] font-bold rounded-sm shadow-md transition-all flex items-center justify-center gap-2.5 cursor-pointer ${
+                    currentStep === 3 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg' : 'bg-brand-navy hover:bg-brand-teal text-white'
+                  }`}
+                >
+                  {currentStep === 3 ? (
+                    <>
+                      <MessageSquare size={16} /> Place Order on WhatsApp
+                    </>
+                  ) : (
+                    <>
+                      Continue <ChevronRight size={14} />
+                    </>
+                  )}
+                </button>
+
+                <div className="mt-3 text-center">
+                  {currentStep > 1 ? (
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setCurrentStep(currentStep - 1);
+                        window.scrollTo(0, 0);
+                      }}
+                      className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 hover:text-brand-navy transition-colors font-medium hover:underline cursor-pointer"
+                    >
+                      Back to {STEPS[currentStep - 2].name}
+                    </button>
+                  ) : (
+                    <Link to="/cart" className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 hover:text-brand-navy transition-colors font-medium hover:underline">
+                      Return to Bag
+                    </Link>
+                  )}
+                </div>
+              </div>
+
             </div>
           </div>
 
         </div>
       </div>
+
+      {/* Add Address Modal */}
+      {addressModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-sm w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-brand-powder/60 bg-brand-cream/20">
+              <h3 className="font-serif text-lg font-semibold text-brand-navy">Add New Address</h3>
+              <button
+                type="button"
+                onClick={() => setAddressModalOpen(false)}
+                className="text-brand-navy/50 hover:text-brand-navy p-1 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAddressSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              <div>
+                <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-1 font-bold">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  value={addressForm.name}
+                  onChange={(e) => {
+                    setAddressForm({ ...addressForm, name: e.target.value });
+                    if (addressErrors.name) setAddressErrors({ ...addressErrors, name: '' });
+                  }}
+                  placeholder="e.g. Aditi Sharma"
+                  className={`w-full border px-3.5 py-2 font-sans text-xs text-brand-navy focus:border-brand-teal outline-none rounded-sm ${
+                    addressErrors.name ? 'border-red-500' : 'border-brand-powder'
+                  }`}
+                />
+                {addressErrors.name && (
+                  <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {addressErrors.name}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-1 font-bold">
+                  Street Address *
+                </label>
+                <input
+                  type="text"
+                  value={addressForm.street}
+                  onChange={(e) => {
+                    setAddressForm({ ...addressForm, street: e.target.value });
+                    if (addressErrors.street) setAddressErrors({ ...addressErrors, street: '' });
+                  }}
+                  placeholder="House no, street name"
+                  className={`w-full border px-3.5 py-2 font-sans text-xs text-brand-navy focus:border-brand-teal outline-none rounded-sm ${
+                    addressErrors.street ? 'border-red-500' : 'border-brand-powder'
+                  }`}
+                />
+                {addressErrors.street && (
+                  <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {addressErrors.street}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-1 font-bold">
+                  Apartment, Suite, Locality
+                </label>
+                <input
+                  type="text"
+                  value={addressForm.apartment}
+                  onChange={(e) => setAddressForm({ ...addressForm, apartment: e.target.value })}
+                  placeholder="Landmark or area"
+                  className="w-full border border-brand-powder px-3.5 py-2 font-sans text-xs text-brand-navy focus:border-brand-teal outline-none rounded-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-1 font-bold">
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    value={addressForm.city}
+                    onChange={(e) => {
+                      setAddressForm({ ...addressForm, city: e.target.value });
+                      if (addressErrors.city) setAddressErrors({ ...addressErrors, city: '' });
+                    }}
+                    placeholder="e.g. Mumbai"
+                    className={`w-full border px-3.5 py-2 font-sans text-xs text-brand-navy focus:border-brand-teal outline-none rounded-sm ${
+                      addressErrors.city ? 'border-red-500' : 'border-brand-powder'
+                    }`}
+                  />
+                  {addressErrors.city && (
+                    <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {addressErrors.city}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-1 font-bold">
+                    State *
+                  </label>
+                  <input
+                    type="text"
+                    value={addressForm.state}
+                    onChange={(e) => {
+                      setAddressForm({ ...addressForm, state: e.target.value });
+                      if (addressErrors.state) setAddressErrors({ ...addressErrors, state: '' });
+                    }}
+                    placeholder="e.g. Maharashtra"
+                    className={`w-full border px-3.5 py-2 font-sans text-xs text-brand-navy focus:border-brand-teal outline-none rounded-sm ${
+                      addressErrors.state ? 'border-red-500' : 'border-brand-powder'
+                    }`}
+                  />
+                  {addressErrors.state && (
+                    <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {addressErrors.state}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-1 font-bold">
+                    PIN Code *
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={addressForm.pincode}
+                    onChange={(e) => {
+                      setAddressForm({ ...addressForm, pincode: e.target.value.replace(/\D/g, '') });
+                      if (addressErrors.pincode) setAddressErrors({ ...addressErrors, pincode: '' });
+                    }}
+                    placeholder="e.g. 400050"
+                    className={`w-full border px-3.5 py-2 font-sans text-xs text-brand-navy focus:border-brand-teal outline-none rounded-sm ${
+                      addressErrors.pincode ? 'border-red-500' : 'border-brand-powder'
+                    }`}
+                  />
+                  {addressErrors.pincode && (
+                    <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {addressErrors.pincode}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-1 font-bold">
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    maxLength={10}
+                    value={addressForm.phone}
+                    onChange={(e) => {
+                      setAddressForm({ ...addressForm, phone: e.target.value.replace(/\D/g, '') });
+                      if (addressErrors.phone) setAddressErrors({ ...addressErrors, phone: '' });
+                    }}
+                    placeholder="+91 98765 43210"
+                    className={`w-full border px-3.5 py-2 font-sans text-xs text-brand-navy focus:border-brand-teal outline-none rounded-sm ${
+                      addressErrors.phone ? 'border-red-500' : 'border-brand-powder'
+                    }`}
+                  />
+                  {addressErrors.phone && (
+                    <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {addressErrors.phone}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <label className="flex items-center gap-2 cursor-pointer font-sans text-xs text-brand-navy select-none">
+                  <input
+                    type="checkbox"
+                    checked={addressForm.isDefault}
+                    onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
+                    className="w-4 h-4 text-brand-teal rounded border-brand-powder focus:ring-brand-teal"
+                  />
+                  <span>Set as Default Shipping Address</span>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-brand-powder/60">
+                <button
+                  type="button"
+                  onClick={() => setAddressModalOpen(false)}
+                  className="px-4 py-2 font-sans text-xs uppercase tracking-wider border border-brand-powder text-brand-navy/70 hover:bg-gray-50 rounded-sm font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 font-sans text-xs uppercase tracking-wider bg-brand-navy hover:bg-brand-teal text-white rounded-sm font-semibold transition-colors shadow-sm"
+                >
+                  Save Address
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

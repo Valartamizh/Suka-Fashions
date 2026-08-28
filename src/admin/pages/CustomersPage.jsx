@@ -1,6 +1,6 @@
 // CustomersPage — /admin/customers
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, Eye, Users } from 'lucide-react';
 import AdminPageHeader from '../components/ui/AdminPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -11,6 +11,7 @@ import { adminCustomers } from '../data/adminCustomers';
 const PAGE_SIZE = 8;
 
 export default function CustomersPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('All');
   const [page, setPage] = useState(1);
@@ -78,8 +79,8 @@ export default function CustomersPage() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
-                {['Customer ID', 'Name', 'Mobile', 'Email', 'Orders', 'Total Spent', 'Cart', 'Wishlist', 'Joined', 'Status', ''].map(h => (
-                  <th key={h} className="px-4 py-3.5 text-left font-semibold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">
+                {['ID', 'Customer', 'Phone', 'Email', 'Orders', 'Total Spent', 'Cart', 'Wishlist', 'Joined', 'Status'].map(h => (
+                  <th key={h} className="px-5 py-3.5 text-left font-semibold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -88,38 +89,30 @@ export default function CustomersPage() {
             <tbody className="divide-y divide-slate-50">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={11}>
+                  <td colSpan={10}>
                     <EmptyState icon={Users} title="No customers found" description="Try adjusting your search." />
                   </td>
                 </tr>
               ) : paginated.map(c => (
-                <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3.5 font-mono text-[10px] text-slate-500">{c.id}</td>
-                  <td className="px-4 py-3.5">
+                <tr key={c.id} onClick={() => navigate(`/admin/customers/${c.id}`)} className="hover:bg-brand-powder/20 cursor-pointer transition-colors group">
+                  <td className="px-5 py-3.5 font-mono text-[10px] text-slate-500">{c.id}</td>
+                  <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 bg-brand-powder rounded-full flex items-center justify-center text-brand-teal font-bold text-xs flex-shrink-0">
                         {c.firstName.charAt(0)}{c.lastName.charAt(0)}
                       </div>
-                      <span className="font-semibold text-slate-800 whitespace-nowrap">{c.name}</span>
+                      <span className="font-semibold text-slate-800 whitespace-nowrap group-hover:text-brand-teal transition-colors">{c.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-slate-600 whitespace-nowrap">{c.phone}</td>
-                  <td className="px-4 py-3.5 text-slate-500 max-w-[140px] truncate">{c.email}</td>
-                  <td className="px-4 py-3.5 font-semibold text-slate-700">{c.totalOrders}</td>
-                  <td className="px-4 py-3.5 font-bold text-slate-800">₹{c.totalSpent.toLocaleString('en-IN')}</td>
-                  <td className="px-4 py-3.5 text-slate-500">{c.cartItems.length}</td>
-                  <td className="px-4 py-3.5 text-slate-500">{c.wishlistItems.length}</td>
-                  <td className="px-4 py-3.5 text-slate-400 whitespace-nowrap">{c.joinedAt}</td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-5 py-3.5 text-slate-600 whitespace-nowrap font-medium">{c.phone}</td>
+                  <td className="px-5 py-3.5 text-slate-500 max-w-[140px] truncate">{c.email}</td>
+                  <td className="px-5 py-3.5 font-semibold text-slate-700">{c.totalOrders}</td>
+                  <td className="px-5 py-3.5 font-bold text-slate-800">₹{c.totalSpent.toLocaleString('en-IN')}</td>
+                  <td className="px-5 py-3.5 text-slate-500">{c.cartItems.length}</td>
+                  <td className="px-5 py-3.5 text-slate-500">{c.wishlistItems.length}</td>
+                  <td className="px-5 py-3.5 text-slate-400 font-medium whitespace-nowrap">{c.joinedAt}</td>
+                  <td className="px-5 py-3.5">
                     <StatusBadge status={c.status} />
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <Link
-                      to={`/admin/customers/${c.id}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-powder hover:bg-brand-teal/20 text-brand-teal text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
-                    >
-                      <Eye size={12} /> View
-                    </Link>
                   </td>
                 </tr>
               ))}

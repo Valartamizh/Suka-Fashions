@@ -1,6 +1,5 @@
-// AdminDashboard — /admin
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   IndianRupee, ShoppingBag, Package, AlertTriangle, Users,
   Eye, ChevronRight, TrendingUp,
@@ -72,6 +71,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState('7 Days');
   const [chartRange, setChartRange] = useState('7days');
   const chartData = salesData[chartRange];
@@ -240,9 +240,9 @@ export default function AdminDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-50">
-                  {['Order ID', 'Customer', 'Amount', 'Payment', 'Status', 'Date', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left font-semibold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">
+                <tr className="border-b border-slate-100 bg-slate-50/50">
+                  {['Order ID', 'Customer', 'Amount', 'Payment', 'Status', 'Date'].map(h => (
+                    <th key={h} className="px-5 py-3.5 text-left font-semibold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">
                       {h}
                     </th>
                   ))}
@@ -250,22 +250,21 @@ export default function AdminDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {adminOrders.slice(0, 6).map(order => (
-                  <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-4 py-3 font-mono font-bold text-brand-teal text-xs">#{order.id}</td>
-                    <td className="px-4 py-3 text-slate-700 font-medium whitespace-nowrap">{order.customer.name.split(' ')[0]} {order.customer.name.split(' ')[1]?.charAt(0)}.</td>
-                    <td className="px-4 py-3 font-bold text-slate-800">₹{order.total.toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-3">
+                  <tr
+                    key={order.id}
+                    onClick={() => navigate(`/admin/orders/${order.id}`)}
+                    className="hover:bg-brand-powder/20 cursor-pointer transition-colors group"
+                  >
+                    <td className="px-5 py-3.5 font-mono font-bold text-brand-teal text-xs group-hover:underline">#{order.id}</td>
+                    <td className="px-5 py-3.5 text-slate-700 font-semibold whitespace-nowrap group-hover:text-brand-teal transition-colors">{order.customer.name}</td>
+                    <td className="px-5 py-3.5 font-bold text-slate-800">₹{order.total.toLocaleString('en-IN')}</td>
+                    <td className="px-5 py-3.5">
                       <StatusBadge status={order.paymentStatus} />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5">
                       <StatusBadge status={order.status} />
                     </td>
-                    <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{order.date}</td>
-                    <td className="px-4 py-3">
-                      <Link to={`/admin/orders/${order.id}`} className="text-brand-teal hover:underline font-semibold flex items-center gap-0.5">
-                        <Eye size={12} /> View
-                      </Link>
-                    </td>
+                    <td className="px-5 py-3.5 text-slate-400 font-medium whitespace-nowrap">{order.date}</td>
                   </tr>
                 ))}
               </tbody>
@@ -283,15 +282,19 @@ export default function AdminDashboard() {
           </div>
           <div className="divide-y divide-slate-50">
             {topProducts.map((p, i) => (
-              <div key={p.id} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/60 transition-colors">
+              <div
+                key={p.id}
+                onClick={() => navigate(`/product/${p.slug || p.id}`)}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100/70 cursor-pointer transition-colors group"
+              >
                 <span className="font-bold text-slate-300 text-xs w-4 text-center">{i + 1}</span>
                 <img
                   src={p.image}
                   alt={p.name}
-                  className="w-9 h-11 object-cover rounded-lg border border-slate-100 flex-shrink-0"
+                  className="w-10 h-12 object-cover rounded-lg border border-slate-100 flex-shrink-0 group-hover:scale-105 transition-transform"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-slate-700 truncate leading-tight">{p.name}</p>
+                  <p className="text-xs font-semibold text-slate-800 truncate leading-tight group-hover:text-brand-teal transition-colors">{p.name}</p>
                   <p className="text-[10px] text-slate-400 mt-0.5">
                     <span className="text-emerald-600 font-bold">{p.unitsSold} sold</span>
                     <span className="mx-1.5">·</span>
@@ -359,8 +362,12 @@ export default function AdminDashboard() {
                 {lowStockItems.map(item => {
                   const status = getStockStatus(item.available, item.minimumStock);
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-4 py-3 text-slate-700 font-medium max-w-[160px] truncate">{item.productName}</td>
+                    <tr
+                      key={item.id}
+                      onClick={() => navigate('/admin/inventory')}
+                      className="hover:bg-amber-50/50 cursor-pointer transition-colors group"
+                    >
+                      <td className="px-4 py-3 text-slate-800 font-semibold max-w-[160px] truncate group-hover:text-brand-teal">{item.productName}</td>
                       <td className="px-4 py-3 font-mono text-slate-500 text-[10px]">{item.sku}</td>
                       <td className="px-4 py-3 text-slate-500">{item.variant}</td>
                       <td className={`px-4 py-3 font-bold ${item.available === 0 ? 'text-red-600' : 'text-amber-600'}`}>

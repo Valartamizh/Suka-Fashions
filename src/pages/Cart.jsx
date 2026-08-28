@@ -33,11 +33,8 @@ export default function Cart() {
     });
   };
 
-  const handleMoveToWishlist = (item) => {
-    if (!isInWishlist(item.id)) {
-      toggleWishlist(item);
-    }
-    removeFromCart(item.cartId);
+  const handleToggleWishlist = (item) => {
+    toggleWishlist(item);
   };
 
   const requestClearCart = () => {
@@ -172,10 +169,10 @@ export default function Cart() {
                     <Trash2 size={16} strokeWidth={1.5} />
                   </button>
                   <button
-                    onClick={() => handleMoveToWishlist(item)}
+                    onClick={() => handleToggleWishlist(item)}
                     className="text-brand-navy/40 hover:text-brand-teal transition-colors p-1 cursor-pointer"
-                    aria-label="Move to wishlist"
-                    title="Move to Wishlist"
+                    aria-label={isInWishlist(item.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                    title={isInWishlist(item.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
                   >
                     <Heart size={16} strokeWidth={1.5} className={isInWishlist(item.id) ? 'fill-red-500 text-red-500' : ''} />
                   </button>

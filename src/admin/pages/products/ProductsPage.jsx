@@ -1,13 +1,14 @@
 // ProductsPage — /admin/products
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Filter, MoreVertical, Edit, Eye, Copy, PackagePlus, Archive, Trash2, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search, Filter, MoreVertical, Edit, Eye, Copy, Package, PackagePlus, Archive, Trash2, SlidersHorizontal } from 'lucide-react';
 import AdminPageHeader from '../../components/ui/AdminPageHeader';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Pagination from '../../components/ui/Pagination';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import EmptyState from '../../components/ui/EmptyState';
 import { adminProducts } from '../../data/adminProducts';
+import sareeGolden from '../../../assets/saree_golden.jpg';
 
 const PAGE_SIZE = 6;
 const CATEGORIES = ['All', 'Sarees', 'Lehengas', 'Kurtis', 'Dresses', 'Co-ords', 'Dupattas'];
@@ -201,48 +202,52 @@ export default function ProductsPage() {
                   </td>
                 </tr>
               ) : paginated.map(product => (
-                <tr key={product.id} className="hover:bg-slate-50/60 transition-colors group">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
+                <tr key={product.id} className="hover:bg-slate-50/80 transition-colors group">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-4">
                       <img
-                        src={product.image}
+                        src={product.image || sareeGolden}
                         alt={product.name}
-                        className="w-10 h-12 object-cover rounded-lg border border-slate-100 flex-shrink-0"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = sareeGolden;
+                        }}
+                        className="w-14 h-16 sm:w-16 sm:h-20 object-cover rounded-lg border border-slate-200 shadow-sm flex-shrink-0"
                       />
                       <div className="min-w-0">
-                        <p className="font-semibold text-slate-800 truncate max-w-[160px]">{product.name}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{product.category} · {product.subcategory}</p>
+                        <p className="font-semibold text-sm text-slate-900 leading-snug">{product.name}</p>
+                        <p className="text-xs text-slate-400 mt-1 font-medium">{product.category} · {product.subcategory}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">{product.sku}</td>
-                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{product.category}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="font-bold text-slate-800">₹{product.price.toLocaleString('en-IN')}</span>
+                  <td className="px-5 py-4 font-mono text-slate-600 text-xs font-semibold whitespace-nowrap">{product.sku}</td>
+                  <td className="px-5 py-4 text-slate-700 text-xs font-medium whitespace-nowrap">{product.category}</td>
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <span className="font-bold text-sm text-slate-900">₹{product.price.toLocaleString('en-IN')}</span>
                     {product.mrp > product.price && (
-                      <span className="text-[10px] text-slate-400 line-through ml-1">₹{product.mrp.toLocaleString('en-IN')}</span>
+                      <span className="text-xs text-slate-400 line-through ml-1.5">₹{product.mrp.toLocaleString('en-IN')}</span>
                     )}
                   </td>
-                  <td className={`px-4 py-3 font-bold ${product.stock === 0 ? 'text-red-500' : product.stock <= 5 ? 'text-amber-500' : 'text-slate-700'}`}>
+                  <td className={`px-5 py-4 font-bold text-xs ${product.stock === 0 ? 'text-red-500' : product.stock <= 5 ? 'text-amber-500' : 'text-slate-800'}`}>
                     {product.stock}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <StatusBadge status={product.stock === 0 ? 'out-of-stock' : product.status} />
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-semibold ${product.featured ? 'text-brand-teal' : 'text-slate-300'}`}>
+                  <td className="px-5 py-4">
+                    <span className={`text-xs font-semibold ${product.featured ? 'text-brand-teal font-bold' : 'text-slate-300'}`}>
                       {product.featured ? '★ Yes' : '—'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{product.updatedAt}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
+                  <td className="px-5 py-4 text-slate-400 text-xs whitespace-nowrap">{product.updatedAt}</td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-1.5">
                       <Link
                         to={`/admin/products/add`}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-brand-powder text-slate-400 hover:text-brand-teal transition-colors"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-brand-powder text-slate-500 hover:text-brand-teal transition-colors"
                         title="Edit"
                       >
-                        <Edit size={13} />
+                        <Edit size={15} />
                       </Link>
                       <ActionsMenu
                         product={product}

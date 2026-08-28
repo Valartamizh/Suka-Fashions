@@ -1,4 +1,22 @@
 // Admin product data — enriched with SKU, variants, status, flags, attributes, SEO
+import sareeGolden from '../../assets/saree_golden.jpg';
+import sareeBeigeMaroon from '../../assets/saree_beige_maroon.jpg';
+import sareeBeigeMaroonFull from '../../assets/saree_beige_maroon_full.jpg';
+import sareeBeigeOrange from '../../assets/saree_beige_orange.jpg';
+import sareeBeigePink from '../../assets/saree_beige_pink.jpg';
+import lehengaRed from '../../assets/lehenga_red.jpg';
+import lehengaPink from '../../assets/lehenga_pink.jpg';
+import lehengaMint from '../../assets/lehenga_mint.jpg';
+import anarkaliBlack from '../../assets/anarkali_black.jpg';
+import kurtiPurplePrinted from '../../assets/kurti_purple_printed.jpg';
+import kurtiPurpleMaroon from '../../assets/kurti_purple_maroon.jpg';
+import kurtiTealPrinted from '../../assets/kurti_teal_printed.jpg';
+import dressNavy from '../../assets/dress_navy.jpg';
+import gownBlue from '../../assets/gown_blue.jpg';
+import coordSet from '../../assets/coord_set.jpg';
+import dupattaSilk from '../../assets/dupatta_silk.jpg';
+import festiveSuit from '../../assets/festive_suit.jpg';
+
 export const adminProducts = [
   {
     id: 'teal-organza-saree',
@@ -23,11 +41,8 @@ export const adminProducts = [
     gst: 5,
     stock: 12,
     minStock: 10,
-    image: 'https://images.unsplash.com/photo-1610030470224-34537bb26732?q=80&w=200&auto=format&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1610030470224-34537bb26732?q=80&w=600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop',
-    ],
+    image: sareeGolden,
+    images: [sareeGolden, sareeBeigeMaroon],
     variants: [
       { color: 'Teal', colorHex: '#006B70', sizes: [{ size: 'Free Size', stock: 12, sku: 'SUK-SAR-001-FS' }] },
     ],
@@ -79,10 +94,8 @@ export const adminProducts = [
     gst: 5,
     stock: 5,
     minStock: 8,
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=200&auto=format&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop',
-    ],
+    image: sareeBeigeMaroonFull,
+    images: [sareeBeigeMaroonFull],
     variants: [
       { color: 'Gold', colorHex: '#D4AF37', sizes: [{ size: 'Free Size', stock: 5, sku: 'SUK-SAR-002-FS' }] },
     ],
@@ -134,10 +147,8 @@ export const adminProducts = [
     gst: 5,
     stock: 8,
     minStock: 5,
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=200&auto=format&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop',
-    ],
+    image: sareeBeigePink,
+    images: [sareeBeigePink],
     variants: [
       { color: 'Blush Pink', colorHex: '#F8C8DC', sizes: [{ size: 'Free Size', stock: 8, sku: 'SUK-SAR-003-FS' }] },
     ],
@@ -189,10 +200,8 @@ export const adminProducts = [
     gst: 12,
     stock: 3,
     minStock: 5,
-    image: 'https://images.unsplash.com/photo-1617501706025-6ab51a2f9634?q=80&w=200&auto=format&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1617501706025-6ab51a2f9634?q=80&w=600&auto=format&fit=crop',
-    ],
+    image: lehengaRed,
+    images: [lehengaRed],
     variants: [
       { color: 'Crimson', colorHex: '#DC143C', sizes: [
         { size: 'S', stock: 1, sku: 'SUK-LEH-001-S' },
@@ -249,10 +258,8 @@ export const adminProducts = [
     gst: 5,
     stock: 22,
     minStock: 10,
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=200&auto=format&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop',
-    ],
+    image: kurtiPurplePrinted,
+    images: [kurtiPurplePrinted],
     variants: [
       { color: 'Purple', colorHex: '#7B2FBE', sizes: [
         { size: 'S', stock: 5, sku: 'SUK-ANA-001-S' },
@@ -309,10 +316,8 @@ export const adminProducts = [
     gst: 5,
     stock: 0,
     minStock: 8,
-    image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=200&auto=format&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=600&auto=format&fit=crop',
-    ],
+    image: dressNavy,
+    images: [dressNavy],
     variants: [
       { color: 'Navy', colorHex: '#1E3A5F', sizes: [
         { size: 'S', stock: 0, sku: 'SUK-DRS-001-S' },
@@ -368,10 +373,8 @@ export const adminProducts = [
     gst: 5,
     stock: 17,
     minStock: 10,
-    image: 'https://images.unsplash.com/photo-1594938298603-c8148c4b4978?q=80&w=200&auto=format&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1594938298603-c8148c4b4978?q=80&w=600&auto=format&fit=crop',
-    ],
+    image: coordSet,
+    images: [coordSet],
     variants: [
       { color: 'Teal', colorHex: '#006B70', sizes: [
         { size: 'S', stock: 4, sku: 'SUK-CRD-001-S' },
@@ -428,8 +431,8 @@ export const adminProducts = [
     gst: 5,
     stock: 35,
     minStock: 15,
-    image: 'https://images.unsplash.com/photo-1619975823882-8e6c54bff8db?q=80&w=200&auto=format&fit=crop',
-    images: [],
+    image: dupattaSilk,
+    images: [dupattaSilk],
     variants: [
       { color: 'Ivory', colorHex: '#FFFFF0', sizes: [{ size: 'Free Size', stock: 35, sku: 'SUK-DUP-001-FS' }] },
     ],
@@ -464,7 +467,7 @@ export const adminCategories = [
   {
     id: 'sarees',
     name: 'Sarees',
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400&auto=format&fit=crop',
+    image: sareeGolden,
     displayOrder: 1,
     active: true,
     showOnHomepage: true,
@@ -473,7 +476,7 @@ export const adminCategories = [
   {
     id: 'lehengas',
     name: 'Lehengas',
-    image: 'https://images.unsplash.com/photo-1617501706025-6ab51a2f9634?q=80&w=400&auto=format&fit=crop',
+    image: lehengaRed,
     displayOrder: 2,
     active: true,
     showOnHomepage: true,
@@ -482,7 +485,7 @@ export const adminCategories = [
   {
     id: 'kurtis',
     name: 'Kurtis & Suits',
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=400&auto=format&fit=crop',
+    image: kurtiPurplePrinted,
     displayOrder: 3,
     active: true,
     showOnHomepage: true,
@@ -491,7 +494,7 @@ export const adminCategories = [
   {
     id: 'dresses',
     name: 'Dresses',
-    image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=400&auto=format&fit=crop',
+    image: dressNavy,
     displayOrder: 4,
     active: true,
     showOnHomepage: true,
@@ -500,7 +503,7 @@ export const adminCategories = [
   {
     id: 'coords',
     name: 'Co-ords',
-    image: 'https://images.unsplash.com/photo-1594938298603-c8148c4b4978?q=80&w=400&auto=format&fit=crop',
+    image: coordSet,
     displayOrder: 5,
     active: true,
     showOnHomepage: false,
@@ -509,7 +512,7 @@ export const adminCategories = [
   {
     id: 'dupattas',
     name: 'Dupattas',
-    image: 'https://images.unsplash.com/photo-1619975823882-8e6c54bff8db?q=80&w=400&auto=format&fit=crop',
+    image: dupattaSilk,
     displayOrder: 6,
     active: true,
     showOnHomepage: false,
@@ -518,7 +521,7 @@ export const adminCategories = [
   {
     id: 'festive',
     name: 'Festive Wear',
-    image: 'https://images.unsplash.com/photo-1610030470224-34537bb26732?q=80&w=400&auto=format&fit=crop',
+    image: festiveSuit,
     displayOrder: 7,
     active: true,
     showOnHomepage: true,

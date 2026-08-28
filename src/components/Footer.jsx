@@ -52,7 +52,6 @@ const columns = [
       { name: 'Shipping Policy',     path: '/shipping'     },
       { name: 'Returns & Exchanges', path: '/returns'      },
       { name: 'FAQs',                path: '/faqs'         },
-      { name: 'Size Guide',          path: '/size-guide'   },
       { name: 'Track Order',         path: '/track-order'  },
     ],
   },

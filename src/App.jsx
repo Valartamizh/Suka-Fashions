@@ -23,7 +23,6 @@ import Contact      from './pages/Contact';
 import ShippingPolicy from './pages/ShippingPolicy';
 import ReturnsExchanges from './pages/ReturnsExchanges';
 import FAQs         from './pages/FAQs';
-import SizeGuide    from './pages/SizeGuide';
 import TrackOrder   from './pages/TrackOrder';
 import Careers      from './pages/Careers';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -122,7 +121,6 @@ function MainLayout() {
           <Route path="/shipping"               element={<ShippingPolicy />}    />
           <Route path="/returns"                element={<ReturnsExchanges />} />
           <Route path="/faqs"                   element={<FAQs />}             />
-          <Route path="/size-guide"             element={<SizeGuide />}        />
           <Route path="/track-order"            element={<TrackOrder />}       />
           <Route path="/careers"                element={<Careers />}          />
           <Route path="/privacy"                element={<PrivacyPolicy />}    />
