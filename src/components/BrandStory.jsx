@@ -8,7 +8,7 @@ export default function BrandStory() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-12 lg:py-16 bg-white border-b border-brand-powder/30 overflow-hidden">
+    <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-b border-brand-powder/30 overflow-hidden">
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
 

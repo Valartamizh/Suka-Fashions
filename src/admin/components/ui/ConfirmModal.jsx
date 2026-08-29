@@ -1,6 +1,6 @@
 // ConfirmModal — reusable confirmation dialog
 import React from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X, CheckCircle2 } from 'lucide-react';
 
 export default function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confirmLabel = 'Confirm', variant = 'danger' }) {
   if (!isOpen) return null;
@@ -16,9 +16,13 @@ export default function ConfirmModal({ isOpen, onClose, onConfirm, title, messag
           <X size={18} />
         </button>
         <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-4 ${
-          variant === 'danger' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
+          variant === 'danger'
+            ? 'bg-red-100 text-red-600'
+            : variant === 'brand'
+            ? 'bg-brand-powder text-brand-teal'
+            : 'bg-amber-100 text-amber-600'
         }`}>
-          <AlertTriangle size={20} />
+          {variant === 'brand' ? <CheckCircle2 size={20} /> : <AlertTriangle size={20} />}
         </div>
         <h3 className="font-sans font-bold text-slate-800 text-base mb-2">{title}</h3>
         <p className="text-sm text-slate-500 mb-6">{message}</p>
@@ -34,6 +38,8 @@ export default function ConfirmModal({ isOpen, onClose, onConfirm, title, messag
             className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors ${
               variant === 'danger'
                 ? 'bg-red-500 hover:bg-red-600'
+                : variant === 'brand'
+                ? 'bg-brand-teal hover:bg-brand-tealDark'
                 : 'bg-amber-500 hover:bg-amber-600'
             }`}
           >
@@ -44,3 +50,4 @@ export default function ConfirmModal({ isOpen, onClose, onConfirm, title, messag
     </div>
   );
 }
+

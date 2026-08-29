@@ -69,12 +69,12 @@ export default function FAQs() {
     <div className="w-full bg-white text-left">
       
       {/* Header */}
-      <section className="bg-brand-cream/60 py-12 sm:py-16 border-b border-brand-powder/60">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-2 block">
+      <section className="bg-brand-cream/60 py-6 sm:py-8 border-b border-brand-powder/60">
+        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 text-center">
+          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-1.5 block">
             Help & Knowledge Center
           </span>
-          <h1 className="text-3xl sm:text-5xl font-serif text-brand-navy tracking-wide mb-6">
+          <h1 className="text-2xl sm:text-4xl font-serif text-brand-navy tracking-wide mb-3 sm:mb-4">
             Frequently Asked Questions
           </h1>
 
@@ -85,7 +85,7 @@ export default function FAQs() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search questions (e.g. shipping, returns, silk care)..."
-              className="w-full pl-12 pr-4 py-3.5 border border-brand-powder rounded-sm text-xs font-sans shadow-2xs focus:outline-none focus:border-brand-teal bg-white"
+              className="w-full pl-12 pr-4 py-3 border border-brand-powder rounded-sm text-xs font-sans shadow-2xs focus:outline-none focus:border-brand-teal bg-white"
             />
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-navy/40" />
           </div>
@@ -93,7 +93,7 @@ export default function FAQs() {
       </section>
 
       {/* Main FAQ Content */}
-      <section className="py-12 sm:py-20 max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-6 sm:py-10 w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         
         {/* Category Filter Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4 mb-10 border-b border-brand-powder/60">

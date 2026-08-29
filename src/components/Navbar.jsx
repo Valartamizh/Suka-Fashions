@@ -86,7 +86,6 @@ const navItems = [
       { label: 'Haldi / Mehendi',  path: '/products?occasion=Haldi' },
     ],
   },
-  { name: 'Sale', path: '/category/sale', highlight: true },
 ];
 
 export default function Navbar() {
@@ -267,19 +266,19 @@ export default function Navbar() {
                     {/* Dropdown / Mega Menu */}
                     {hasDropdown && activeDropdown === item.name && (
                       <div
-                        className="absolute top-full left-1/2 -translate-x-1/2 bg-white border border-brand-powder/60 shadow-2xl rounded-sm p-6 z-50 animate-in fade-in zoom-in-95 duration-200"
-                        style={{ minWidth: item.megaImage ? '520px' : '260px' }}
+                        className="absolute top-full left-1/2 -translate-x-1/2 bg-white border border-brand-powder/60 shadow-2xl rounded-sm p-4 sm:p-5 z-50 animate-in fade-in zoom-in-95 duration-200"
+                        style={{ minWidth: item.megaImage ? '370px' : '220px', maxWidth: '420px' }}
                       >
-                        <div className="flex gap-8">
-                          <div className="flex-1 flex flex-col gap-2">
-                            <span className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-teal font-semibold border-b border-brand-powder pb-2 mb-1">
+                        <div className="flex gap-4 sm:gap-5 items-stretch">
+                          <div className="flex-1 min-w-[150px] flex flex-col gap-1.5 justify-start">
+                            <span className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-teal font-bold border-b border-brand-powder pb-1.5 mb-1 whitespace-nowrap">
                               Explore {item.name}
                             </span>
                             {item.dropdown.map((drop) => (
                               <Link
                                 key={drop.label}
                                 to={drop.path}
-                                className="font-sans text-xs tracking-wider text-brand-navy/80 hover:text-brand-teal hover:pl-1 transition-all py-1"
+                                className="font-sans text-xs tracking-wider text-brand-navy/80 hover:text-brand-teal hover:pl-1 transition-all py-1 whitespace-nowrap font-medium"
                               >
                                 {drop.label}
                               </Link>
@@ -287,24 +286,24 @@ export default function Navbar() {
                           </div>
 
                           {item.megaImage && (
-                            <div className="w-48 flex-shrink-0 relative overflow-hidden rounded-sm group">
+                            <Link
+                              to={item.megaLink}
+                              className="w-36 sm:w-40 flex-shrink-0 relative overflow-hidden rounded-md group block aspect-[3/4] bg-brand-cream border border-brand-powder/50 self-center"
+                            >
                               <img
                                 src={item.megaImage}
                                 alt={item.megaTitle}
-                                className="w-full h-44 object-cover transition-transform duration-500 group-hover:scale-105"
+                                className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-transparent to-transparent flex flex-col justify-end p-3">
-                                <span className="font-serif text-sm font-medium text-white">
+                              <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/85 via-transparent to-transparent flex flex-col justify-end p-2.5">
+                                <span className="font-serif text-xs sm:text-sm font-medium text-white leading-tight">
                                   {item.megaTitle}
                                 </span>
-                                <Link
-                                  to={item.megaLink}
-                                  className="font-sans text-[9px] uppercase tracking-widest text-brand-powder hover:text-white mt-0.5 font-semibold"
-                                >
+                                <span className="font-sans text-[9px] uppercase tracking-widest text-brand-powder group-hover:text-white mt-0.5 font-semibold">
                                   Shop Now →
-                                </Link>
+                                </span>
                               </div>
-                            </div>
+                            </Link>
                           )}
                         </div>
                       </div>
@@ -490,9 +489,6 @@ export default function Navbar() {
                             </div>
                             <Link to="/account" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">My Profile & Orders</Link>
                             <Link to="/wishlist" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">Wishlist</Link>
-                            <Link to="/admin" className="block px-4 py-2 font-sans text-xs text-brand-teal font-semibold hover:bg-brand-powderLight border-t border-brand-powder/40 mt-1">
-                              🛡️ Admin Dashboard
-                            </Link>
                             <button onClick={handleLogoutRequest} className="w-full text-left px-4 py-2 font-sans text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-brand-powder/40 mt-1 cursor-pointer">
                               <LogOut size={13} /> Logout
                             </button>
@@ -500,19 +496,16 @@ export default function Navbar() {
                         ) : (
                           <>
                             <Link to="/login" className="block px-4 py-2.5 font-sans text-xs font-semibold text-brand-teal hover:bg-brand-powderLight">Login / Register</Link>
-                            <Link to="/admin" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight border-t border-brand-powder/40">
-                              🛡️ Admin Portal
-                            </Link>
                           </>
                         )}
                       </div>
                     )}
               </div>
 
-              {/* Wishlist */}
+              {/* Wishlist (Desktop / Tablet) */}
               <Link
                 to="/wishlist"
-                className="relative p-2 text-brand-navy hover:text-brand-teal transition-colors rounded-full hover:bg-brand-powderLight"
+                className="hidden sm:inline-flex relative p-2 text-brand-navy hover:text-brand-teal transition-colors rounded-full hover:bg-brand-powderLight"
                 aria-label="Wishlist"
               >
                 <Heart size={20} strokeWidth={1.7} />
@@ -523,10 +516,10 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Cart */}
+              {/* Cart (Desktop / Tablet) */}
               <Link
                 to="/cart"
-                className="relative p-2 text-brand-navy hover:text-brand-teal transition-colors rounded-full hover:bg-brand-powderLight"
+                className="hidden sm:inline-flex relative p-2 text-brand-navy hover:text-brand-teal transition-colors rounded-full hover:bg-brand-powderLight"
                 aria-label="Shopping Bag"
               >
                 <ShoppingBag size={20} strokeWidth={1.7} />

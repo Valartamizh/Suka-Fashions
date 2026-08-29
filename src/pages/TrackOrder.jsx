@@ -122,21 +122,21 @@ export default function TrackOrder() {
     <div className="w-full bg-white text-left">
       
       {/* Header */}
-      <section className="bg-brand-cream/60 py-12 sm:py-16 border-b border-brand-powder/60">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-2 block">
+      <section className="bg-brand-cream/60 py-6 sm:py-8 border-b border-brand-powder/60">
+        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 text-center">
+          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-1.5 block">
             Real-Time Tracking
           </span>
-          <h1 className="text-3xl sm:text-5xl font-serif text-brand-navy tracking-wide mb-4">
+          <h1 className="text-2xl sm:text-4xl font-serif text-brand-navy tracking-wide mb-2 sm:mb-3">
             Track Your Order
           </h1>
-          <p className="font-sans text-xs sm:text-sm text-brand-navy/60 max-w-lg mx-auto leading-relaxed">
+          <p className="font-sans text-xs sm:text-sm text-brand-navy/60 max-w-xl mx-auto leading-relaxed">
             Enter your Order ID and Mobile Number / Email to check the live status of your package shipment.
           </p>
         </div>
       </section>
 
-      <section className="py-12 sm:py-20 max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section className="py-6 sm:py-10 w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 space-y-10">
         
         {/* Lookup Form */}
         <div className="bg-white p-8 sm:p-10 rounded-sm border border-brand-powder/70 shadow-2xs">

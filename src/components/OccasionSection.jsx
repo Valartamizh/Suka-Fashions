@@ -60,11 +60,11 @@ export default function OccasionSection() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-12 lg:py-16 bg-white border-b border-brand-powder/30">
+    <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-b border-brand-powder/30">
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Heading */}
-        <div className="text-center mb-10 reveal">
+        <div className="text-center mb-4 reveal">
           <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
             Style For Every Moment
           </p>

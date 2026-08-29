@@ -29,7 +29,7 @@ export default function BenefitsSection() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-8 lg:py-10 bg-[#F5FAFB] border-y border-brand-powder/50">
+    <section ref={sectionRef} className="py-4 lg:py-6 bg-[#F5FAFB] border-y border-brand-powder/50">
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {benefits.map((item, i) => {

@@ -1,17 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../hooks/useReveal';
-import { categories } from '../data/categories';
+import { useCategories } from '../context/CategoryContext';
 
 export default function CategorySection() {
   const sectionRef = useReveal();
+  const { homepageCategories } = useCategories();
+
+  const displayList = homepageCategories.filter(c => c.id !== 'sale');
 
   return (
-    <section ref={sectionRef} className="py-10 lg:py-14 bg-white border-b border-brand-powder/30">
+    <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-b border-brand-powder/30">
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Heading */}
-        <div className="text-center mb-8 reveal">
+        <div className="text-center mb-4 reveal">
           <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
             Collections
           </p>
@@ -22,12 +25,12 @@ export default function CategorySection() {
         </div>
 
         {/* Row */}
-        <div className="flex overflow-x-auto lg:grid lg:grid-cols-8 gap-4 sm:gap-6 pb-2 no-scrollbar scroll-smooth snap-x snap-mandatory">
-          {categories.map((cat, idx) => (
+        <div className="flex overflow-x-auto lg:flex lg:flex-wrap lg:justify-center gap-4 sm:gap-6 pb-2 no-scrollbar scroll-smooth snap-x snap-mandatory">
+          {displayList.map((cat, idx) => (
             <Link
               key={cat.id}
-              to={cat.link}
-              className={`reveal reveal-delay-${Math.min(idx + 1, 5)} flex-shrink-0 w-[95px] sm:w-[115px] lg:w-auto flex flex-col items-center group snap-start`}
+              to={cat.link || `/category/${cat.id}`}
+              className={`reveal reveal-delay-${Math.min(idx + 1, 5)} flex-shrink-0 w-[95px] sm:w-[115px] lg:w-[125px] flex flex-col items-center group snap-start`}
             >
               {/* Circle */}
               <div
@@ -46,7 +49,7 @@ export default function CategorySection() {
                   </div>
                 ) : (
                   <img
-                    src={cat.image}
+                    src={cat.image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=80'}
                     alt={cat.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"
@@ -72,3 +75,4 @@ export default function CategorySection() {
     </section>
   );
 }
+

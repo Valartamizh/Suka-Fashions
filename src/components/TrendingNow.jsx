@@ -35,11 +35,11 @@ export default function TrendingNow() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-10 lg:py-14 bg-white border-b border-brand-powder/30">
+    <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-b border-brand-powder/30">
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Header */}
-        <div className="text-center mb-8 reveal">
+        <div className="text-center mb-4 reveal">
           <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
             In The Spotlight
           </p>
@@ -49,13 +49,13 @@ export default function TrendingNow() {
           <div className="section-divider" />
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        {/* Cards: Horizontal Snap Slider on Mobile, 3-Column Grid on Desktop */}
+        <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar snap-x snap-mandatory">
           {trending.map((item, index) => (
             <Link 
               key={item.id} 
               to={item.link}
-              className={`reveal reveal-delay-${index + 1} group relative block w-full aspect-[3/4] overflow-hidden rounded-sm bg-brand-cream border border-brand-powder/50`}
+              className={`reveal reveal-delay-${index + 1} group relative block w-[75vw] max-w-[280px] md:w-full flex-shrink-0 snap-start aspect-[3/4] overflow-hidden rounded-md bg-brand-cream border border-brand-powder/50 shadow-xs`}
             >
               <img 
                 src={item.image} 
@@ -65,17 +65,17 @@ export default function TrendingNow() {
               />
               
               {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent opacity-85 group-hover:opacity-90 transition-opacity duration-500" />
 
               {/* Text Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-6 lg:p-8 text-left">
-                <span className="font-sans text-[10px] tracking-widest text-brand-powder uppercase mb-2 block transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+              <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 lg:p-8 text-left">
+                <span className="font-sans text-[9px] sm:text-[10px] tracking-widest text-brand-powder uppercase mb-1 sm:mb-2 block transform sm:translate-y-4 sm:opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                   Explore Collection
                 </span>
-                <h3 className="font-serif text-2xl sm:text-3xl font-medium text-white mb-1 leading-tight transform group-hover:-translate-y-1 transition-transform duration-300">
+                <h3 className="font-serif text-lg sm:text-2xl lg:text-3xl font-medium text-white mb-0.5 sm:mb-1 leading-tight transform group-hover:-translate-y-1 transition-transform duration-300">
                   {item.title}
                 </h3>
-                <p className="font-sans text-xs text-white/70 font-light transform group-hover:-translate-y-1 transition-transform duration-300 delay-75">
+                <p className="font-sans text-[11px] sm:text-xs text-white/75 font-light transform group-hover:-translate-y-1 transition-transform duration-300 delay-75">
                   {item.subtitle}
                 </p>
               </div>

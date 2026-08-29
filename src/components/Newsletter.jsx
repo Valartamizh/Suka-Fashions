@@ -32,7 +32,7 @@ export default function Newsletter() {
   };
 
   return (
-    <section className="relative py-12 lg:py-16 overflow-hidden" style={{ background: '#004D50' }}>
+    <section className="relative py-6 lg:py-8 overflow-hidden" style={{ background: '#004D50' }}>
 
       {/* Decorative blobs */}
       <div className="absolute top-0 left-0 w-80 h-80 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: '#006B70', transform: 'translate(-40%, -40%)' }} />

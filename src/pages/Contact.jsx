@@ -56,23 +56,23 @@ export default function Contact() {
     <div className="w-full bg-white text-left">
       
       {/* Hero Header */}
-      <section className="bg-brand-cream/60 py-12 sm:py-16 border-b border-brand-powder/60">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-2 block">
+      <section className="bg-brand-cream/60 py-6 sm:py-8 border-b border-brand-powder/60">
+        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 text-center">
+          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-1.5 block">
             We'd Love To Hear From You
           </span>
-          <h1 className="text-3xl sm:text-5xl font-serif text-brand-navy tracking-wide mb-4">
+          <h1 className="text-2xl sm:text-4xl font-serif text-brand-navy tracking-wide mb-2 sm:mb-3">
             Contact Customer Care
           </h1>
-          <p className="font-sans text-xs sm:text-sm text-brand-navy/60 max-w-lg mx-auto leading-relaxed">
+          <p className="font-sans text-xs sm:text-sm text-brand-navy/60 max-w-xl mx-auto leading-relaxed">
             Have questions about your order, custom fitting, or bridal styling? Our dedicated support team is here to assist you.
           </p>
         </div>
       </section>
 
       {/* Main Form & Info Section */}
-      <section className="py-12 sm:py-20 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+      <section className="py-6 sm:py-8 w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
           
           {/* Contact Details & Info (5 cols) */}
           <div className="lg:col-span-5 space-y-8">

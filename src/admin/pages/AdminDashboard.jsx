@@ -5,7 +5,7 @@ import {
   Eye, ChevronRight, TrendingUp,
 } from 'lucide-react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import StatCard from '../components/ui/StatCard';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -15,6 +15,72 @@ import { adminInventory, getStockStatus } from '../data/adminInventory';
 import { adminCustomers } from '../data/adminCustomers';
 
 const DATE_RANGES = ['Today', '7 Days', '30 Days', 'This Month'];
+
+const RANGE_METRICS = {
+  'Today': {
+    revenue: '₹18,450',
+    revenueChange: '+4.2% vs yesterday',
+    revenueChangeType: 'up',
+    orders: '14',
+    ordersChange: '+2 orders vs yesterday',
+    ordersChangeType: 'up',
+    customers: '3',
+    customersChange: '+3 new today',
+    customersChangeType: 'up',
+    chartLabel: 'Today (Hourly Trends)',
+    chartData: [
+      { label: '9 AM', revenue: 2400, orders: 2 },
+      { label: '12 PM', revenue: 4800, orders: 4 },
+      { label: '3 PM', revenue: 3900, orders: 3 },
+      { label: '6 PM', revenue: 5200, orders: 4 },
+      { label: '9 PM', revenue: 2150, orders: 1 },
+    ],
+    statusCounts: { processing: 3, shipped: 4, delivered: 5, returned: 1, cancelled: 1 },
+  },
+  '7 Days': {
+    revenue: '₹2,48,650',
+    revenueChange: '+12.5% vs last week',
+    revenueChangeType: 'up',
+    orders: '126',
+    ordersChange: '+8.2% this period',
+    ordersChangeType: 'up',
+    customers: '18',
+    customersChange: '+5.1% this week',
+    customersChangeType: 'up',
+    chartLabel: 'Past 7 Days',
+    chartData: salesData['7days'],
+    statusCounts: { processing: 18, shipped: 32, delivered: 68, returned: 4, cancelled: 4 },
+  },
+  '30 Days': {
+    revenue: '₹7,53,650',
+    revenueChange: '+18.4% vs last month',
+    revenueChangeType: 'up',
+    orders: '412',
+    ordersChange: '+14.6% this period',
+    ordersChangeType: 'up',
+    customers: '42',
+    customersChange: '+12.3% this month',
+    customersChangeType: 'up',
+    chartLabel: 'Past 30 Days (Weekly)',
+    chartData: salesData['30days'],
+    statusCounts: { processing: 24, shipped: 58, delivered: 302, returned: 14, cancelled: 14 },
+  },
+  'This Month': {
+    revenue: '₹6,84,200',
+    revenueChange: '+15.2% vs previous month',
+    revenueChangeType: 'up',
+    orders: '385',
+    ordersChange: '+11.8% this period',
+    ordersChangeType: 'up',
+    customers: '38',
+    customersChange: '+9.4% new this month',
+    customersChangeType: 'up',
+    chartLabel: 'Current Month Progression',
+    chartData: salesData['30days'],
+    statusCounts: { processing: 22, shipped: 54, delivered: 284, returned: 13, cancelled: 12 },
+  },
+};
+
 const CHART_RANGES = [
   { label: '7D', key: '7days' },
   { label: '30D', key: '30days' },
@@ -25,6 +91,7 @@ const CHART_RANGES = [
 const ORDER_STATUS_COLORS = {
   pending: '#F59E0B',
   confirmed: '#14B8A6',
+  processing: '#3B82F6',
   packed: '#6366F1',
   shipped: '#8B5CF6',
   delivered: '#10B981',
@@ -45,12 +112,6 @@ const lowStockItems = adminInventory.filter(i => {
   const s = getStockStatus(i.available, i.minimumStock);
   return s === 'low-stock' || s === 'out-of-stock';
 }).slice(0, 5);
-
-// Order status summary
-const orderStatusSummary = adminOrders.reduce((acc, o) => {
-  acc[o.status] = (acc[o.status] || 0) + 1;
-  return acc;
-}, {});
 
 // Top selling products
 const topProducts = [...adminProducts]
@@ -73,8 +134,25 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState('7 Days');
-  const [chartRange, setChartRange] = useState('7days');
-  const chartData = salesData[chartRange];
+  const [customChartData, setCustomChartData] = useState(null);
+  const [activeChartRange, setActiveChartRange] = useState('7days');
+
+  const currentMetrics = RANGE_METRICS[dateRange] || RANGE_METRICS['7 Days'];
+  
+  // Use custom selected chart range if clicked, otherwise follow top date range
+  const chartData = customChartData || currentMetrics.chartData;
+
+  const handleDateRangeChange = (range) => {
+    setDateRange(range);
+    setCustomChartData(null); // Reset to follow top date range
+  };
+
+  const handleChartRangeClick = (key) => {
+    setActiveChartRange(key);
+    setCustomChartData(salesData[key]);
+  };
+
+  const totalStatusCount = Object.values(currentMetrics.statusCounts).reduce((a, b) => a + b, 0);
 
   return (
     <div className="space-y-6">
@@ -82,17 +160,21 @@ export default function AdminDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-sans text-xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Welcome back. Here's what's happening with Suka Fashions today.</p>
+          <p className="text-sm text-slate-400 mt-0.5">
+            Showing metrics for <span className="font-semibold text-brand-teal">{dateRange}</span>.
+          </p>
         </div>
-        <div className="flex gap-1 bg-white border border-slate-200 rounded-lg p-1">
+        
+        {/* Dynamic Interactive Date Range Filter */}
+        <div className="flex gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-2xs">
           {DATE_RANGES.map(r => (
             <button
               key={r}
-              onClick={() => setDateRange(r)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              onClick={() => handleDateRangeChange(r)}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 dateRange === r
-                  ? 'bg-brand-teal text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-brand-teal text-white shadow-sm scale-102'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
               }`}
             >
               {r}
@@ -101,27 +183,30 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards (Dynamically updated based on Date Range) */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Revenue"
-          value="₹2,48,650"
-          change="+12.5% vs last month"
-          changeType="up"
+          value={currentMetrics.revenue}
+          change={currentMetrics.revenueChange}
+          changeType={currentMetrics.revenueChangeType}
           icon={IndianRupee}
+          to="/admin/orders"
         />
         <StatCard
           title="Orders"
-          value="326"
-          change="+8.2% this period"
-          changeType="up"
+          value={currentMetrics.orders}
+          change={currentMetrics.ordersChange}
+          changeType={currentMetrics.ordersChangeType}
           icon={ShoppingBag}
+          to="/admin/orders"
         />
         <StatCard
           title="Products"
           value={adminProducts.length.toString()}
           subtitle="Active listings"
           icon={Package}
+          to="/admin/products"
         />
         <StatCard
           title="Low Stock"
@@ -129,13 +214,15 @@ export default function AdminDashboard() {
           subtitle={`${invStats.outOfStock} out of stock`}
           icon={AlertTriangle}
           accent
+          to="/admin/inventory"
         />
         <StatCard
           title="Customers"
-          value={adminCustomers.length.toString()}
-          change="+5.1% this month"
-          changeType="up"
+          value={currentMetrics.customers}
+          change={currentMetrics.customersChange}
+          changeType={currentMetrics.customersChangeType}
           icon={Users}
+          to="/admin/customers"
         />
       </div>
 
@@ -146,15 +233,17 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-sans font-bold text-slate-800 text-sm">Sales Overview</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Revenue and order trends</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {customChartData ? 'Custom period trends' : currentMetrics.chartLabel}
+              </p>
             </div>
             <div className="flex gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1">
               {CHART_RANGES.map(r => (
                 <button
                   key={r.key}
-                  onClick={() => setChartRange(r.key)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
-                    chartRange === r.key
+                  onClick={() => handleChartRangeClick(r.key)}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                    (customChartData ? activeChartRange === r.key : false)
                       ? 'bg-brand-teal text-white shadow-sm'
                       : 'text-slate-500 hover:text-slate-700'
                   }`}
@@ -190,11 +279,16 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Order Status Overview */}
+        {/* Order Status Overview (Dynamically proportioned) */}
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
-          <h3 className="font-sans font-bold text-slate-800 text-sm mb-4">Order Overview</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-sans font-bold text-slate-800 text-sm">Order Overview</h3>
+            <span className="text-[11px] font-semibold text-brand-teal bg-brand-powderLight px-2 py-0.5 rounded-full">
+              {dateRange}
+            </span>
+          </div>
           <div className="space-y-2.5">
-            {Object.entries(orderStatusSummary).map(([status, count]) => (
+            {Object.entries(currentMetrics.statusCounts).map(([status, count]) => (
               <div key={status} className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <span
@@ -206,9 +300,9 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 bg-slate-100 rounded-full flex-shrink-0" style={{ width: '60px' }}>
                     <div
-                      className="h-full rounded-full"
+                      className="h-full rounded-full transition-all duration-500"
                       style={{
-                        width: `${(count / adminOrders.length) * 100}%`,
+                        width: `${Math.min(100, Math.round((count / totalStatusCount) * 100))}%`,
                         backgroundColor: ORDER_STATUS_COLORS[status] || '#94a3b8',
                       }}
                     />
@@ -227,7 +321,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Bottom row: Recent Orders + Top Products + Low Stock */}
+      {/* Bottom row: Recent Orders + Top Products */}
       <div className="grid lg:grid-cols-3 gap-4">
         {/* Recent Orders */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm">
@@ -249,7 +343,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {adminOrders.slice(0, 6).map(order => (
+                {adminOrders.slice(0, dateRange === 'Today' ? 3 : 6).map(order => (
                   <tr
                     key={order.id}
                     onClick={() => navigate(`/admin/orders/${order.id}`)}
@@ -291,7 +385,7 @@ export default function AdminDashboard() {
                 <img
                   src={p.image}
                   alt={p.name}
-                  className="w-10 h-12 object-cover rounded-lg border border-slate-100 flex-shrink-0 group-hover:scale-105 transition-transform"
+                  className="w-10 h-12 object-cover object-top rounded-lg border border-slate-100 flex-shrink-0 group-hover:scale-105 transition-transform"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-slate-800 truncate leading-tight group-hover:text-brand-teal transition-colors">{p.name}</p>

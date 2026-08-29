@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, ShieldCheck, ChevronRight, MessageSquare, Truck, Plus, X, MapPin } from 'lucide-react';
+import logo from '../assets/logo.jpg';
 import { products } from '../data/products';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -8,8 +9,7 @@ import { useOrders } from '../context/OrderContext';
 
 const STEPS = [
   { id: 1, name: 'Address' },
-  { id: 2, name: 'Delivery' },
-  { id: 3, name: 'Review' }
+  { id: 2, name: 'Review & Confirm' }
 ];
 
 const PUBLIC_PRODUCT_IMAGES = {
@@ -133,11 +133,9 @@ export default function Checkout() {
     }
   }, [selectedAddressId, addresses]);
 
-  const [deliveryMethod, setDeliveryMethod] = useState('standard');
-
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = deliveryMethod === 'express' ? 250 : 0;
-  const total = subtotal + shipping;
+  const shipping = 0;
+  const total = subtotal;
 
   const [checkoutErrors, setCheckoutErrors] = useState({});
 
@@ -246,10 +244,7 @@ export default function Checkout() {
 
     if (currentStep === 1) {
       if (!validateStep1()) return;
-    }
-
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep(2);
       window.scrollTo(0, 0);
     } else {
       // Final step submit: Redirect to WhatsApp with complete order breakdown
@@ -257,7 +252,8 @@ export default function Checkout() {
       const itemsListText = cartItems
         .map(item => {
           const imgUrl = getProductImageUrl(item);
-          return `• *${item.name}* (${item.selectedSize || item.size || 'Free Size'}) x${item.quantity} - ₹${(item.price * item.quantity).toLocaleString('en-IN')}\n  📷 *Product Photo:* ${imgUrl}`;
+          const pId = item.productId || item.sku || (products.find(p => p.id === item.id)?.productId) || item.id;
+          return `• *${item.name}* [PID: ${pId}] (${item.selectedSize || item.size || 'Free Size'}${item.selectedColor ? `, Color: ${item.selectedColor}` : ''}) x${item.quantity} - ₹${(item.price * item.quantity).toLocaleString('en-IN')}\n  📷 *Product Photo:* ${imgUrl}`;
         })
         .join('\n\n');
 
@@ -271,7 +267,7 @@ export default function Checkout() {
         `*Delivery Address:* ${formData.address}, ${formData.apartment ? formData.apartment + ', ' : ''}${formData.city}, ${formData.state} - ${formData.pincode}\n\n` +
         `*ITEMS ORDERED:*\n${itemsListText}\n\n` +
         `*Subtotal:* ₹${subtotal.toLocaleString('en-IN')}\n` +
-        `*Delivery Charge:* ${shipping === 0 ? 'FREE (Standard)' : `₹${shipping} (Express)`}\n` +
+        `*Delivery Charge:* FREE (Standard Delivery)\n` +
         `*TOTAL AMOUNT:* ₹${total.toLocaleString('en-IN')}\n` +
         `-----------------------------------\n` +
         `Please confirm my order and share dispatch details. Thank you!`
@@ -284,12 +280,17 @@ export default function Checkout() {
         status: 'Processing',
         total: total,
         subtotal: subtotal,
-        shipping: shipping,
+        shipping: 0,
         paymentMethod: 'WhatsApp Express Checkout',
-        items: cartItems.map(item => ({
-          ...item,
-          selectedSize: item.selectedSize || item.size || 'Free Size',
-        })),
+        items: cartItems.map(item => {
+          const pId = item.productId || item.sku || (products.find(p => p.id === item.id)?.productId) || item.id;
+          return {
+            ...item,
+            productId: pId,
+            sku: pId,
+            selectedSize: item.selectedSize || item.size || 'Free Size',
+          };
+        }),
         address: {
           name: `${formData.firstName} ${formData.lastName}`,
           street: formData.address,
@@ -321,13 +322,21 @@ export default function Checkout() {
   return (
     <div className="bg-brand-cream/20 min-h-[85vh] pb-16 text-left">
       
-      {/* Checkout Header */}
-      <div className="bg-white border-b border-brand-powder/60 py-4">
+      {/* Checkout Header with Brand Logo */}
+      <div className="bg-white border-b border-brand-powder/60 py-3.5 shadow-2xs">
         <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 flex justify-between items-center">
-          <Link to="/" className="font-serif text-xl sm:text-2xl font-bold tracking-wider text-brand-navy">
-            Suka <span className="font-sans text-[9px] tracking-[0.3em] text-brand-teal uppercase ml-1">FASHIONS</span>
+          <Link to="/" className="flex items-center gap-3 group">
+            <img src={logo} alt="Suka Fashions Logo" className="w-10 h-10 object-contain rounded-full border border-brand-powder/60 shadow-2xs" />
+            <div className="flex flex-col">
+              <span className="font-serif text-xl sm:text-2xl font-bold tracking-wider text-brand-navy leading-none">
+                Suka
+              </span>
+              <span className="font-sans text-[8.5px] tracking-[0.3em] text-brand-teal uppercase font-bold mt-0.5">
+                FASHIONS
+              </span>
+            </div>
           </Link>
-          <div className="flex items-center gap-2 text-brand-navy/60 font-sans text-[10px] uppercase tracking-[0.15em] font-medium">
+          <div className="flex items-center gap-2 text-brand-navy/70 font-sans text-[10px] uppercase tracking-[0.15em] font-semibold bg-brand-cream/40 px-3 py-1.5 rounded-full border border-brand-powder/50">
             <ShieldCheck size={16} className="text-brand-teal" /> Express WhatsApp Checkout
           </div>
         </div>
@@ -560,44 +569,8 @@ export default function Checkout() {
                   </div>
                 )}
 
-                {/* STEP 2: Delivery */}
+                {/* STEP 2: Review & WhatsApp Redirect Notice */}
                 {currentStep === 2 && (
-                  <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                    <h2 className="font-serif text-xl sm:text-2xl text-brand-navy mb-6">Delivery Method</h2>
-                    <div className="space-y-4">
-                      <label 
-                        onClick={() => setDeliveryMethod('standard')}
-                        className={`flex items-start gap-4 border p-5 rounded-sm cursor-pointer transition-colors ${deliveryMethod === 'standard' ? 'border-brand-teal bg-brand-powderLight' : 'border-brand-powder'}`}
-                      >
-                        <input type="radio" name="delivery" checked={deliveryMethod === 'standard'} onChange={() => setDeliveryMethod('standard')} className="mt-1 w-4 h-4 text-brand-teal border-brand-teal focus:ring-brand-teal" />
-                        <div className="flex-1">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-sans text-sm font-semibold text-brand-navy">Standard Delivery</span>
-                            <span className="font-sans text-xs font-bold text-brand-teal">Free</span>
-                          </div>
-                          <p className="font-sans text-[11px] text-brand-navy/60">Delivered in 3-5 business days via BlueDart / Delhivery</p>
-                        </div>
-                      </label>
-
-                      <label 
-                        onClick={() => setDeliveryMethod('express')}
-                        className={`flex items-start gap-4 border p-5 rounded-sm cursor-pointer transition-colors ${deliveryMethod === 'express' ? 'border-brand-teal bg-brand-powderLight' : 'border-brand-powder'}`}
-                      >
-                        <input type="radio" name="delivery" checked={deliveryMethod === 'express'} onChange={() => setDeliveryMethod('express')} className="mt-1 w-4 h-4 text-brand-teal border-brand-powder focus:ring-brand-teal" />
-                        <div className="flex-1">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-sans text-sm font-medium text-brand-navy">Express Air Courier</span>
-                            <span className="font-sans text-xs font-bold text-brand-navy">₹250</span>
-                          </div>
-                          <p className="font-sans text-[11px] text-brand-navy/60">Delivered in 1-2 business days with priority packing</p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 3: Review & WhatsApp Redirect Notice */}
-                {currentStep === 3 && (
                   <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                     <h2 className="font-serif text-xl sm:text-2xl text-brand-navy mb-6">Review & Place Order</h2>
                     
@@ -608,7 +581,7 @@ export default function Checkout() {
                         <div>
                           <p className="font-sans text-xs font-bold uppercase tracking-wider mb-0.5">WhatsApp Redirect Enabled</p>
                           <p className="font-sans text-[11px] text-emerald-800 leading-relaxed">
-                            Clicking <strong>"Place Order on WhatsApp"</strong> below will format your order details and launch a direct chat with Suka Fashions support (+91 98765 43210) for fast confirmation.
+                            Clicking <strong>"Place Order on WhatsApp"</strong> below will format your complete order invoice with product IDs and launch a direct chat with Suka Fashions support (+91 98765 43210) for instant confirmation.
                           </p>
                         </div>
                       </div>
@@ -626,14 +599,12 @@ export default function Checkout() {
                         </p>
                       </div>
 
-                      <div className="border border-brand-powder/50 p-5 rounded-sm bg-brand-cream/10">
-                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-brand-powder/50">
-                          <h3 className="font-sans text-[10px] uppercase tracking-widest font-semibold text-brand-navy">Delivery Method</h3>
-                          <button type="button" onClick={() => setCurrentStep(2)} className="text-[10px] uppercase text-brand-teal hover:underline font-bold">Edit</button>
+                      <div className="border border-brand-powder/50 p-4 rounded-sm bg-brand-cream/10 flex items-center gap-3">
+                        <Truck size={18} className="text-brand-teal flex-shrink-0" />
+                        <div className="text-xs font-sans text-brand-navy/80">
+                          <span className="font-semibold text-brand-navy">Delivery Service: </span>
+                          <span className="text-brand-teal font-bold uppercase tracking-wider">FREE Standard Shipping</span> (3-5 business days)
                         </div>
-                        <p className="font-sans text-xs text-brand-navy/80">
-                          Delivery: <strong>{deliveryMethod === 'express' ? 'Express Courier (₹250)' : 'Standard Free Shipping'}</strong>
-                        </p>
                       </div>
 
                     </div>
@@ -654,21 +625,30 @@ export default function Checkout() {
               
               {/* Items List */}
               <div className="space-y-4 mb-6 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-                {cartItems.map((item, idx) => (
-                  <div key={idx} className="flex gap-4 items-center">
-                    <div className="w-16 h-20 bg-brand-cream border border-brand-powder/40 rounded-sm overflow-hidden flex-shrink-0 relative">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      <span className="absolute -top-1 -right-1 bg-brand-navy text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{item.quantity}</span>
+                {cartItems.map((item, idx) => {
+                  const pId = item.productId || item.sku || (products.find(p => p.id === item.id)?.productId) || item.id;
+                  return (
+                    <div key={idx} className="flex gap-4 items-center">
+                      <div className="w-16 h-20 bg-brand-cream border border-brand-powder/40 rounded-sm overflow-hidden flex-shrink-0 relative">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <span className="absolute -top-1 -right-1 bg-brand-navy text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{item.quantity}</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-brand-powderLight text-brand-navy border border-brand-powder text-[9px] font-mono font-semibold mb-1">
+                          PID: {pId}
+                        </div>
+                        <p className="font-serif text-sm text-brand-navy line-clamp-1 mb-0.5">{item.name}</p>
+                        <p className="font-sans text-[10px] text-brand-navy/60 uppercase tracking-wider">
+                          Size: {item.selectedSize || item.size || 'Free Size'}
+                          {item.selectedColor ? ` • ${item.selectedColor}` : ''}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-sans text-sm font-semibold text-brand-navy">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-serif text-sm text-brand-navy line-clamp-1 mb-1">{item.name}</p>
-                      <p className="font-sans text-[10px] text-brand-navy/60 uppercase tracking-wider">Size: {item.size}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-sans text-sm font-semibold text-brand-navy">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="space-y-3 mb-6 pt-4 border-t border-brand-powder/60">
@@ -678,7 +658,7 @@ export default function Checkout() {
                 </div>
                 <div className="flex justify-between font-sans text-xs text-brand-navy/70">
                   <span>Delivery Charge</span>
-                  <span>{shipping === 0 ? 'Free' : `₹${shipping.toLocaleString('en-IN')}`}</span>
+                  <span className="text-brand-teal font-semibold">FREE</span>
                 </div>
               </div>
 
@@ -696,16 +676,16 @@ export default function Checkout() {
                   type="button"
                   onClick={handleNext}
                   className={`w-full py-3.5 px-6 font-sans text-[10px] uppercase tracking-[0.2em] font-bold rounded-sm shadow-md transition-all flex items-center justify-center gap-2.5 cursor-pointer ${
-                    currentStep === 3 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg' : 'bg-brand-navy hover:bg-brand-teal text-white'
+                    currentStep === 2 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg' : 'bg-brand-navy hover:bg-brand-teal text-white'
                   }`}
                 >
-                  {currentStep === 3 ? (
+                  {currentStep === 2 ? (
                     <>
                       <MessageSquare size={16} /> Place Order on WhatsApp
                     </>
                   ) : (
                     <>
-                      Continue <ChevronRight size={14} />
+                      Continue to Review <ChevronRight size={14} />
                     </>
                   )}
                 </button>
@@ -720,7 +700,7 @@ export default function Checkout() {
                       }}
                       className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 hover:text-brand-navy transition-colors font-medium hover:underline cursor-pointer"
                     >
-                      Back to {STEPS[currentStep - 2].name}
+                      Back to Address
                     </button>
                   ) : (
                     <Link to="/cart" className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 hover:text-brand-navy transition-colors font-medium hover:underline">

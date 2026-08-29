@@ -41,7 +41,6 @@ const columns = [
       { name: 'Kurtis',        path: '/category/kurtis'   },
       { name: 'Lehengas',      path: '/category/lehengas' },
       { name: 'Dresses',       path: '/category/dresses'  },
-      { name: 'Sale',          path: '/category/sale'     },
     ],
   },
   {
@@ -51,7 +50,6 @@ const columns = [
       { name: 'Contact Us',          path: '/contact'      },
       { name: 'Shipping Policy',     path: '/shipping'     },
       { name: 'Returns & Exchanges', path: '/returns'      },
-      { name: 'FAQs',                path: '/faqs'         },
       { name: 'Track Order',         path: '/track-order'  },
     ],
   },
@@ -59,12 +57,9 @@ const columns = [
     id:    'about',
     title: 'About',
     links: [
-      { name: 'About Us',          path: '/about'       },
       { name: 'Our Story',         path: '/about'       },
-      { name: 'Careers',           path: '/careers'     },
       { name: 'Privacy Policy',    path: '/privacy'     },
       { name: 'Terms & Conditions', path: '/terms'      },
-      { name: 'Admin Portal',      path: '/admin/login' },
     ],
   },
 ];
@@ -77,8 +72,6 @@ const socials = [
   { SvgIcon: WhatsAppIcon,  href: 'https://wa.me/919876543210',   label: 'WhatsApp'  },
 ];
 
-const paymentBadges = ['VISA', 'MASTERCARD', 'RUPAY', 'UPI'];
-
 /* ─── Accordion column (mobile) ─────────────────────────────────────────────── */
 function FooterColumn({ col }) {
   const [open, setOpen] = useState(false);
@@ -87,7 +80,7 @@ function FooterColumn({ col }) {
     <div className="flex flex-col text-left">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex justify-between items-center py-3 lg:py-0 border-b border-white/10 lg:border-none focus:outline-none group"
+        className="w-full flex justify-between items-center py-2.5 lg:py-0 border-b border-white/10 lg:border-none focus:outline-none group"
         aria-expanded={open}
       >
         <h4 className="font-serif text-xs tracking-[0.22em] uppercase font-semibold text-brand-powder">
@@ -98,7 +91,7 @@ function FooterColumn({ col }) {
         </span>
       </button>
 
-      <ul className={`space-y-2.5 mt-4 lg:block ${open ? 'block' : 'hidden'}`}>
+      <ul className={`space-y-2 mt-3 lg:block ${open ? 'block' : 'hidden'}`}>
         {col.links.map((link) => (
           <li key={link.name}>
             <Link
@@ -119,17 +112,17 @@ export default function Footer() {
   const [customerOpen, setCustomerOpen] = useState(false);
 
   return (
-    <footer className="bg-brand-tealDark text-white pt-12 lg:pt-14 pb-8 border-t border-brand-tealLight/10">
+    <footer className="bg-brand-tealDark text-white pt-8 lg:pt-10 pb-5 border-t border-brand-tealLight/10">
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* ── Main grid ─────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-8 lg:gap-10 pb-12 border-b border-white/10">
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 lg:gap-8 pb-6 lg:pb-7 border-b border-white/10">
 
           {/* Brand column — 2 cols wide */}
           <div className="lg:col-span-2 flex flex-col items-start">
 
             {/* Logo */}
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <img
                 src={logo}
                 alt="Suka Fashions Logo"
@@ -219,13 +212,15 @@ export default function Footer() {
                 },
               ].map(({ Icon, text, label, href, isSvg, isExternal }) => {
                 const content = (
-                  <div className="flex items-start gap-2.5 group/item">
-                    {isSvg ? (
-                      <InstagramIcon />
-                    ) : (
-                      <Icon size={14} strokeWidth={1.6} className="text-brand-teal group-hover/item:text-white transition-colors mt-0.5 flex-shrink-0" />
-                    )}
-                    <span className={`font-sans text-[11px] leading-snug transition-colors ${href ? 'text-brand-powder/80 group-hover/item:text-white hover:underline' : 'text-brand-powder/55'}`}>
+                  <div className="flex items-center gap-2.5 group/item">
+                    <div className="w-6 h-6 rounded-full bg-white/10 group-hover/item:bg-white/20 flex items-center justify-center text-brand-powder group-hover/item:text-white transition-all flex-shrink-0">
+                      {isSvg ? (
+                        <InstagramIcon />
+                      ) : (
+                        <Icon size={12} strokeWidth={2} />
+                      )}
+                    </div>
+                    <span className={`font-sans text-[11px] leading-snug transition-colors ${href ? 'text-brand-powder/85 group-hover/item:text-white hover:underline' : 'text-brand-powder/65'}`}>
                       {text}
                     </span>
                   </div>
@@ -253,25 +248,11 @@ export default function Footer() {
         </div>
 
         {/* ── Bottom row ─────────────────────────────── */}
-        <div className="pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-
+        <div className="pt-4 sm:pt-5 flex justify-center items-center">
           {/* Copyright */}
-          <p className="font-sans text-[10px] text-brand-powder/35 font-light text-center sm:text-left">
+          <p className="font-sans text-[11px] text-brand-powder/40 font-light text-center">
             © {new Date().getFullYear()} Suka Fashions. All Rights Reserved. Crafted with care.
           </p>
-
-          {/* Payment badges */}
-          <div className="flex items-center gap-2">
-            {paymentBadges.map((badge) => (
-              <span
-                key={badge}
-                className="px-2.5 py-1 border border-white/10 bg-white/8 text-brand-powder font-sans text-[9px] tracking-[0.12em] font-semibold rounded-xs select-none"
-              >
-                {badge}
-              </span>
-            ))}
-          </div>
-
         </div>
 
       </div>

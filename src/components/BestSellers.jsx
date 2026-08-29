@@ -43,32 +43,32 @@ export default function BestSellers() {
   if (bestSellers.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="py-12 lg:py-16 bg-brand-cream/30 border-b border-brand-powder/30 relative overflow-hidden">
-      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
+    <section ref={sectionRef} className="pt-4 pb-3 sm:pt-6 sm:pb-6 lg:py-8 bg-brand-cream/30 border-b border-brand-powder/30 relative overflow-hidden">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Header row */}
-        <div className="flex justify-between items-end mb-7 pb-3 border-b border-brand-powder/40 reveal">
+        <div className="flex justify-between items-end mb-3 sm:mb-4 pb-2 border-b border-brand-powder/40 reveal">
           <div>
-            <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-1.5">
+            <p className="font-sans text-[9.5px] sm:text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-1 sm:mb-1.5">
               Loved by our customers
             </p>
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
+            <h2 className="font-serif text-xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
               Best Sellers
             </h2>
-            <div className="section-divider-left mt-2" />
+            <div className="section-divider-left mt-1.5 sm:mt-2" />
           </div>
           
-          <div className="hidden sm:flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Link
               to="/products?sort=best-selling"
-              className="flex items-center gap-2 font-sans text-[11px] tracking-[0.18em] uppercase text-brand-teal hover:text-brand-tealDark font-semibold transition-colors duration-200 group mr-4"
+              className="flex items-center gap-1 sm:gap-2 font-sans text-[9.5px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.18em] uppercase text-brand-teal hover:text-brand-tealDark font-bold transition-colors duration-200 group sm:mr-4 whitespace-nowrap"
             >
-              <span>View All</span>
-              <ArrowRight size={14} strokeWidth={2} className="transform transition-transform duration-200 group-hover:translate-x-1" />
+              <span>View More</span>
+              <ArrowRight size={13} strokeWidth={2} className="transform transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
             
             {/* Custom Navigation Arrows */}
-            <div className="flex gap-2">
+            <div className="hidden sm:flex gap-2">
               <button 
                 onClick={() => scroll('left')}
                 disabled={!showLeftArrow}

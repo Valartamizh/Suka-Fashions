@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthFashionPanel from '../components/auth/AuthFashionPanel';
@@ -11,8 +11,14 @@ export default function Login() {
   const [step, setStep] = useState('phone'); // 'phone' | 'otp'
   const [phone, setPhone] = useState('');
   const [newUserData, setNewUserData] = useState({ name: 'Pooja', email: 'pooja@example.com' });
-  const { login } = useAuth();
+  const { login, isLoggedIn } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate('/');
+    }
+  }, [isLoggedIn, navigate]);
 
   const handleSendOtp = (data) => {
     const enteredPhone = typeof data === 'object' ? data.phone : data;
@@ -31,7 +37,7 @@ export default function Login() {
   const handleOtpSuccess = () => {
     const formattedPhone = phone.startsWith('+91') ? phone : `+91 ${phone}`;
     login(formattedPhone, newUserData.name, newUserData.email);
-    navigate('/account');
+    navigate('/');
   };
 
   return (

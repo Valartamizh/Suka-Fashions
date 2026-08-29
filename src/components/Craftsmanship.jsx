@@ -35,11 +35,11 @@ export default function Craftsmanship() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-12 lg:py-16 bg-white border-y border-brand-powder/50">
+    <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-y border-brand-powder/50">
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Section Heading */}
-        <div className="text-center mb-10 reveal">
+        <div className="text-center mb-5 reveal">
           <p className="font-sans text-[10px] tracking-[0.3em] text-brand-teal uppercase font-semibold mb-3">
             The Suka Standard
           </p>

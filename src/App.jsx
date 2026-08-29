@@ -92,15 +92,20 @@ function MobileBottomNav() {
   );
 }
 
+import { AuthProvider } from './context/AuthContext';
+import { CategoryProvider } from './context/CategoryContext';
+import { ContentProvider, useContent } from './context/ContentContext';
+
 function MainLayout() {
   const location = useLocation();
   // Hide Navbar/Footer on specific pages for cleaner flow
   const hideNavFooter = ['/checkout', '/order-success', '/login'].includes(location.pathname);
+  const { isSectionActive } = useContent();
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
       
-      {!hideNavFooter && <AnnouncementBar />}
+      {!hideNavFooter && isSectionActive('announcement') && <AnnouncementBar />}
       {!hideNavFooter && <Navbar />}
 
       {/* Page content */}
@@ -136,43 +141,48 @@ function MainLayout() {
   );
 }
 
-import { AuthProvider } from './context/AuthContext';
-
 export default function App() {
   return (
     <AuthProvider>
       <AdminAuthProvider>
-        <Router>
-          <WishlistProvider>
-            <CartProvider>
-              <OrderProvider>
-                <Routes>
-                  {/* ─── Admin Routes (standalone, no customer nav/footer) ───── */}
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="products" element={<ProductsPage />} />
-                    <Route path="products/add" element={<AddProductPage />} />
-                    <Route path="categories" element={<CategoriesPage />} />
-                    <Route path="inventory" element={<InventoryPage />} />
-                    <Route path="orders" element={<OrdersPage />} />
-                    <Route path="orders/:id" element={<OrderDetailPage />} />
-                    <Route path="customers" element={<CustomersPage />} />
-                    <Route path="customers/:id" element={<CustomerDetailPage />} />
-                    <Route path="reviews" element={<ReviewsPage />} />
-                    <Route path="content" element={<ContentPage />} />
-                    <Route path="users" element={<UsersPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
-                  </Route>
+        <CategoryProvider>
+          <ContentProvider>
+            <Router>
+              <WishlistProvider>
+                <CartProvider>
+                  <OrderProvider>
+                    <Routes>
+                      {/* ─── Admin Routes (standalone, no customer nav/footer) ───── */}
+                      <Route path="/admin/login" element={<AdminLogin />} />
+                      <Route path="/admin" element={<AdminLayout />}>
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="products" element={<ProductsPage />} />
+                        <Route path="products/add" element={<AddProductPage />} />
+                        <Route path="products/edit/:id" element={<AddProductPage />} />
+                        <Route path="categories" element={<CategoriesPage />} />
+                        <Route path="inventory" element={<InventoryPage />} />
+                        <Route path="orders" element={<OrdersPage />} />
+                        <Route path="orders/:id" element={<OrderDetailPage />} />
+                        <Route path="customers" element={<CustomersPage />} />
+                        <Route path="customers/:id" element={<CustomerDetailPage />} />
+                        <Route path="reviews" element={<ReviewsPage />} />
+                        <Route path="content" element={<ContentPage />} />
+                        <Route path="users" element={<UsersPage />} />
+                        <Route path="settings" element={<SettingsPage />} />
+                      </Route>
 
-                  {/* ─── Customer Storefront ────────────────────────────────── */}
-                  <Route path="/*" element={<MainLayout />} />
-                </Routes>
-              </OrderProvider>
-            </CartProvider>
-          </WishlistProvider>
-        </Router>
+                      {/* ─── Customer Storefront ────────────────────────────────── */}
+                      <Route path="/*" element={<MainLayout />} />
+                    </Routes>
+                  </OrderProvider>
+                </CartProvider>
+              </WishlistProvider>
+            </Router>
+          </ContentProvider>
+        </CategoryProvider>
       </AdminAuthProvider>
     </AuthProvider>
   );
 }
+
+

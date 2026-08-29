@@ -26,6 +26,8 @@ export const products = [
   // ─── SAREES (6) ─────────────────────────────────────────────────────────────
   {
     id: 'teal-organza-saree',
+    productId: 'SUK-SAR-001',
+    sku: 'SUK-SAR-001',
     slug: 'teal-embroidered-organza-saree',
     name: 'Teal Embroidered Organza Saree',
     category: 'sarees',
@@ -47,6 +49,8 @@ export const products = [
   },
   {
     id: 'gold-zari-kanchipuram',
+    productId: 'SUK-SAR-002',
+    sku: 'SUK-SAR-002',
     slug: 'royal-gold-zari-kanchipuram-saree',
     name: 'Royal Gold Zari Kanchipuram Saree',
     category: 'sarees',
@@ -68,6 +72,8 @@ export const products = [
   },
   {
     id: 'blush-pink-silk-saree',
+    productId: 'SUK-SAR-003',
+    sku: 'SUK-SAR-003',
     slug: 'blush-pink-pure-silk-saree',
     name: 'Blush Pink Pure Silk Saree',
     category: 'sarees',
@@ -89,6 +95,8 @@ export const products = [
   },
   {
     id: 'navy-blue-georgette-saree',
+    productId: 'SUK-SAR-004',
+    sku: 'SUK-SAR-004',
     slug: 'navy-blue-georgette-ruffle-saree',
     name: 'Navy Blue Georgette Ruffle Saree',
     category: 'sarees',
@@ -110,6 +118,8 @@ export const products = [
   },
   {
     id: 'maroon-banarasi-saree',
+    productId: 'SUK-SAR-005',
+    sku: 'SUK-SAR-005',
     slug: 'maroon-banarasi-silk-saree',
     name: 'Maroon Banarasi Silk Saree',
     category: 'sarees',
@@ -131,6 +141,8 @@ export const products = [
   },
   {
     id: 'yellow-cotton-saree',
+    productId: 'SUK-SAR-006',
+    sku: 'SUK-SAR-006',
     slug: 'mustard-yellow-handloom-cotton-saree',
     name: 'Mustard Yellow Handloom Cotton Saree',
     category: 'sarees',
@@ -154,6 +166,8 @@ export const products = [
   // ─── KURTIS (5) ─────────────────────────────────────────────────────────────
   {
     id: 'floral-cotton-kurti',
+    productId: 'SUK-KUR-101',
+    sku: 'SUK-KUR-101',
     slug: 'floral-printed-cotton-kurti-set',
     name: 'Floral Printed Cotton Kurti Set',
     category: 'kurtis',
@@ -175,6 +189,8 @@ export const products = [
   },
   {
     id: 'crimson-festive-kurta',
+    productId: 'SUK-KUR-102',
+    sku: 'SUK-KUR-102',
     slug: 'crimson-silk-festive-kurta-set',
     name: 'Crimson Silk Festive Kurta Set',
     category: 'kurtis',
@@ -196,6 +212,8 @@ export const products = [
   },
   {
     id: 'emerald-green-kurti',
+    productId: 'SUK-KUR-103',
+    sku: 'SUK-KUR-103',
     slug: 'emerald-green-embroidered-kurti',
     name: 'Emerald Green Embroidered Kurti',
     category: 'kurtis',
@@ -217,6 +235,8 @@ export const products = [
   },
   {
     id: 'white-chikankari-kurti',
+    productId: 'SUK-KUR-104',
+    sku: 'SUK-KUR-104',
     slug: 'classic-white-chikankari-kurti',
     name: 'Classic White Chikankari Kurti',
     category: 'kurtis',
@@ -238,6 +258,8 @@ export const products = [
   },
   {
     id: 'black-office-kurti',
+    productId: 'SUK-KUR-105',
+    sku: 'SUK-KUR-105',
     slug: 'black-a-line-office-kurti',
     name: 'Black A-Line Office Kurti',
     category: 'kurtis',
@@ -261,6 +283,8 @@ export const products = [
   // ─── LEHENGAS (4) ───────────────────────────────────────────────────────────
   {
     id: 'blue-sequins-lehenga',
+    productId: 'SUK-LEH-201',
+    sku: 'SUK-LEH-201',
     slug: 'blue-sequins-net-lehenga',
     name: 'Blue Sequins Net Lehenga',
     category: 'lehengas',
@@ -282,6 +306,8 @@ export const products = [
   },
   {
     id: 'pastel-pink-lehenga',
+    productId: 'SUK-LEH-202',
+    sku: 'SUK-LEH-202',
     slug: 'blush-pink-floral-lehenga',
     name: 'Blush Pink Floral Lehenga',
     category: 'lehengas',
@@ -303,6 +329,8 @@ export const products = [
   },
   {
     id: 'mustard-yellow-lehenga',
+    productId: 'SUK-LEH-203',
+    sku: 'SUK-LEH-203',
     slug: 'mustard-yellow-haldi-lehenga',
     name: 'Mustard Yellow Haldi Lehenga',
     category: 'lehengas',
@@ -324,6 +352,8 @@ export const products = [
   },
   {
     id: 'red-bridal-lehenga',
+    productId: 'SUK-LEH-204',
+    sku: 'SUK-LEH-204',
     slug: 'classic-red-bridal-lehenga',
     name: 'Classic Red Bridal Lehenga',
     category: 'lehengas',
@@ -347,6 +377,8 @@ export const products = [
   // ─── DRESSES (5) ────────────────────────────────────────────────────────────
   {
     id: 'sage-green-anarkali',
+    productId: 'SUK-DRS-301',
+    sku: 'SUK-DRS-301',
     slug: 'sage-green-anarkali-dress',
     name: 'Sage Green Anarkali Dress',
     category: 'dresses',
@@ -368,6 +400,8 @@ export const products = [
   },
   {
     id: 'ivory-handloom-anarkali',
+    productId: 'SUK-DRS-302',
+    sku: 'SUK-DRS-302',
     slug: 'ivory-handloom-anarkali-dress',
     name: 'Ivory Handloom Anarkali Dress',
     category: 'dresses',
@@ -389,6 +423,8 @@ export const products = [
   },
   {
     id: 'peach-maxi-dress',
+    productId: 'SUK-DRS-303',
+    sku: 'SUK-DRS-303',
     slug: 'peach-floral-maxi-dress',
     name: 'Peach Floral Maxi Dress',
     category: 'dresses',
@@ -410,6 +446,8 @@ export const products = [
   },
   {
     id: 'maroon-velvet-gown',
+    productId: 'SUK-DRS-304',
+    sku: 'SUK-DRS-304',
     slug: 'maroon-velvet-evening-gown',
     name: 'Maroon Velvet Evening Gown',
     category: 'dresses',
@@ -431,6 +469,8 @@ export const products = [
   },
   {
     id: 'powder-blue-tunic',
+    productId: 'SUK-DRS-305',
+    sku: 'SUK-DRS-305',
     slug: 'powder-blue-embroidered-tunic',
     name: 'Powder Blue Embroidered Tunic',
     category: 'dresses',
@@ -454,6 +494,8 @@ export const products = [
   // ─── CO-ORDS (2) ─────────────────────────────────────────────────────────────
   {
     id: 'designer-ethnic-coord-set',
+    productId: 'SUK-CRD-401',
+    sku: 'SUK-CRD-401',
     slug: 'designer-ethnic-coord-set',
     name: 'Designer Ethnic Co-ord Set',
     category: 'coords',
@@ -475,6 +517,8 @@ export const products = [
   },
   {
     id: 'indigo-blockprint-coord',
+    productId: 'SUK-CRD-402',
+    sku: 'SUK-CRD-402',
     slug: 'indigo-blockprint-cotton-coord',
     name: 'Indigo Blockprint Cotton Co-ord',
     category: 'coords',
@@ -498,6 +542,8 @@ export const products = [
   // ─── DUPATTAS (2) ────────────────────────────────────────────────────────────
   {
     id: 'banarasi-silk-dupatta',
+    productId: 'SUK-DUP-501',
+    sku: 'SUK-DUP-501',
     slug: 'royal-banarasi-silk-zari-dupatta',
     name: 'Royal Banarasi Silk Zari Dupatta',
     category: 'dupattas',
@@ -519,6 +565,8 @@ export const products = [
   },
   {
     id: 'phulkari-embroidered-dupatta',
+    productId: 'SUK-DUP-502',
+    sku: 'SUK-DUP-502',
     slug: 'phulkari-hand-embroidered-dupatta',
     name: 'Phulkari Hand Embroidered Dupatta',
     category: 'dupattas',
@@ -542,6 +590,8 @@ export const products = [
   // ─── FESTIVE WEAR (2) ─────────────────────────────────────────────────────────
   {
     id: 'designer-festive-salwar-suit',
+    productId: 'SUK-FST-601',
+    sku: 'SUK-FST-601',
     slug: 'designer-emerald-festive-salwar-suit',
     name: 'Designer Emerald Festive Salwar Suit',
     category: 'festive',
@@ -563,6 +613,8 @@ export const products = [
   },
   {
     id: 'royal-anarkali-suit-set',
+    productId: 'SUK-FST-602',
+    sku: 'SUK-FST-602',
     slug: 'royal-anarkali-suit-set',
     name: 'Royal Anarkali Suit Set',
     category: 'festive',

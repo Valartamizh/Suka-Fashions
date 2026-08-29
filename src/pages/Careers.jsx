@@ -53,12 +53,12 @@ export default function Careers() {
     <div className="w-full bg-white text-left">
       
       {/* Header */}
-      <section className="bg-brand-cream/60 py-16 sm:py-20 border-b border-brand-powder/60 text-center">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-3 block">
+      <section className="bg-brand-cream/60 py-6 sm:py-8 border-b border-brand-powder/60 text-center">
+        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
+          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-1.5 block">
             Join The Suka Family
           </span>
-          <h1 className="text-3xl sm:text-5xl font-serif text-brand-navy tracking-wide mb-6">
+          <h1 className="text-2xl sm:text-4xl font-serif text-brand-navy tracking-wide mb-2 sm:mb-3">
             Build The Future Of Luxury Handlooms
           </h1>
           <p className="font-sans text-xs sm:text-sm text-brand-navy/70 max-w-xl mx-auto leading-relaxed font-light">
@@ -68,7 +68,7 @@ export default function Careers() {
       </section>
 
       {/* Values & Culture */}
-      <section className="py-16 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-6 sm:py-10 w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="p-8 bg-brand-cream/30 border border-brand-powder rounded-sm text-center">
             <Heart size={28} className="text-brand-teal mx-auto mb-4" />

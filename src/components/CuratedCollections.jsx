@@ -44,35 +44,35 @@ export default function CuratedCollections() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-12 lg:py-16 bg-brand-cream/40 border-b border-brand-powder/30">
+    <section ref={sectionRef} className="py-6 lg:py-8 bg-brand-cream/40 border-b border-brand-powder/30">
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-3 border-b border-brand-powder/40 reveal">
+        <div className="flex items-end justify-between mb-3 sm:mb-4 pb-2 border-b border-brand-powder/40 reveal">
           <div>
-            <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
+            <p className="font-sans text-[9.5px] sm:text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-1 sm:mb-2">
               Handpicked For You
             </p>
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
+            <h2 className="font-serif text-xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
               Curated Collections
             </h2>
           </div>
           <Link
             to="/products"
-            className="hidden sm:inline-flex items-center gap-2 font-sans text-[10px] tracking-[0.22em] uppercase font-semibold text-brand-navy hover:text-brand-teal pb-1 border-b border-brand-navy/30 hover:border-brand-teal transition-all duration-300 group"
+            className="inline-flex items-center gap-1.5 sm:gap-2 font-sans text-[9.5px] sm:text-[10px] tracking-[0.16em] sm:tracking-[0.22em] uppercase font-bold text-brand-teal sm:text-brand-navy hover:text-brand-teal pb-1 transition-all duration-300 group whitespace-nowrap"
           >
-            DISCOVER ALL
-            <ArrowRight size={14} strokeWidth={2} className="transform group-hover:translate-x-1 transition-transform" />
+            <span>DISCOVER ALL</span>
+            <ArrowRight size={13} strokeWidth={2} className="transform group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+        {/* Grid: 2 Columns on Mobile, 4 Columns on Desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5 lg:gap-6">
           {collections.map((col, index) => (
             <Link
               key={col.id}
               to={col.link}
-              className={`reveal reveal-delay-${index + 1} group block relative aspect-[3/4] overflow-hidden rounded-md bg-white shadow-sm hover:shadow-2xl transition-all duration-400 border border-brand-powder/40`}
+              className={`reveal reveal-delay-${index + 1} group block relative aspect-[3/4] overflow-hidden rounded-md bg-white shadow-2xs hover:shadow-xl transition-all duration-400 border border-brand-powder/40`}
             >
               <div className="absolute inset-0 overflow-hidden">
                 <img
@@ -84,21 +84,21 @@ export default function CuratedCollections() {
               </div>
               
               {/* Soft overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/70 via-transparent to-transparent opacity-70 group-hover:opacity-80 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-transparent to-transparent opacity-75 group-hover:opacity-85 transition-opacity" />
 
               {/* Bottom Badge */}
-              <div className="absolute inset-x-4 bottom-4 z-10">
-                <div className="w-full flex items-center justify-between bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-sm shadow-xl transition-transform duration-300 group-hover:-translate-y-1">
-                  <div>
-                    <span className="font-sans text-[8px] tracking-[0.2em] text-brand-teal uppercase font-bold block mb-0.5">
+              <div className="absolute inset-x-2 bottom-2 sm:inset-x-4 sm:bottom-4 z-10">
+                <div className="w-full flex items-center justify-between bg-white/95 backdrop-blur-md p-2 sm:p-3.5 rounded-xs sm:rounded-sm shadow-md transition-transform duration-300 group-hover:-translate-y-1">
+                  <div className="min-w-0 pr-1">
+                    <span className="font-sans text-[7.5px] sm:text-[8px] tracking-[0.16em] text-brand-teal uppercase font-bold block mb-0.5 truncate">
                       {col.subtitle}
                     </span>
-                    <h3 className="font-serif text-base sm:text-lg text-brand-navy font-medium leading-none">
+                    <h3 className="font-serif text-[11.5px] sm:text-base lg:text-lg text-brand-navy font-medium leading-tight truncate">
                       {col.title}
                     </h3>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-brand-powder flex items-center justify-center text-brand-teal group-hover:bg-brand-teal group-hover:text-white transition-colors duration-300 flex-shrink-0">
-                    <ArrowRight size={14} strokeWidth={2} />
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-brand-powder flex items-center justify-center text-brand-teal group-hover:bg-brand-teal group-hover:text-white transition-colors duration-300 flex-shrink-0">
+                    <ArrowRight size={11} strokeWidth={2} className="sm:w-[14px] sm:h-[14px]" />
                   </div>
                 </div>
               </div>

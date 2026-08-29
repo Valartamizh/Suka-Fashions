@@ -133,6 +133,11 @@ export default function OrderDetailPage() {
                     className="w-14 h-16 object-cover rounded-lg border border-slate-100 flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
+                    {(item.sku || item.productId) && (
+                      <span className="inline-block font-mono text-[10px] text-brand-navy bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 mb-1 font-semibold">
+                        SKU: {item.sku || item.productId}
+                      </span>
+                    )}
                     <p className="font-semibold text-slate-800 text-sm">{item.name}</p>
                     <p className="text-xs text-slate-400 mt-0.5">{item.variant}</p>
                     <p className="text-xs text-slate-500 mt-1">Qty: {item.qty}</p>

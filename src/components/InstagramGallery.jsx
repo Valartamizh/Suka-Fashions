@@ -66,10 +66,10 @@ export default function InstagramGallery() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-10 lg:py-14 bg-white border-b border-brand-powder/30 overflow-hidden">
+    <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-b border-brand-powder/30 overflow-hidden">
 
       {/* ── Section Heading ───────────────────────── */}
-      <div className="text-center mb-7 px-4 reveal">
+      <div className="text-center mb-4 px-4 reveal">
         <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
           Instagram
         </p>

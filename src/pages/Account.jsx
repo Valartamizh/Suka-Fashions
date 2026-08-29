@@ -356,17 +356,6 @@ export default function Account() {
                   </button>
                 );
               })}
-              
-              <Link
-                to="/admin"
-                className="flex items-center justify-between px-4 py-3 rounded-sm bg-brand-navy text-white hover:bg-brand-teal transition-all duration-200 shadow-sm mt-3"
-              >
-                <div className="flex items-center gap-3">
-                  <ShieldCheck size={18} strokeWidth={1.8} />
-                  <span className="font-sans text-xs uppercase tracking-widest font-semibold">Admin Panel</span>
-                </div>
-                <ChevronRight size={16} />
-              </Link>
 
               <button
                 type="button"
@@ -440,9 +429,13 @@ export default function Account() {
                         </div>
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
+                            <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-brand-powderLight text-brand-navy border border-brand-powder text-[9px] font-mono font-semibold mb-1">
+                              PID: {order.items[0].productId || order.items[0].sku || order.items[0].id}
+                            </div>
                             <h3 className="font-serif text-lg text-brand-navy mb-1">{order.items[0].name}</h3>
                             <p className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 mb-2">
                               Size: {order.items[0].selectedSize} | Qty: {order.items[0].quantity}
+                              {order.items[0].selectedColor ? ` | Color: ${order.items[0].selectedColor}` : ''}
                             </p>
                           </div>
                           
@@ -712,12 +705,16 @@ export default function Account() {
                   <div key={idx} className="flex items-center gap-4 p-3 bg-brand-cream/20 border border-brand-powder/40 rounded-sm">
                     <img src={item.image} alt={item.name} className="w-16 h-20 object-cover rounded-xs border border-brand-powder/40 flex-shrink-0" />
                     <div className="flex-1">
+                      <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-brand-powderLight text-brand-navy border border-brand-powder text-[9px] font-mono font-semibold mb-1">
+                        PID: {item.productId || item.sku || item.id}
+                      </div>
                       <h4 className="font-serif text-base text-brand-navy font-medium">{item.name}</h4>
                       <p className="font-sans text-[10px] text-brand-navy/60 uppercase tracking-wider mt-0.5">
-                        Size: {item.selectedSize} | Qty: {item.quantity}
+                        Size: {item.selectedSize || 'Free Size'} | Qty: {item.quantity}
+                        {item.selectedColor ? ` | Color: ${item.selectedColor}` : ''}
                       </p>
                       <p className="font-sans text-xs font-bold text-brand-navy mt-1">
-                        ₹{item.price.toLocaleString('en-IN')}
+                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                       </p>
                     </div>
                   </div>
