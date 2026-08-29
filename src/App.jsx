@@ -57,7 +57,7 @@ function MobileBottomNav() {
 
   const tabs = [
     { to: '/',         Icon: Home,        label: 'Home'    },
-    { to: '/products', Icon: Search,      label: 'Search'  },
+    { isSearch: true,  Icon: Search,      label: 'Search'  },
     { to: '/wishlist', Icon: Heart,       label: 'Wishlist', badge: wishlistCount },
     { to: '/cart',     Icon: ShoppingBag, label: 'Bag',      badge: cartCount    },
     { to: '/account',  Icon: User,        label: 'Account'  },
@@ -66,18 +66,33 @@ function MobileBottomNav() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-brand-powder/60 shadow-[0_-2px_16px_rgba(0,0,0,0.06)] lg:hidden pb-safe">
       <div className="flex justify-around items-center h-16 px-2 pb-2">
-        {tabs.map(({ to, Icon, label, badge }) => {
-          const isActive = location.pathname === to || (to === '/products' && location.pathname.includes('/category/'));
+        {tabs.map(({ to, Icon, label, badge, isSearch }) => {
+          if (isSearch) {
+            return (
+              <button
+                key="search-btn"
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-search-overlay'))}
+                className="relative flex flex-col items-center gap-1 flex-1 py-1 transition-colors duration-200 text-brand-navy/55 hover:text-brand-teal active:scale-95 cursor-pointer"
+                aria-label="Search Catalog"
+              >
+                <Icon size={20} strokeWidth={1.7} />
+                <span className="font-sans text-[9px] uppercase tracking-[0.12em] font-semibold">{label}</span>
+              </button>
+            );
+          }
+
+          const isActive = location.pathname === to;
           return (
             <Link
               key={to}
               to={to}
               className={`relative flex flex-col items-center gap-1 flex-1 py-1 transition-colors duration-200 ${
-                isActive ? 'text-brand-teal' : 'text-brand-navy/45 hover:text-brand-navy'
+                isActive ? 'text-brand-teal' : 'text-brand-navy/55 hover:text-brand-navy'
               }`}
               aria-label={label}
             >
-              <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
+              <Icon size={20} strokeWidth={isActive ? 2 : 1.7} />
               <span className="font-sans text-[9px] uppercase tracking-[0.12em] font-semibold">{label}</span>
               {badge > 0 && (
                 <span className="absolute top-0 right-[calc(50%-18px)] bg-brand-teal text-white text-[7px] font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">

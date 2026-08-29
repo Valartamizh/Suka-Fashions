@@ -55,7 +55,7 @@ export default function TrendingNow() {
             <Link 
               key={item.id} 
               to={item.link}
-              className={`reveal reveal-delay-${index + 1} group relative block w-[75vw] max-w-[280px] md:w-full flex-shrink-0 snap-start aspect-[3/4] overflow-hidden rounded-md bg-brand-cream border border-brand-powder/50 shadow-xs`}
+              className={`reveal reveal-delay-${index + 1} group relative block w-[75vw] max-w-[280px] md:max-w-none md:w-full flex-shrink-0 snap-start aspect-[3/4] overflow-hidden rounded-md bg-brand-cream border border-brand-powder/50 shadow-xs`}
             >
               <img 
                 src={item.image} 

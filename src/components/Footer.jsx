@@ -80,23 +80,23 @@ function FooterColumn({ col }) {
     <div className="flex flex-col text-left">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex justify-between items-center py-2.5 lg:py-0 border-b border-white/10 lg:border-none focus:outline-none group"
+        className="w-full flex justify-between items-center py-2 sm:py-2.5 lg:py-0 border-b border-white/10 lg:border-none focus:outline-none group cursor-pointer"
         aria-expanded={open}
       >
-        <h4 className="font-serif text-xs tracking-[0.22em] uppercase font-semibold text-brand-powder">
+        <h4 className="font-serif text-[11.5px] sm:text-xs tracking-[0.2em] uppercase font-semibold text-brand-powder">
           {col.title}
         </h4>
         <span className="lg:hidden text-brand-powder/50 group-hover:text-white transition-colors">
-          {open ? <ChevronUp size={15} strokeWidth={1.8} /> : <ChevronDown size={15} strokeWidth={1.8} />}
+          {open ? <ChevronUp size={14} strokeWidth={1.8} /> : <ChevronDown size={14} strokeWidth={1.8} />}
         </span>
       </button>
 
-      <ul className={`space-y-2 mt-3 lg:block ${open ? 'block' : 'hidden'}`}>
+      <ul className={`space-y-1.5 mt-2 lg:block ${open ? 'block pb-2' : 'hidden'}`}>
         {col.links.map((link) => (
           <li key={link.name}>
             <Link
               to={link.path}
-              className="font-sans text-[11px] text-brand-powder/55 hover:text-white transition-colors duration-150 tracking-wide"
+              className="font-sans text-[10.5px] sm:text-[11px] text-brand-powder/60 hover:text-white transition-colors duration-150 tracking-wide block py-0.5"
             >
               {link.name}
             </Link>
@@ -112,40 +112,40 @@ export default function Footer() {
   const [customerOpen, setCustomerOpen] = useState(false);
 
   return (
-    <footer className="bg-brand-tealDark text-white pt-8 lg:pt-10 pb-5 border-t border-brand-tealLight/10">
-      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
+    <footer className="bg-brand-tealDark text-white pt-5 sm:pt-8 lg:pt-10 pb-4 sm:pb-5 border-t border-brand-tealLight/10">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* ── Main grid ─────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 lg:gap-8 pb-6 lg:pb-7 border-b border-white/10">
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 sm:gap-6 lg:gap-8 pb-4 sm:pb-6 lg:pb-7 border-b border-white/10">
 
           {/* Brand column — 2 cols wide */}
-          <div className="lg:col-span-2 flex flex-col items-start">
+          <div className="lg:col-span-2 flex flex-col items-start pb-2 lg:pb-0 border-b border-white/10 lg:border-none w-full">
 
             {/* Logo */}
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-2.5 mb-2">
               <img
                 src={logo}
                 alt="Suka Fashions Logo"
-                className="h-14 w-14 rounded-full object-cover border border-brand-tealLight/30 shadow-md"
+                className="h-11 w-11 sm:h-13 sm:w-13 rounded-full object-cover border border-brand-tealLight/30 shadow-md"
               />
-              <div className="leading-none">
-                <span className="font-serif text-2xl font-bold tracking-wider text-white block">Suka</span>
-                <span className="font-sans text-[9px] tracking-[0.3em] text-brand-powder font-medium uppercase">FASHIONS</span>
+              <div className="leading-none text-left">
+                <span className="font-serif text-xl sm:text-2xl font-bold tracking-wider text-white block">Suka</span>
+                <span className="font-sans text-[8.5px] tracking-[0.3em] text-brand-powder font-medium uppercase">FASHIONS</span>
               </div>
             </div>
 
             {/* Tagline */}
-            <p className="font-sans text-[10px] tracking-[0.22em] font-semibold text-brand-powder uppercase mb-5">
+            <p className="font-sans text-[9px] sm:text-[10px] tracking-[0.2em] font-semibold text-brand-powder uppercase mb-2 text-left">
               Women Based • Women Empowered
             </p>
 
             {/* About blurb */}
-            <p className="font-sans text-[11px] text-brand-powder/50 font-light mb-7 leading-relaxed max-w-xs">
+            <p className="font-sans text-[10.5px] sm:text-[11px] text-brand-powder/55 font-light mb-3 sm:mb-5 leading-relaxed max-w-sm text-left">
               A luxury women's clothing brand dedicated to celebrating femininity, empowering women artisans, and keeping traditional weaves alive for the modern woman.
             </p>
 
             {/* Social icons */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 mb-2 lg:mb-0">
               {socials.map(({ SvgIcon, href, label }) => (
                 <a
                   key={label}
@@ -153,7 +153,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-brand-tealLight text-white transition-all duration-200 hover:scale-110"
+                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-brand-tealLight text-white transition-all duration-200 hover:scale-110"
                 >
                   <SvgIcon />
                 </a>
@@ -172,18 +172,18 @@ export default function Footer() {
           <div className="lg:col-span-1 flex flex-col text-left">
             <button
               onClick={() => setCustomerOpen((o) => !o)}
-              className="w-full flex justify-between items-center py-3 lg:py-0 border-b border-white/10 lg:border-none focus:outline-none group"
+              className="w-full flex justify-between items-center py-2 sm:py-2.5 lg:py-0 border-b border-white/10 lg:border-none focus:outline-none group cursor-pointer"
               aria-expanded={customerOpen}
             >
-              <h4 className="font-serif text-xs tracking-[0.22em] uppercase font-semibold text-brand-powder">
+              <h4 className="font-serif text-[11.5px] sm:text-xs tracking-[0.2em] uppercase font-semibold text-brand-powder">
                 Customer Care
               </h4>
               <span className="lg:hidden text-brand-powder/50 group-hover:text-white transition-colors">
-                {customerOpen ? <ChevronUp size={15} strokeWidth={1.8} /> : <ChevronDown size={15} strokeWidth={1.8} />}
+                {customerOpen ? <ChevronUp size={14} strokeWidth={1.8} /> : <ChevronDown size={14} strokeWidth={1.8} />}
               </span>
             </button>
 
-            <div className={`mt-4 lg:block space-y-4 ${customerOpen ? 'block' : 'hidden'}`}>
+            <div className={`mt-2.5 lg:block space-y-2.5 ${customerOpen ? 'block pb-2' : 'hidden'}`}>
               {[
                 { 
                   Icon: Phone, 
@@ -212,15 +212,15 @@ export default function Footer() {
                 },
               ].map(({ Icon, text, label, href, isSvg, isExternal }) => {
                 const content = (
-                  <div className="flex items-center gap-2.5 group/item">
-                    <div className="w-6 h-6 rounded-full bg-white/10 group-hover/item:bg-white/20 flex items-center justify-center text-brand-powder group-hover/item:text-white transition-all flex-shrink-0">
+                  <div className="flex items-center gap-2 group/item">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/10 group-hover/item:bg-white/20 flex items-center justify-center text-brand-powder group-hover/item:text-white transition-all flex-shrink-0">
                       {isSvg ? (
                         <InstagramIcon />
                       ) : (
-                        <Icon size={12} strokeWidth={2} />
+                        <Icon size={11} strokeWidth={2} />
                       )}
                     </div>
-                    <span className={`font-sans text-[11px] leading-snug transition-colors ${href ? 'text-brand-powder/85 group-hover/item:text-white hover:underline' : 'text-brand-powder/65'}`}>
+                    <span className={`font-sans text-[10px] sm:text-[11px] leading-snug transition-colors ${href ? 'text-brand-powder/85 group-hover/item:text-white hover:underline' : 'text-brand-powder/65'}`}>
                       {text}
                     </span>
                   </div>
@@ -248,9 +248,9 @@ export default function Footer() {
         </div>
 
         {/* ── Bottom row ─────────────────────────────── */}
-        <div className="pt-4 sm:pt-5 flex justify-center items-center">
+        <div className="pt-3 sm:pt-5 flex justify-center items-center">
           {/* Copyright */}
-          <p className="font-sans text-[11px] text-brand-powder/40 font-light text-center">
+          <p className="font-sans text-[10px] sm:text-[11px] text-brand-powder/40 font-light text-center">
             © {new Date().getFullYear()} Suka Fashions. All Rights Reserved. Crafted with care.
           </p>
         </div>

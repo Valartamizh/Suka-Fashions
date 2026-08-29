@@ -18,7 +18,7 @@ export default function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="bg-brand-tealDark text-white z-50 relative border-b border-white/10" style={{ minHeight: 34 }}>
+    <div className="hidden sm:block bg-brand-tealDark text-white z-50 relative border-b border-white/10" style={{ minHeight: 34 }}>
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 h-[34px] flex items-center">
 
         {/* Desktop: all three evenly distributed */}

@@ -277,78 +277,86 @@ export default function ProductList() {
 
       {/* Active Filter Badges Bar */}
       {hasActiveFilters && (
-        <div className="mb-4 p-3 bg-brand-cream/40 border border-brand-powder/60 rounded-sm flex items-center flex-wrap gap-2">
-          <span className="font-sans text-[10px] tracking-[0.2em] font-bold uppercase text-brand-navy/60 mr-1">Active Filters:</span>
-          
-          {selectedCategory !== 'all' && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-brand-powder text-brand-navy text-xs rounded-full font-medium shadow-2xs">
-              Category: <strong className="capitalize">{selectedCategory}</strong>
-              <button onClick={() => updateParam('category', 'all')} className="hover:text-red-500 ml-1"><X size={12} /></button>
+        <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-brand-cream/40 border border-brand-powder/60 rounded-sm">
+          {/* Header Row: Count & Clear All */}
+          <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-brand-powder/50">
+            <span className="font-sans text-[10px] sm:text-[11px] tracking-[0.18em] font-bold uppercase text-brand-navy/70 flex items-center gap-1.5">
+              Active Filters
             </span>
-          )}
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="text-[10px] sm:text-xs font-sans text-brand-teal hover:text-brand-tealDark hover:underline font-bold uppercase tracking-wider cursor-pointer"
+            >
+              Clear All
+            </button>
+          </div>
 
-          {activeSort !== 'recommended' && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-powderLight border border-brand-teal/30 text-brand-teal text-xs rounded-full font-medium shadow-2xs">
-              Sort: <strong>{SORT_OPTIONS.find(o => o.id === activeSort)?.label}</strong>
-              <button onClick={() => setActiveSort('recommended')} className="hover:text-red-500 ml-1"><X size={12} /></button>
-            </span>
-          )}
+          {/* Badges Pills */}
+          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+            {selectedCategory !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Category: <strong className="capitalize">{selectedCategory}</strong>
+                <button type="button" onClick={() => updateParam('category', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove category filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
 
-          {priceRange !== 'all' && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-brand-powder text-brand-navy text-xs rounded-full font-medium shadow-2xs">
-              Price: <strong>{priceRange}</strong>
-              <button onClick={() => { setPriceRange('all'); updateParam('price', 'all'); }} className="hover:text-red-500 ml-1"><X size={12} /></button>
-            </span>
-          )}
+            {activeSort !== 'recommended' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-powderLight border border-brand-teal/30 text-brand-teal text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Sort: <strong>{SORT_OPTIONS.find(o => o.id === activeSort)?.label}</strong>
+                <button type="button" onClick={() => setActiveSort('recommended')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove sort filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
 
-          {selectedTag !== 'all' && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-brand-powder text-brand-navy text-xs rounded-full font-medium shadow-2xs">
-              Highlights: <strong>{TAG_OPTIONS.find(t => t.id === selectedTag)?.label}</strong>
-              <button onClick={() => updateParam('tag', 'all')} className="hover:text-red-500 ml-1"><X size={12} /></button>
-            </span>
-          )}
+            {priceRange !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Price: <strong>{priceRange}</strong>
+                <button type="button" onClick={() => { setPriceRange('all'); updateParam('price', 'all'); }} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove price filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
 
-          {selectedSize !== 'all' && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-brand-powder text-brand-navy text-xs rounded-full font-medium shadow-2xs">
-              Size: <strong>{selectedSize}</strong>
-              <button onClick={() => updateParam('size', 'all')} className="hover:text-red-500 ml-1"><X size={12} /></button>
-            </span>
-          )}
+            {selectedTag !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Highlights: <strong>{TAG_OPTIONS.find(t => t.id === selectedTag)?.label}</strong>
+                <button type="button" onClick={() => updateParam('tag', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove highlights filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
 
-          {selectedColor !== 'all' && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-brand-powder text-brand-navy text-xs rounded-full font-medium shadow-2xs">
-              Color: <strong>{COLOR_FILTER_OPTIONS.find(c => c.id === selectedColor)?.name}</strong>
-              <button onClick={() => updateParam('color', 'all')} className="hover:text-red-500 ml-1"><X size={12} /></button>
-            </span>
-          )}
+            {selectedSize !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Size: <strong>{selectedSize}</strong>
+                <button type="button" onClick={() => updateParam('size', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove size filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
 
-          {selectedFabric !== 'all' && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-brand-powder text-brand-navy text-xs rounded-full font-medium shadow-2xs">
-              Fabric: <strong>{selectedFabric}</strong>
-              <button onClick={() => updateParam('fabric', 'all')} className="hover:text-red-500 ml-1"><X size={12} /></button>
-            </span>
-          )}
+            {selectedColor !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Color: <strong>{COLOR_FILTER_OPTIONS.find(c => c.id === selectedColor)?.name}</strong>
+                <button type="button" onClick={() => updateParam('color', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove color filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
 
-          {selectedOccasion !== 'all' && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-brand-powder text-brand-navy text-xs rounded-full font-medium shadow-2xs">
-              Occasion: <strong>{selectedOccasion}</strong>
-              <button onClick={() => updateParam('occasion', 'all')} className="hover:text-red-500 ml-1"><X size={12} /></button>
-            </span>
-          )}
+            {selectedFabric !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Fabric: <strong>{selectedFabric}</strong>
+                <button type="button" onClick={() => updateParam('fabric', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove fabric filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
 
-          {selectedPattern !== 'all' && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-brand-powder text-brand-navy text-xs rounded-full font-medium shadow-2xs">
-              Pattern: <strong>{selectedPattern}</strong>
-              <button onClick={() => updateParam('pattern', 'all')} className="hover:text-red-500 ml-1"><X size={12} /></button>
-            </span>
-          )}
+            {selectedOccasion !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Occasion: <strong>{selectedOccasion}</strong>
+                <button type="button" onClick={() => updateParam('occasion', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove occasion filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
 
-          <button
-            onClick={clearAllFilters}
-            className="text-xs font-sans text-brand-teal hover:underline font-bold ml-auto pl-2 uppercase tracking-wider"
-          >
-            Clear All
-          </button>
+            {selectedPattern !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Pattern: <strong>{selectedPattern}</strong>
+                <button type="button" onClick={() => updateParam('pattern', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove pattern filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
+          </div>
         </div>
       )}
 

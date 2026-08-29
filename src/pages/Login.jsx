@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AuthFashionPanel from '../components/auth/AuthFashionPanel';
 import PhoneLoginForm from '../components/auth/PhoneLoginForm';
@@ -19,6 +20,10 @@ export default function Login() {
       navigate('/');
     }
   }, [isLoggedIn, navigate]);
+
+  const handleBack = () => {
+    navigate('/');
+  };
 
   const handleSendOtp = (data) => {
     const enteredPhone = typeof data === 'object' ? data.phone : data;
@@ -41,7 +46,20 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-brand-cream/30 via-white to-brand-powderLight/20 py-6 px-3 sm:px-6 lg:px-10 flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-140px)]">
+    <div className="bg-gradient-to-b from-brand-cream/30 via-white to-brand-powderLight/20 py-4 sm:py-6 px-3 sm:px-6 lg:px-10 flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-140px)]">
+
+      {/* Top Header with Back Button */}
+      <div className="w-full max-w-[1100px] mx-auto flex items-center justify-start mb-3 animate-in fade-in duration-300">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-brand-powder/80 text-brand-navy hover:text-brand-teal hover:border-brand-teal text-xs font-sans font-semibold shadow-2xs transition-all duration-200 cursor-pointer group"
+          aria-label="Back to Store"
+        >
+          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+          <span>Back</span>
+        </button>
+      </div>
 
       {/* Top Luxury Banner / Tagline Header */}
       <div className="text-center max-w-2xl mx-auto mb-5 animate-in fade-in slide-in-from-top-3 duration-500">

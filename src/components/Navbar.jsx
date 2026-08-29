@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, Heart, ShoppingBag, ChevronDown, LogOut } from 'lucide-react';
+import { Menu, X, Search, User, Heart, ShoppingBag, ChevronDown, LogOut, ArrowLeft } from 'lucide-react';
 import logo from '../assets/logo.jpg';
 import SearchOverlay from './SearchOverlay';
 import { useAuth } from '../context/AuthContext';
@@ -141,6 +141,13 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Listen for open search overlay events (e.g. from Mobile Bottom Nav)
+  useEffect(() => {
+    const handleOpenSearch = () => setSearchOpen(true);
+    window.addEventListener('open-search-overlay', handleOpenSearch);
+    return () => window.removeEventListener('open-search-overlay', handleOpenSearch);
+  }, []);
+
   // Close mobile drawer and dropdowns on route change
   useEffect(() => {
     setMobileOpen(false);
@@ -196,6 +203,8 @@ export default function Navbar() {
     return location.pathname.startsWith(path);
   };
 
+  const isProductPage = location.pathname.startsWith('/product/');
+
   return (
     <>
       <header
@@ -206,7 +215,46 @@ export default function Navbar() {
         }`}
       >
         <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
-          <div className={`flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-[76px]' : 'h-[94px] lg:h-[102px]'}`}>
+          
+          {/* Mobile Product Page Header with Back Button */}
+          {isProductPage && (
+            <div className="lg:hidden flex items-center justify-between h-14 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.history.length > 1) {
+                    navigate(-1);
+                  } else {
+                    navigate('/products');
+                  }
+                }}
+                className="flex items-center gap-1.5 p-1.5 -ml-1 text-brand-navy hover:text-brand-teal transition-colors rounded-full active:bg-brand-cream/50 cursor-pointer"
+                aria-label="Go back to products"
+              >
+                <ArrowLeft size={20} strokeWidth={2} />
+                <span className="font-sans text-xs font-bold uppercase tracking-wider">Back</span>
+              </button>
+
+              <Link to="/" className="flex items-center gap-2">
+                <img src={logo} alt="Suka Fashions Logo" className="w-7 h-7 rounded-full object-cover border border-brand-powder shadow-2xs" />
+                <span className="font-serif text-base font-bold text-brand-navy tracking-wide">Suka</span>
+              </Link>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(true)}
+                  className="p-2 text-brand-navy hover:text-brand-teal transition-colors rounded-full"
+                  aria-label="Search catalog"
+                >
+                  <Search size={20} strokeWidth={1.8} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Standard Navigation Bar (Hidden on Mobile Product Pages) */}
+          <div className={`${isProductPage ? 'hidden lg:flex' : 'flex'} items-center justify-between transition-all duration-300 ${scrolled ? 'h-[76px]' : 'h-[94px] lg:h-[102px]'}`}>
 
             {/* ── Logo ─────────────────────────────────────── */}
             <Link to="/" className="flex items-center gap-3.5 flex-shrink-0">
@@ -580,10 +628,47 @@ export default function Navbar() {
               ))}
             </div>
 
-            <div className="p-5 border-t border-brand-powder bg-brand-cream/30">
-              <Link to="/login" className="block text-center bg-brand-teal text-white py-3 font-sans text-xs uppercase tracking-widest font-bold rounded-sm shadow-sm">
-                Login / Register
-              </Link>
+            <div className="p-4 border-t border-brand-powder bg-brand-cream/30">
+              {isLoggedIn ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 pb-2 border-b border-brand-powder/50">
+                    <div className="w-9 h-9 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xs shadow-xs uppercase ring-2 ring-brand-teal/20 flex-shrink-0">
+                      {user?.name?.trim()?.charAt(0) || 'U'}
+                    </div>
+                    <div className="min-w-0 text-left">
+                      <p className="font-sans text-xs font-bold text-brand-navy truncate">{user?.name || 'Customer'}</p>
+                      <p className="font-sans text-[10px] text-brand-navy/60 truncate">{user?.email || user?.phone}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Link
+                      to="/account"
+                      onClick={() => setMobileOpen(false)}
+                      className="text-center bg-white border border-brand-powder/80 text-brand-navy hover:text-brand-teal hover:border-brand-teal py-2 rounded-xs font-sans text-[11px] font-bold uppercase tracking-wider shadow-2xs"
+                    >
+                      My Account
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        handleLogoutRequest();
+                      }}
+                      className="text-center bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-2 rounded-xs font-sans text-[11px] font-bold uppercase tracking-wider cursor-pointer"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-center bg-brand-teal text-white py-3 font-sans text-xs uppercase tracking-widest font-bold rounded-sm shadow-sm hover:bg-brand-tealDark transition-colors"
+                >
+                  Login / Register
+                </Link>
+              )}
             </div>
           </div>
         </div>

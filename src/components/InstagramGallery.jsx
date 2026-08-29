@@ -66,18 +66,18 @@ export default function InstagramGallery() {
   const sectionRef = useReveal();
 
   return (
-    <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-b border-brand-powder/30 overflow-hidden">
+    <section ref={sectionRef} className="pt-4 pb-3 sm:py-6 lg:py-8 bg-white border-b border-brand-powder/30 overflow-hidden">
 
       {/* ── Section Heading ───────────────────────── */}
-      <div className="text-center mb-4 px-4 reveal">
-        <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
+      <div className="text-center mb-3 sm:mb-4 px-4 reveal">
+        <p className="font-sans text-[9.5px] sm:text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-1 sm:mb-2">
           Instagram
         </p>
-        <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
+        <h2 className="font-serif text-xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
           Follow @SukaFashions
         </h2>
-        <div className="section-divider" />
-        <p className="font-sans text-xs text-brand-navy/45 mt-3">
+        <div className="section-divider mt-1.5 sm:mt-2" />
+        <p className="font-sans text-[11px] sm:text-xs text-brand-navy/55 mt-2 sm:mt-3">
           Tag us in your looks for a chance to be featured
         </p>
       </div>
@@ -113,14 +113,14 @@ export default function InstagramGallery() {
       </div>
 
       {/* ── CTA Button ──────────────────────────── */}
-      <div className="text-center mt-8 reveal">
+      <div className="text-center mt-3.5 sm:mt-6 reveal">
         <a
           href="https://instagram.com/sukafashions"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2.5 font-sans text-[11px] tracking-[0.2em] uppercase font-semibold text-brand-teal border border-brand-teal px-8 py-3 hover:bg-brand-teal hover:text-white transition-all duration-300 rounded-sm"
+          className="inline-flex items-center gap-2 font-sans text-[10px] sm:text-[11px] tracking-[0.2em] uppercase font-semibold text-brand-teal border border-brand-teal px-6 sm:px-8 py-2.5 sm:py-3 hover:bg-brand-teal hover:text-white transition-all duration-300 rounded-sm"
         >
-          <InstagramSVG size={14} />
+          <InstagramSVG size={13} />
           Follow Us on Instagram
         </a>
       </div>

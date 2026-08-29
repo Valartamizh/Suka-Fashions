@@ -20,24 +20,24 @@ export default function ShippingPolicy() {
         </div>
       </section>
 
-      <section className="py-6 sm:py-10 w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 space-y-10">
+      <section className="py-4 sm:py-8 w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-10 space-y-6 sm:space-y-10">
         
         {/* Quick Highlights Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-brand-cream/30 p-6 rounded-sm border border-brand-powder/60 text-center">
-            <Truck size={24} className="text-brand-teal mx-auto mb-3" />
-            <h3 className="font-serif text-base text-brand-navy mb-1">Free Shipping</h3>
-            <p className="font-sans text-xs text-brand-navy/60">On all prepaid domestic orders above ₹1,999</p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-6">
+          <div className="bg-brand-cream/30 p-2.5 sm:p-6 rounded-sm border border-brand-powder/60 text-center">
+            <Truck size={20} className="text-brand-teal mx-auto mb-1.5 sm:mb-3 sm:w-6 sm:h-6" />
+            <h3 className="font-serif text-xs sm:text-base text-brand-navy mb-0.5 sm:mb-1 font-medium">Free Shipping</h3>
+            <p className="font-sans text-[9px] sm:text-xs text-brand-navy/60 leading-tight">Prepaid orders above ₹1,999</p>
           </div>
-          <div className="bg-brand-cream/30 p-6 rounded-sm border border-brand-powder/60 text-center">
-            <Clock size={24} className="text-brand-teal mx-auto mb-3" />
-            <h3 className="font-serif text-base text-brand-navy mb-1">Fast Dispatch</h3>
-            <p className="font-sans text-xs text-brand-navy/60">Orders dispatched within 24–48 business hours</p>
+          <div className="bg-brand-cream/30 p-2.5 sm:p-6 rounded-sm border border-brand-powder/60 text-center">
+            <Clock size={20} className="text-brand-teal mx-auto mb-1.5 sm:mb-3 sm:w-6 sm:h-6" />
+            <h3 className="font-serif text-xs sm:text-base text-brand-navy mb-0.5 sm:mb-1 font-medium">Fast Dispatch</h3>
+            <p className="font-sans text-[9px] sm:text-xs text-brand-navy/60 leading-tight">Dispatched in 24–48 hrs</p>
           </div>
-          <div className="bg-brand-cream/30 p-6 rounded-sm border border-brand-powder/60 text-center">
-            <Globe size={24} className="text-brand-teal mx-auto mb-3" />
-            <h3 className="font-serif text-base text-brand-navy mb-1">Worldwide Shipping</h3>
-            <p className="font-sans text-xs text-brand-navy/60">Delivering to 50+ countries via DHL & FedEx</p>
+          <div className="bg-brand-cream/30 p-2.5 sm:p-6 rounded-sm border border-brand-powder/60 text-center">
+            <Globe size={20} className="text-brand-teal mx-auto mb-1.5 sm:mb-3 sm:w-6 sm:h-6" />
+            <h3 className="font-serif text-xs sm:text-base text-brand-navy mb-0.5 sm:mb-1 font-medium">Worldwide</h3>
+            <p className="font-sans text-[9px] sm:text-xs text-brand-navy/60 leading-tight">Delivering to 50+ countries</p>
           </div>
         </div>
 

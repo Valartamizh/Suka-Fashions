@@ -129,38 +129,40 @@ export default function Testimonials() {
           </div>
         </div>
 
-        {/* 3 Review Cards Grid (1 on Mobile, 2 on Tablet, 3 on Desktop) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 reveal">
+        {/* Review Cards (1 on Mobile, 2 on Tablet, 3 on Desktop) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 reveal">
           {visibleCards.map((item, idx) => (
             <div
               key={`${item.id}-${startIndex}-${idx}`}
-              className="relative bg-white border border-brand-powder/70 rounded-xl p-6 sm:p-7 flex flex-col justify-between shadow-sm hover:shadow-xl transition-all duration-300 group"
-              style={{ animation: 'cardFadeIn 0.4s ease both' }}
+              className={`relative bg-white border border-brand-powder/70 rounded-xl p-5 sm:p-7 flex flex-col justify-between shadow-sm hover:shadow-xl transition-all duration-300 group ${
+                idx === 0 ? 'flex' : idx === 1 ? 'hidden md:flex' : 'hidden lg:flex'
+              }`}
+              style={{ animation: 'cardFadeIn 0.35s ease both' }}
             >
               {/* Top Row: Stars + Verified Badge */}
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3.5 sm:mb-4">
                   <div className="flex items-center gap-0.5">
                     {[...Array(item.stars)].map((_, i) => (
-                      <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
+                      <Star key={i} size={14} className="fill-amber-400 text-amber-400 sm:w-[15px] sm:h-[15px]" />
                     ))}
                   </div>
 
-                  <span className="inline-flex items-center gap-1 font-sans text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
-                    <CheckCircle2 size={11} className="text-emerald-600" />
+                  <span className="inline-flex items-center gap-1 font-sans text-[9.5px] sm:text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
+                    <CheckCircle2 size={10} className="text-emerald-600 sm:w-[11px] sm:h-[11px]" />
                     Verified Buyer
                   </span>
                 </div>
 
                 {/* Quote Text */}
-                <blockquote className="font-serif text-sm sm:text-[15px] font-normal text-brand-navy leading-relaxed mb-4 text-left">
+                <blockquote className="font-serif text-sm sm:text-[15px] font-normal text-brand-navy leading-relaxed mb-3 sm:mb-4 text-left">
                   "{item.quote}"
                 </blockquote>
 
                 {/* Purchased Product Tag */}
                 {item.product && (
-                  <div className="mb-5 inline-block bg-brand-cream/60 border border-brand-powder/50 rounded-md px-2.5 py-1 text-left">
-                    <span className="font-sans text-[10px] text-brand-navy/70 font-medium">
+                  <div className="mb-4 sm:mb-5 inline-block bg-brand-cream/60 border border-brand-powder/50 rounded-md px-2.5 py-1 text-left">
+                    <span className="font-sans text-[9.5px] sm:text-[10px] text-brand-navy/70 font-medium">
                       Item: <span className="text-brand-teal font-semibold">{item.product}</span>
                     </span>
                   </div>
@@ -168,37 +170,54 @@ export default function Testimonials() {
               </div>
 
               {/* Bottom Author Row */}
-              <div className="flex items-center gap-3 pt-4 border-t border-brand-powder/40">
+              <div className="flex items-center gap-3 pt-3.5 sm:pt-4 border-t border-brand-powder/40">
                 <img
                   src={item.avatar}
                   alt={item.author}
-                  className="w-10 h-10 rounded-full object-cover border-2 border-brand-powder shadow-2xs flex-shrink-0"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-brand-powder shadow-2xs flex-shrink-0"
                   loading="lazy"
                 />
                 <div className="text-left flex-1 min-w-0">
                   <cite className="font-sans not-italic text-xs font-bold tracking-wider text-brand-navy uppercase block truncate">
                     {item.author}
                   </cite>
-                  <span className="font-sans text-[10.5px] text-brand-navy/50 block truncate">
+                  <span className="font-sans text-[10px] sm:text-[10.5px] text-brand-navy/50 block truncate">
                     {item.location}
                   </span>
                 </div>
-                <span className="font-sans text-[9.5px] text-brand-navy/40 flex-shrink-0">
+                <span className="font-sans text-[9px] sm:text-[9.5px] text-brand-navy/40 flex-shrink-0">
                   {item.date}
                 </span>
               </div>
 
               {/* Subtle Quote Watermark Accent */}
               <Quote
-                size={48}
+                size={42}
                 className="absolute top-4 right-4 text-brand-teal/5 pointer-events-none group-hover:text-brand-teal/10 transition-colors"
               />
             </div>
           ))}
         </div>
 
+        {/* Mobile Dot Indicators for Carousel */}
+        <div className="flex md:hidden justify-center items-center gap-1.5 mt-3.5">
+          {testimonials.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setStartIndex(i)}
+              className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                i === (startIndex % testimonials.length)
+                  ? 'w-5 bg-brand-teal'
+                  : 'w-1.5 bg-brand-powder hover:bg-brand-navy/40'
+              }`}
+              aria-label={`Go to review ${i + 1}`}
+            />
+          ))}
+        </div>
+
         {/* All-time Stats Row */}
-        <div className="mt-7 grid grid-cols-3 gap-3 sm:gap-6 text-center reveal reveal-delay-2">
+        <div className="mt-5 sm:mt-7 grid grid-cols-3 gap-2.5 sm:gap-6 text-center reveal reveal-delay-2">
           {[
             { value: '4.9 / 5', label: 'Average Rating' },
             { value: '2,000+', label: 'Verified Reviews' },

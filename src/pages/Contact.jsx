@@ -56,12 +56,12 @@ export default function Contact() {
     <div className="w-full bg-white text-left">
       
       {/* Hero Header */}
-      <section className="bg-brand-cream/60 py-6 sm:py-8 border-b border-brand-powder/60">
+      <section className="bg-brand-cream/60 py-4 sm:py-6 lg:py-8 border-b border-brand-powder/60">
         <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 text-center">
-          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-1.5 block">
+          <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-teal font-bold mb-1 sm:mb-1.5 block">
             We'd Love To Hear From You
           </span>
-          <h1 className="text-2xl sm:text-4xl font-serif text-brand-navy tracking-wide mb-2 sm:mb-3">
+          <h1 className="text-xl sm:text-3xl lg:text-4xl font-serif text-brand-navy tracking-wide mb-1.5 sm:mb-3">
             Contact Customer Care
           </h1>
           <p className="font-sans text-xs sm:text-sm text-brand-navy/60 max-w-xl mx-auto leading-relaxed">
@@ -71,19 +71,19 @@ export default function Contact() {
       </section>
 
       {/* Main Form & Info Section */}
-      <section className="py-6 sm:py-8 w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+      <section className="py-3 sm:py-6 lg:py-8 w-full max-w-[1720px] mx-auto px-3.5 sm:px-6 lg:px-8 xl:px-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-10">
           
           {/* Contact Details & Info (5 cols) */}
-          <div className="lg:col-span-5 space-y-8">
+          <div className="lg:col-span-5 space-y-4 sm:space-y-8">
             <div>
-              <h2 className="font-serif text-2xl text-brand-navy mb-3 uppercase tracking-wider">Get In Touch</h2>
+              <h2 className="font-serif text-lg sm:text-2xl text-brand-navy mb-1.5 sm:mb-3 uppercase tracking-wider">Get In Touch</h2>
               <p className="font-sans text-xs text-brand-navy/60 leading-relaxed font-light">
                 Reach out to us via phone, email, WhatsApp, or Instagram. We aim to respond to all inquiries within 2 to 4 business hours.
               </p>
             </div>
 
-            <div className="space-y-6 bg-brand-cream/30 p-6 rounded-sm border border-brand-powder/60">
+            <div className="space-y-4 sm:space-y-6 bg-brand-cream/30 p-4 sm:p-6 rounded-sm border border-brand-powder/60">
               
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-full bg-brand-powderLight text-brand-teal flex items-center justify-center flex-shrink-0 mt-1">
@@ -189,22 +189,22 @@ export default function Contact() {
           </div>
 
           {/* Contact Form (7 cols) */}
-          <div className="lg:col-span-7 bg-white p-8 sm:p-10 rounded-sm border border-brand-powder/70 shadow-2xs">
-            <h2 className="font-serif text-2xl text-brand-navy mb-2 uppercase tracking-wider">Send Us A Message</h2>
-            <p className="font-sans text-xs text-brand-navy/60 mb-8">Fill out the form below and our customer care executive will connect with you.</p>
+          <div className="lg:col-span-7 bg-white p-4 sm:p-8 lg:p-10 rounded-sm border border-brand-powder/70 shadow-2xs">
+            <h2 className="font-serif text-lg sm:text-2xl text-brand-navy mb-1.5 sm:mb-2 uppercase tracking-wider">Send Us A Message</h2>
+            <p className="font-sans text-xs text-brand-navy/60 mb-4 sm:mb-8">Fill out the form below and our customer care executive will connect with you.</p>
 
             {submitted ? (
-              <div className="p-8 bg-emerald-50 border border-emerald-200 rounded-sm text-center space-y-3 animate-in fade-in">
-                <CheckCircle2 size={40} className="text-emerald-600 mx-auto" />
-                <h3 className="font-serif text-xl text-emerald-950">Thank You For Reaching Out!</h3>
+              <div className="p-6 sm:p-8 bg-emerald-50 border border-emerald-200 rounded-sm text-center space-y-3 animate-in fade-in">
+                <CheckCircle2 size={36} className="text-emerald-600 mx-auto" />
+                <h3 className="font-serif text-lg sm:text-xl text-emerald-950">Thank You For Reaching Out!</h3>
                 <p className="font-sans text-xs text-emerald-800 max-w-md mx-auto">
                   Your message has been received successfully. A member of our team will contact you shortly via email or phone.
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-6">
                   <div>
                     <label className="block font-sans text-[10px] uppercase tracking-widest font-bold text-brand-navy mb-2">Your Full Name *</label>
                     <input
@@ -282,16 +282,16 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <label className="block font-sans text-[10px] uppercase tracking-widest font-bold text-brand-navy mb-2">Your Message *</label>
+                  <label className="block font-sans text-[10px] uppercase tracking-widest font-bold text-brand-navy mb-1.5 sm:mb-2">Your Message *</label>
                   <textarea
-                    rows={5}
+                    rows={3}
                     value={formData.message}
                     onChange={(e) => {
                       setFormData({ ...formData, message: e.target.value });
                       if (errors.message) setErrors({ ...errors, message: '' });
                     }}
                     placeholder="Tell us how we can help you..."
-                    className={`w-full px-4 py-3 border rounded-sm text-xs font-sans focus:outline-none focus:border-brand-teal transition-colors ${
+                    className={`w-full px-4 py-2.5 sm:py-3 border rounded-sm text-xs font-sans focus:outline-none focus:border-brand-teal transition-colors ${
                       errors.message ? 'border-red-500' : 'border-brand-powder'
                     }`}
                   />
@@ -302,9 +302,9 @@ export default function Contact() {
 
                 <button
                   type="submit"
-                  className="w-full sm:w-auto bg-brand-teal hover:bg-brand-tealDark text-white px-9 py-3.5 font-sans text-[10px] uppercase tracking-[0.2em] font-bold rounded-sm shadow-md transition-colors flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto bg-brand-teal hover:bg-brand-tealDark text-white px-8 py-3 font-sans text-[10px] uppercase tracking-[0.2em] font-bold rounded-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Send size={14} /> Send Message
+                  <Send size={13} /> Send Message
                 </button>
 
               </form>

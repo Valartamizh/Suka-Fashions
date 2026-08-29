@@ -21,35 +21,37 @@ export default function ReturnsExchanges() {
         </div>
       </section>
 
-      <section className="py-6 sm:py-10 w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 space-y-10">
+      <section className="py-4 sm:py-8 w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-10 space-y-6 sm:space-y-10">
         
         {/* Step Guide Grid */}
         <div>
-          <h2 className="font-serif text-2xl text-brand-navy text-center mb-8 uppercase tracking-wider">How Returns & Exchanges Work</h2>
+          <h2 className="font-serif text-base sm:text-2xl text-brand-navy text-center mb-3 sm:mb-8 uppercase tracking-wider">
+            How Returns & Exchanges Work
+          </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-6">
             
-            <div className="bg-white p-6 rounded-sm border border-brand-powder/70 shadow-2xs text-center">
-              <div className="w-10 h-10 rounded-full bg-brand-powderLight text-brand-teal font-serif font-bold text-lg flex items-center justify-center mx-auto mb-4">1</div>
-              <h3 className="font-serif text-base text-brand-navy mb-2">Initiate Request</h3>
-              <p className="font-sans text-xs text-brand-navy/60 leading-relaxed">
-                Log into your Account or contact Customer Care within 7 days of delivery to submit a return or exchange request.
+            <div className="bg-white p-2.5 sm:p-6 rounded-sm border border-brand-powder/70 shadow-2xs text-center">
+              <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-brand-powderLight text-brand-teal font-serif font-bold text-xs sm:text-lg flex items-center justify-center mx-auto mb-1.5 sm:mb-4">1</div>
+              <h3 className="font-serif text-[11px] sm:text-base text-brand-navy mb-1 sm:mb-2 font-medium">Initiate Request</h3>
+              <p className="font-sans text-[9px] sm:text-xs text-brand-navy/60 leading-tight sm:leading-relaxed">
+                Submit return/exchange in Account within 7 days.
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-sm border border-brand-powder/70 shadow-2xs text-center">
-              <div className="w-10 h-10 rounded-full bg-brand-powderLight text-brand-teal font-serif font-bold text-lg flex items-center justify-center mx-auto mb-4">2</div>
-              <h3 className="font-serif text-base text-brand-navy mb-2">Doorstep Pickup</h3>
-              <p className="font-sans text-xs text-brand-navy/60 leading-relaxed">
-                Our courier executive will pick up the package directly from your doorstep within 24 to 48 hours.
+            <div className="bg-white p-2.5 sm:p-6 rounded-sm border border-brand-powder/70 shadow-2xs text-center">
+              <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-brand-powderLight text-brand-teal font-serif font-bold text-xs sm:text-lg flex items-center justify-center mx-auto mb-1.5 sm:mb-4">2</div>
+              <h3 className="font-serif text-[11px] sm:text-base text-brand-navy mb-1 sm:mb-2 font-medium">Doorstep Pickup</h3>
+              <p className="font-sans text-[9px] sm:text-xs text-brand-navy/60 leading-tight sm:leading-relaxed">
+                Courier collects package directly in 24–48 hours.
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-sm border border-brand-powder/70 shadow-2xs text-center">
-              <div className="w-10 h-10 rounded-full bg-brand-powderLight text-brand-teal font-serif font-bold text-lg flex items-center justify-center mx-auto mb-4">3</div>
-              <h3 className="font-serif text-base text-brand-navy mb-2">Instant Refund / Exchange</h3>
-              <p className="font-sans text-xs text-brand-navy/60 leading-relaxed">
-                Once quality-checked, your replacement item will be dispatched or refund credited to your original payment mode.
+            <div className="bg-white p-2.5 sm:p-6 rounded-sm border border-brand-powder/70 shadow-2xs text-center">
+              <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-brand-powderLight text-brand-teal font-serif font-bold text-xs sm:text-lg flex items-center justify-center mx-auto mb-1.5 sm:mb-4">3</div>
+              <h3 className="font-serif text-[11px] sm:text-base text-brand-navy mb-1 sm:mb-2 font-medium">Refund / Swap</h3>
+              <p className="font-sans text-[9px] sm:text-xs text-brand-navy/60 leading-tight sm:leading-relaxed">
+                Instant refund or replacement upon QC pass.
               </p>
             </div>
 
