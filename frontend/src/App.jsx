@@ -124,7 +124,7 @@ function MainLayout() {
       {!hideNavFooter && <Navbar />}
 
       {/* Page content */}
-      <main className="flex-grow pb-16 lg:pb-0">
+      <main className="flex-grow">
         <Routes>
           <Route path="/"                       element={<Homepage />}         />
           <Route path="/products"               element={<ProductList />}      />

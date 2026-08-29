@@ -74,15 +74,15 @@ export default function OccasionSection() {
           <div className="section-divider" />
         </div>
 
-        {/* Grid of Occasion Image Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+        {/* Occasion Cards Slider / Grid */}
+        <div className="flex overflow-x-auto lg:grid lg:grid-cols-6 gap-3 sm:gap-5 lg:gap-6 pb-3 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar snap-x snap-mandatory">
           {occasions.map((occ, idx) => {
             const Icon = occ.icon;
             return (
               <Link
                 key={occ.name}
                 to={occ.path}
-                className={`reveal reveal-delay-${Math.min(idx + 1, 5)} group relative block aspect-[3/4] overflow-hidden rounded-md border border-brand-powder/50 bg-brand-cream shadow-sm hover:shadow-xl transition-all duration-300`}
+                className={`reveal reveal-delay-${Math.min(idx + 1, 5)} flex-none w-[160px] sm:w-[200px] lg:w-auto snap-start group relative block aspect-[3/4] overflow-hidden rounded-md border border-brand-powder/50 bg-brand-cream shadow-xs hover:shadow-xl transition-all duration-300`}
               >
                 {/* Background Fashion Image (object-top positioning) */}
                 <img
@@ -96,16 +96,16 @@ export default function OccasionSection() {
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/90 via-brand-navy/35 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
 
                 {/* Top Badge Icon */}
-                <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-brand-teal shadow-md transition-transform duration-300 group-hover:scale-110">
-                  <Icon size={16} strokeWidth={1.8} />
+                <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-brand-teal shadow-md transition-transform duration-300 group-hover:scale-110">
+                  <Icon size={15} strokeWidth={1.8} />
                 </div>
 
                 {/* Bottom Content */}
-                <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col justify-end text-left">
-                  <span className="font-sans text-[9px] tracking-widest text-brand-powder/80 uppercase font-medium mb-0.5">
+                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex flex-col justify-end text-left">
+                  <span className="font-sans text-[8.5px] sm:text-[9px] tracking-widest text-brand-powder/80 uppercase font-medium mb-0.5">
                     {occ.subtitle}
                   </span>
-                  <h3 className="font-serif text-base sm:text-lg font-medium text-white leading-tight group-hover:text-brand-powder transition-colors">
+                  <h3 className="font-serif text-sm sm:text-base lg:text-lg font-medium text-white leading-tight group-hover:text-brand-powder transition-colors">
                     {occ.name}
                   </h3>
                 </div>

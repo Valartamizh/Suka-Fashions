@@ -209,6 +209,8 @@ export default function Navbar() {
     <>
       <header
         className={`sticky top-0 z-40 w-full bg-white transition-all duration-300 ${
+          isProductPage ? 'hidden lg:block' : ''
+        } ${
           scrolled
             ? 'shadow-[0_4px_24px_rgba(0,0,0,0.07)] border-b border-brand-powder/60'
             : 'border-b border-brand-powder/40'

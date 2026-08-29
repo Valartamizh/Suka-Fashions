@@ -43,7 +43,7 @@ export default function BestSellers() {
   if (bestSellers.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="pt-4 pb-3 sm:pt-6 sm:pb-6 lg:py-8 bg-brand-cream/30 border-b border-brand-powder/30 relative overflow-hidden">
+    <section ref={sectionRef} className="pt-3 pb-2 sm:pt-5 sm:pb-5 lg:py-8 bg-brand-cream/30 border-b border-brand-powder/30 relative overflow-hidden">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* Header row */}
@@ -92,7 +92,7 @@ export default function BestSellers() {
         {/* Product Slider */}
         <div 
           ref={scrollContainerRef}
-          className="flex overflow-x-auto gap-4 sm:gap-6 lg:gap-7 pb-6 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar snap-x snap-mandatory"
+          className="flex overflow-x-auto gap-3.5 sm:gap-6 lg:gap-7 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar snap-x snap-mandatory"
         >
           {bestSellers.map((product, idx) => (
             <div 

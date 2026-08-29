@@ -112,7 +112,7 @@ export default function Footer() {
   const [customerOpen, setCustomerOpen] = useState(false);
 
   return (
-    <footer className="bg-brand-tealDark text-white pt-5 sm:pt-8 lg:pt-10 pb-4 sm:pb-5 border-t border-brand-tealLight/10">
+    <footer className="bg-brand-tealDark text-white pt-5 sm:pt-8 lg:pt-10 pb-20 sm:pb-8 lg:pb-5 border-t border-brand-tealLight/10">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
 
         {/* ── Main grid ─────────────────────────────── */}

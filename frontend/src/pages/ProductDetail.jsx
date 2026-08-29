@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { products } from '../data/products';
-import { Star, Heart, ShoppingBag, Truck, RefreshCw, ChevronDown, Check, ThumbsUp, MessageSquare, X, Send, ZoomIn, ChevronLeft, ChevronRight, Maximize2, MapPin, Plus, Copy, ShieldCheck, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Star, Heart, ShoppingBag, Truck, RefreshCw, ChevronDown, Check, ThumbsUp, MessageSquare, X, Send, ZoomIn, ChevronLeft, ChevronRight, Maximize2, MapPin, Plus, Copy, ShieldCheck, CheckCircle2, ArrowRight, ArrowLeft, Camera, Image as ImageIcon, Eye } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -115,7 +115,7 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState(0); // index
   const [quantity, setQuantity] = useState(1);
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const { addToCart } = useCart();
+  const { addToCart, cartCount } = useCart();
   const [addedToCart, setAddedToCart] = useState(false);
   const [copiedSku, setCopiedSku] = useState(false);
   
@@ -164,6 +164,7 @@ export default function ProductDetail() {
 
   // Related Products & Reviews
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const relatedScrollRef = useRef(null);
   const [reviewsList, setReviewsList] = useState(MOCK_PRODUCT_REVIEWS);
   const [helpfulClicked, setHelpfulClicked] = useState({});
   const [showAllReviews, setShowAllReviews] = useState(false);
@@ -175,9 +176,33 @@ export default function ProductDetail() {
     name: '',
     title: '',
     comment: '',
+    image: null,
   });
+  const [reviewImagePreview, setReviewImagePreview] = useState(null);
   const [reviewErrors, setReviewErrors] = useState({});
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  const handleReviewImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setReviewErrors((prev) => ({ ...prev, image: 'Image size should be under 5MB' }));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReviewImagePreview(reader.result);
+        setNewReview((prev) => ({ ...prev, image: reader.result }));
+        setReviewErrors((prev) => ({ ...prev, image: '' }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeReviewImage = () => {
+    setReviewImagePreview(null);
+    setNewReview((prev) => ({ ...prev, image: null }));
+  };
 
   useEffect(() => {
     // Determine product
@@ -190,8 +215,8 @@ export default function ProductDetail() {
     setQuantity(1);
     setAddedToCart(false);
     
-    // Related products
-    setRelatedProducts(products.filter(p => p.category === foundProduct.category && p.id !== foundProduct.id).slice(0, 4));
+    // Related products (up to 8 items)
+    setRelatedProducts(products.filter(p => p.category === foundProduct.category && p.id !== foundProduct.id).slice(0, 8));
     
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [id]);
@@ -250,13 +275,9 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = () => {
-    if (!isLoggedIn) {
-      navigate('/login');
-      return;
-    }
     addToCart(product, quantity, selectedSize, currentColorName);
     setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 3000);
+    setTimeout(() => setAddedToCart(false), 2500);
   };
 
   const handleBuyNowWhatsApp = () => {
@@ -310,15 +331,29 @@ export default function ProductDetail() {
 
   const handleConfirmWhatsAppOrder = (e) => {
     e.preventDefault();
-    if (!validateAddressForm()) return;
 
-    const subtotal = product.price * quantity;
-    const shipping = whatsappDeliveryMethod === 'express' ? 250 : (subtotal >= 1999 ? 0 : 150);
-    const total = subtotal + shipping;
-    const orderId = `SUKA-${Math.floor(10000 + Math.random() * 90000)}`;
+    let deliveryAddress = { ...addressForm };
 
-    // Save to saved addresses if new
-    if (addressForm.saveForFuture && isAddingNewAddress) {
+    // If using a saved address, grab from saved addresses without form validation
+    if (savedAddresses.length > 0 && !isAddingNewAddress) {
+      const selected = savedAddresses.find((a) => a.id === selectedAddressId) || savedAddresses[0];
+      if (selected) {
+        deliveryAddress = {
+          name: selected.name,
+          phone: selected.phone,
+          email: selected.email || user?.email || '',
+          street: selected.street,
+          apartment: selected.apartment || '',
+          city: selected.city,
+          state: selected.state,
+          pincode: selected.pincode,
+        };
+      }
+    } else {
+      if (!validateAddressForm()) return;
+      deliveryAddress = { ...addressForm };
+
+      // Save to saved addresses
       const newAddr = {
         id: Date.now(),
         name: addressForm.name,
@@ -339,6 +374,10 @@ export default function ProductDetail() {
       setIsAddingNewAddress(false);
     }
 
+    const subtotal = product.price * quantity;
+    const total = subtotal;
+    const orderId = `SUKA-${Math.floor(10000 + Math.random() * 90000)}`;
+
     // Save order in OrderContext
     const createdOrder = {
       id: orderId,
@@ -346,13 +385,11 @@ export default function ProductDetail() {
       status: 'Processing',
       total: total,
       subtotal: subtotal,
-      shipping: shipping,
+      shipping: 0,
       paymentMethod: 'WhatsApp Express Order',
       items: [
         {
           id: product.id,
-          productId: productIdCode,
-          sku: productIdCode,
           name: product.name,
           category: product.category,
           price: product.price,
@@ -362,15 +399,7 @@ export default function ProductDetail() {
           image: product.image,
         },
       ],
-      address: {
-        name: addressForm.name,
-        street: addressForm.street,
-        apartment: addressForm.apartment,
-        city: addressForm.city,
-        state: addressForm.state,
-        pincode: addressForm.pincode,
-        phone: addressForm.phone,
-      },
+      address: deliveryAddress,
     };
     addOrder(createdOrder);
 
@@ -382,26 +411,24 @@ export default function ProductDetail() {
       ? `${window.location.origin}${rawImg}`
       : `${window.location.origin}/${rawImg}`;
 
-    const fullAddress = `${addressForm.street}${addressForm.apartment ? ', ' + addressForm.apartment : ''}, ${addressForm.city}, ${addressForm.state} - ${addressForm.pincode}`;
+    const fullAddress = `${deliveryAddress.street}${deliveryAddress.apartment ? ', ' + deliveryAddress.apartment : ''}, ${deliveryAddress.city}, ${deliveryAddress.state} - ${deliveryAddress.pincode}`;
 
     const whatsappMsg = encodeURIComponent(
       `*🛍️ NEW ORDER - SUKA FASHIONS*\n` +
       `═══════════════════════════\n` +
       `*Order ID:* ${orderId}\n` +
-      `*Product ID (SKU):* ${productIdCode}\n` +
       `*Product:* ${product.name}\n` +
       `*Category:* ${product.category.toUpperCase()}\n` +
       `*Color:* ${currentColorName}\n` +
       `*Size:* ${selectedSize}\n` +
       `*Quantity:* ${quantity}\n` +
       `*Item Price:* ₹${subtotal.toLocaleString('en-IN')}\n` +
-      `*Delivery Fee:* ${shipping === 0 ? 'FREE (Standard)' : `₹${shipping} (Express)`}\n` +
       `*TOTAL AMOUNT:* ₹${total.toLocaleString('en-IN')}\n` +
       `═══════════════════════════\n` +
       `*📦 DELIVERY ADDRESS:*\n` +
-      `*Recipient:* ${addressForm.name}\n` +
-      `*Mobile Number:* ${addressForm.phone}\n` +
-      `${addressForm.email ? `*Email:* ${addressForm.email}\n` : ''}` +
+      `*Recipient:* ${deliveryAddress.name}\n` +
+      `*Mobile Number:* ${deliveryAddress.phone}\n` +
+      `${deliveryAddress.email ? `*Email:* ${deliveryAddress.email}\n` : ''}` +
       `*Address:* ${fullAddress}\n` +
       `═══════════════════════════\n` +
       `📷 *Product Photo:* ${imgUrl}\n\n` +
@@ -455,12 +482,13 @@ export default function ProductDetail() {
     const createdReview = {
       id: Date.now(),
       author: newReview.name,
-      location: 'Verified Customer',
+      location: 'Customer',
       rating: Number(newReview.rating),
       date: 'Just now',
       verified: true,
       title: newReview.title || 'Great Product!',
       content: newReview.comment,
+      image: newReview.image || null,
       helpfulCount: 0,
     };
 
@@ -469,17 +497,244 @@ export default function ProductDetail() {
     setTimeout(() => {
       setReviewSubmitted(false);
       setReviewModalOpen(false);
-      setNewReview({ rating: 5, name: '', title: '', comment: '' });
+      setNewReview({ rating: 5, name: '', title: '', comment: '', image: null });
+      setReviewImagePreview(null);
       setReviewErrors({});
     }, 2000);
   };
 
   return (
     <div className="bg-white pb-0">
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-3 sm:pt-5 pb-4 text-left">
+
+      {/* ── MOBILE HERO & PRODUCT SHEET (Matching Image 2 Reference) ── */}
+      <div className="lg:hidden w-full text-left">
+        {/* 1. Full-Bleed Edge-to-Edge Hero Image */}
+        <div 
+          onClick={() => openPreviewModal(selectedColor)}
+          className="relative w-full aspect-[3/4] sm:aspect-[4/5] bg-brand-cream/40 overflow-hidden cursor-zoom-in"
+        >
+          <img
+            src={selectedColor === 0 ? product.image : (product.imageHover || product.image)}
+            alt={product.name}
+            className="w-full h-full object-cover object-top"
+          />
+
+          {/* Floating Top Header Over Image: Back (Left), Wishlist & Cart (Right) */}
+          <div className="absolute top-4 inset-x-4 flex items-center justify-between z-20" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate('/products');
+                }
+              }}
+              className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-md shadow-md flex items-center justify-center text-brand-navy hover:bg-white active:scale-95 transition-all cursor-pointer"
+              aria-label="Go back"
+            >
+              <ArrowLeft size={20} strokeWidth={2} />
+            </button>
+
+            <div className="flex items-center gap-2.5" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleWishlist(product);
+                }}
+                className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-md shadow-md flex items-center justify-center text-brand-navy hover:bg-white active:scale-95 transition-all cursor-pointer"
+                aria-label="Wishlist"
+              >
+                <Heart
+                  size={18}
+                  strokeWidth={isInWishlist(product.id) ? 0 : 1.8}
+                  className={isInWishlist(product.id) ? 'fill-red-500 text-red-500' : 'text-brand-navy'}
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/cart');
+                }}
+                className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-md shadow-md flex items-center justify-center text-brand-navy hover:bg-white active:scale-95 transition-all relative cursor-pointer"
+                aria-label="Cart"
+              >
+                <ShoppingBag size={18} strokeWidth={1.8} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-brand-teal text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold font-sans">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Floating Next and Prev Navigation Arrows */}
+          {galleryImages.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedColor((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+                }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/50 backdrop-blur-xs border border-white/60 shadow-xs text-brand-navy/80 flex items-center justify-center transition-all hover:bg-white/90 hover:text-brand-navy active:scale-90 z-20 cursor-pointer opacity-70 hover:opacity-100"
+                aria-label="Previous image"
+              >
+                <ChevronLeft size={18} strokeWidth={2} />
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedColor((prev) => (prev + 1) % galleryImages.length);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/50 backdrop-blur-xs border border-white/60 shadow-xs text-brand-navy/80 flex items-center justify-center transition-all hover:bg-white/90 hover:text-brand-navy active:scale-90 z-20 cursor-pointer opacity-70 hover:opacity-100"
+                aria-label="Next image"
+              >
+                <ChevronRight size={18} strokeWidth={2} />
+              </button>
+            </>
+          )}
+
+          {/* Image switch indicator dots if multiple gallery photos */}
+          {galleryImages.length > 1 && (
+            <div className="absolute bottom-3 inset-x-0 flex justify-center items-center gap-2 z-10">
+              {galleryImages.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedColor(idx)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    selectedColor === idx ? 'w-6 bg-white shadow-sm' : 'w-2 bg-white/60'
+                  }`}
+                  aria-label={`View image ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 2. Clean Product Info Card (Inspired by Image 2 Reference) */}
+        <div className="bg-[#FAF8F5] p-5 sm:p-6 border-b border-brand-powder/40 text-left">
+          {/* Eyebrow Series */}
+          <p className="font-sans text-[10.5px] font-bold text-emerald-800 tracking-[0.2em] uppercase mb-1.5">
+            SUKA COUTURE • {product.category.toUpperCase()}
+          </p>
+
+          {/* Product Title */}
+          <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-brand-navy leading-tight mb-2">
+            {product.name}
+          </h1>
+
+          {/* Tagline / Subtitle */}
+          <p className="font-serif text-xs sm:text-sm italic text-brand-navy/80 mb-3">
+            "{product.description?.slice(0, 90) || 'Grace in every drape • Intricate handcrafted artistry'}..."
+          </p>
+
+          {/* Specs & Highlights */}
+          <div className="text-xs text-brand-navy/70 space-y-1 mb-3">
+            <p>
+              <span className="font-semibold text-brand-navy">Fabric:</span> {product.fabric || 'Pure Silk & Organza'}
+              {product.occasion && (
+                <> • <span className="font-semibold text-brand-navy">Occasion:</span> {product.occasion}</>
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center text-amber-500">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} size={12} className={s <= Math.floor(product.rating) ? 'fill-amber-400' : 'text-brand-powder'} strokeWidth={1} />
+                ))}
+              </div>
+              <span className="text-[11px] text-brand-navy/60">
+                {product.reviewsCount ? `${product.rating} (${product.reviewsCount} reviews)` : 'No reviews yet'}
+              </span>
+            </div>
+          </div>
+
+          <div className="h-[1px] bg-brand-powder/50 my-3.5" />
+
+          {/* Variant / Size Selector (Styled like Image 2 Reference) */}
+          {product.sizes && product.sizes.length > 0 && (
+            <div className="mb-4">
+              <span className="font-sans text-[10px] font-bold tracking-[0.18em] uppercase text-brand-navy mb-2.5 block">
+                VARIANT: <span className="text-brand-teal uppercase">{selectedSize}</span>
+              </span>
+              <div className="flex flex-wrap gap-2.5">
+                {product.sizes.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setSelectedSize(size)}
+                    className={`px-5 py-2 text-xs font-bold rounded-lg transition-all border ${
+                      selectedSize === size
+                        ? 'bg-[#1B2559] text-white border-[#1B2559] shadow-sm'
+                        : 'bg-white text-brand-navy border-slate-300 hover:border-brand-teal'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Price Row */}
+          <div className="flex items-baseline gap-3 mb-4">
+            <span className="font-sans text-2xl font-bold text-brand-navy">
+              ₹{product.price.toLocaleString('en-IN')}
+            </span>
+            {product.oldPrice && (
+              <span className="font-sans text-sm text-brand-navy/40 line-through">
+                ₹{product.oldPrice.toLocaleString('en-IN')}
+              </span>
+            )}
+            {product.discount && (
+              <span className="font-sans text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-xs">
+                {product.discount}
+              </span>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={product.stock === 0}
+              className={`w-full py-3 px-2 rounded-md font-sans text-xs font-bold tracking-wider uppercase transition-all shadow-md ${
+                product.stock === 0
+                  ? 'bg-brand-powder text-brand-navy/40 cursor-not-allowed'
+                  : addedToCart
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-brand-teal hover:bg-brand-tealDark text-white'
+              }`}
+            >
+              {product.stock === 0 ? 'Out of Stock' : addedToCart ? '✓ Added' : 'Add to Bag'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleBuyNowWhatsApp}
+              disabled={product.stock === 0}
+              className="w-full py-3 px-2 rounded-md font-sans text-xs font-bold tracking-wider uppercase bg-[#25D366] hover:bg-[#20bd5a] text-white transition-all shadow-md"
+            >
+              Buy on WhatsApp
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── DESKTOP & SHARED DETAILS CONTAINER ── */}
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-0 sm:pt-5 pb-4 text-left">
         
-        {/* Breadcrumbs */}
-        <nav className="text-[10px] font-sans text-brand-navy/50 uppercase tracking-[0.2em] mb-4 lg:mb-5 flex items-center flex-wrap gap-2">
+        {/* Breadcrumbs (Desktop Only) */}
+        <nav className="hidden lg:flex text-[10px] font-sans text-brand-navy/50 uppercase tracking-[0.2em] mb-4 lg:mb-5 items-center flex-wrap gap-2">
           <Link to="/" className="hover:text-brand-teal transition-colors">Home</Link>
           <span>/</span>
           <Link to="/products" className="hover:text-brand-teal transition-colors">Shop</Link>
@@ -489,19 +744,19 @@ export default function ProductDetail() {
           <span className="text-brand-navy font-semibold truncate max-w-[200px] sm:max-w-none">{product.name}</span>
         </nav>
 
-        {/* Main Product Layout: Full-Width 2-Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-14 items-start">
+        {/* Main Product Layout: Full-Width 2-Column Grid (Desktop) */}
+        <div className="hidden lg:grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-14 items-start">
           
           {/* Left Side: Images Gallery (6 Cols) */}
           <div className="lg:col-span-6 w-full flex flex-col gap-3.5">
             <div 
               onClick={() => openPreviewModal(selectedColor)}
-              className="w-full h-[480px] sm:h-[540px] lg:h-[580px] overflow-hidden border border-brand-powder/50 rounded-sm shadow-sm bg-brand-cream/30 relative group cursor-zoom-in flex items-center justify-center"
+              className="w-full aspect-[3/4] sm:aspect-[4/5] lg:h-[680px] xl:h-[720px] 2xl:h-[760px] overflow-hidden border border-brand-powder/50 rounded-sm shadow-sm bg-brand-cream/30 relative group cursor-zoom-in"
             >
               <img 
                 src={selectedColor === 0 ? product.image : (product.imageHover || product.image)} 
                 alt={product.name} 
-                className="w-full h-full object-contain p-2 transition-transform duration-700 ease-out group-hover:scale-105"
+                className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
               />
 
               {/* Navigation Arrows on Main Image */}
@@ -513,7 +768,7 @@ export default function ProductDetail() {
                       e.stopPropagation();
                       setSelectedColor((prev) => (prev === 0 ? 1 : 0));
                     }}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-brand-teal hover:text-white text-brand-navy shadow-md flex items-center justify-center transition-all opacity-80 hover:opacity-100 z-10 cursor-pointer"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-brand-navy shadow-md flex items-center justify-center transition-all opacity-70 hover:opacity-100 z-10 cursor-pointer"
                     aria-label="Previous image"
                   >
                     <ChevronLeft size={18} />
@@ -524,7 +779,7 @@ export default function ProductDetail() {
                       e.stopPropagation();
                       setSelectedColor((prev) => (prev === 0 ? 1 : 0));
                     }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-brand-teal hover:text-white text-brand-navy shadow-md flex items-center justify-center transition-all opacity-80 hover:opacity-100 z-10 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-brand-navy shadow-md flex items-center justify-center transition-all opacity-70 hover:opacity-100 z-10 cursor-pointer"
                     aria-label="Next image"
                   >
                     <ChevronRight size={18} />
@@ -574,17 +829,17 @@ export default function ProductDetail() {
               <button 
                 type="button"
                 onClick={() => setSelectedColor(0)} 
-                className={`w-18 h-22 sm:w-20 sm:h-24 overflow-hidden border bg-brand-cream/20 rounded-sm p-1 transition-all cursor-pointer ${selectedColor === 0 ? 'border-brand-teal ring-2 ring-brand-teal/40' : 'border-brand-powder/60 opacity-70 hover:opacity-100 hover:border-brand-teal'}`}
+                className={`w-18 h-22 sm:w-20 sm:h-24 overflow-hidden border bg-brand-cream/20 rounded-sm transition-all cursor-pointer ${selectedColor === 0 ? 'border-brand-teal ring-2 ring-brand-teal/40' : 'border-brand-powder/60 opacity-70 hover:opacity-100 hover:border-brand-teal'}`}
               >
-                <img src={product.image} alt={product.name} className="w-full h-full object-contain rounded-xs" />
+                <img src={product.image} alt={product.name} className="w-full h-full object-cover object-top rounded-xs" />
               </button>
               {product.imageHover && (
                 <button 
                   type="button"
                   onClick={() => setSelectedColor(1)} 
-                  className={`w-18 h-22 sm:w-20 sm:h-24 overflow-hidden border bg-brand-cream/20 rounded-sm p-1 transition-all cursor-pointer ${selectedColor === 1 ? 'border-brand-teal ring-2 ring-brand-teal/40' : 'border-brand-powder/60 opacity-70 hover:opacity-100 hover:border-brand-teal'}`}
+                  className={`w-18 h-22 sm:w-20 sm:h-24 overflow-hidden border bg-brand-cream/20 rounded-sm transition-all cursor-pointer ${selectedColor === 1 ? 'border-brand-teal ring-2 ring-brand-teal/40' : 'border-brand-powder/60 opacity-70 hover:opacity-100 hover:border-brand-teal'}`}
                 >
-                  <img src={product.imageHover} alt={product.name} className="w-full h-full object-contain rounded-xs" />
+                  <img src={product.imageHover} alt={product.name} className="w-full h-full object-cover object-top rounded-xs" />
                 </button>
               )}
             </div>
@@ -594,36 +849,25 @@ export default function ProductDetail() {
           <div className="lg:col-span-6 w-full">
             <div className="sticky top-[100px]">
               
-              {/* Brand & Product ID Badge */}
-              <div className="flex items-center justify-between gap-3 mb-2.5 flex-wrap">
+              {/* Brand Header */}
+              <div className="mb-2">
                 <span className="font-sans text-[10px] text-brand-teal font-bold tracking-[0.25em] uppercase">
                   Suka Fashions
                 </span>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-brand-powderLight text-brand-navy border border-brand-powder shadow-xs">
-                  <span className="font-sans text-[9px] uppercase tracking-wider font-semibold text-brand-navy/60">Product ID:</span>
-                  <span className="font-mono text-xs font-bold text-brand-teal tracking-wide">{productIdCode}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(productIdCode);
-                      setCopiedSku(true);
-                      setTimeout(() => setCopiedSku(false), 2000);
-                    }}
-                    title="Copy Product ID"
-                    className="text-brand-navy/40 hover:text-brand-teal transition-colors p-0.5 ml-0.5 cursor-pointer"
-                  >
-                    {copiedSku ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
-                  </button>
-                </div>
               </div>
 
-              <h1 className="font-serif text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight text-brand-navy font-light mb-4">
+              <h1 className="font-serif text-3xl sm:text-4xl lg:text-[2.6rem] leading-tight text-brand-navy font-light mb-1.5">
                 {product.name}
               </h1>
 
+              {/* Tagline */}
+              <p className="font-serif text-sm sm:text-base italic text-brand-navy/70 mb-3.5">
+                "{product.description?.slice(0, 95) || 'Grace in every drape • Intricate handcrafted artistry'}..."
+              </p>
+
               {/* Price */}
-              <div className="flex items-baseline gap-4 mb-5">
-                <span className="font-sans text-2xl font-bold text-brand-navy">
+              <div className="flex items-baseline gap-3 sm:gap-4 mb-3">
+                <span className="font-sans text-2xl sm:text-3xl font-bold text-brand-navy">
                   ₹{product.price.toLocaleString('en-IN')}
                 </span>
                 {product.oldPrice && (
@@ -631,33 +875,29 @@ export default function ProductDetail() {
                     ₹{product.oldPrice.toLocaleString('en-IN')}
                   </span>
                 )}
-                <span className="font-sans text-[10px] text-brand-navy/50 tracking-wider">
-                  (Incl. of all taxes)
-                </span>
+                {product.discount && (
+                  <span className="font-sans text-xs font-bold text-emerald-700 bg-emerald-100/80 border border-emerald-200 px-2 py-0.5 rounded-xs">
+                    {product.discount}
+                  </span>
+                )}
               </div>
 
-              {/* Rating */}
-              <div className="flex items-center gap-2 mb-8 pb-8 border-b border-brand-powder/60">
+              {/* Rating & Review Count */}
+              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-brand-powder/60">
                 <div className="flex items-center text-amber-400">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star key={s} size={14} className={s <= Math.floor(product.rating) ? 'fill-amber-400' : 'text-brand-powder'} strokeWidth={1} />
                   ))}
                 </div>
-                <span className="font-sans text-xs text-brand-navy/60 font-medium border-r border-brand-powder/60 pr-3">
-                  {product.rating}
+                <span className="font-sans text-xs text-brand-navy/60 font-medium">
+                  {product.rating} ({product.reviewsCount || reviewsList.length} reviews)
                 </span>
-                <button
-                  onClick={scrollToReviews}
-                  className="font-sans text-xs text-brand-teal hover:underline font-semibold pl-1 transition-colors"
-                >
-                  Read {product.reviewsCount || reviewsList.length} Reviews
-                </button>
               </div>
 
               {/* Color Selection (Enhanced with Color Names & Visible Borders for White Swatches) */}
               {product.colors && product.colors.length > 0 && (
-                <div className="mb-8">
-                  <span className="font-sans text-[10px] font-semibold tracking-[0.2em] uppercase text-brand-navy mb-3 block">
+                <div className="mb-5">
+                  <span className="font-sans text-[10px] font-semibold tracking-[0.2em] uppercase text-brand-navy mb-2.5 block">
                     COLOR: <span className="font-bold text-brand-teal capitalize ml-1.5">{currentColorName}</span>
                   </span>
                   <div className="flex items-center gap-3">
@@ -689,7 +929,7 @@ export default function ProductDetail() {
 
               {/* Size Selection */}
               {product.sizes && product.sizes.length > 0 && (
-                <div className="mb-8">
+                <div className="mb-5">
                   <div className="flex justify-between items-baseline mb-3">
                     <span className="font-sans text-[10px] font-semibold tracking-[0.2em] uppercase text-brand-navy">
                       Size
@@ -728,7 +968,7 @@ export default function ProductDetail() {
                       Order Invoice Dispatched: {orderSuccessNotification.orderId}
                     </p>
                     <p className="mb-1 text-emerald-800">
-                      Product ID <span className="font-mono font-bold bg-emerald-100 px-1.5 py-0.5 rounded-xs">{orderSuccessNotification.productId}</span> and delivery address have been sent to WhatsApp!
+                      Order details and delivery address have been sent to WhatsApp!
                     </p>
                     <Link to="/account" className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-emerald-900 hover:underline mt-1">
                       View Order in Account <ArrowRight size={12} />
@@ -809,13 +1049,13 @@ export default function ProductDetail() {
         </div>
 
         {/* ── CUSTOMER REVIEWS SECTION ───────────────────────── */}
-        <div id="customer-reviews-section" className="mt-6 sm:mt-8 pt-6 border-t border-brand-powder/60">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <div id="customer-reviews-section" className="mt-2 sm:mt-8 pt-3 sm:pt-6 border-t border-brand-powder/60">
+          <div className="flex items-center justify-between gap-2 mb-3">
             <div>
-              <span className="font-sans text-[10px] text-brand-teal font-semibold tracking-[0.25em] uppercase mb-1 block">
+              <span className="font-sans text-[9px] sm:text-[10px] text-brand-teal font-semibold tracking-[0.25em] uppercase mb-0.5 block">
                 Customer Feedback
               </span>
-              <h2 className="font-serif text-2xl sm:text-3xl text-brand-navy font-light uppercase tracking-wider">
+              <h2 className="font-serif text-lg sm:text-2xl lg:text-3xl text-brand-navy font-light uppercase tracking-wider leading-tight">
                 Ratings & Reviews
               </h2>
             </div>
@@ -827,27 +1067,27 @@ export default function ProductDetail() {
                 }
                 setReviewModalOpen(true);
               }}
-              className="inline-flex items-center gap-2 bg-brand-navy hover:bg-brand-teal text-white font-sans text-xs uppercase tracking-wider px-6 py-3 rounded-sm transition-colors shadow-sm self-start sm:self-auto cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-brand-navy hover:bg-brand-teal text-white font-sans text-[10px] sm:text-xs uppercase tracking-wider px-3 py-2 sm:px-5 sm:py-2.5 rounded-sm transition-colors shadow-xs flex-shrink-0 cursor-pointer"
             >
-              <MessageSquare size={14} /> Write a Review
+              <MessageSquare size={13} /> <span>Write a Review</span>
             </button>
           </div>
 
           {/* Rating Summary Card */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-brand-powderLight/40 border border-brand-powder/60 p-5 sm:p-6 rounded-sm mb-5">
-            <div className="md:col-span-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-brand-powder/60 pb-6 md:pb-0 md:pr-6 text-center">
-              <span className="font-serif text-5xl sm:text-6xl text-brand-navy font-light mb-2">{product.rating}</span>
-              <div className="flex items-center gap-1 text-amber-400 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-6 bg-brand-powderLight/40 border border-brand-powder/60 p-3.5 sm:p-6 rounded-sm mb-3 sm:mb-4">
+            <div className="md:col-span-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-brand-powder/60 pb-3 md:pb-0 md:pr-6 text-center">
+              <span className="font-serif text-4xl sm:text-6xl text-brand-navy font-light mb-1">{product.rating}</span>
+              <div className="flex items-center gap-1 text-amber-400 mb-1">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} size={18} className={s <= Math.floor(product.rating) ? 'fill-amber-400' : 'text-slate-300'} />
+                  <Star key={s} size={15} className={s <= Math.floor(product.rating) ? 'fill-amber-400' : 'text-slate-300'} />
                 ))}
               </div>
-              <p className="font-sans text-xs text-brand-navy/60">
-                Based on {product.reviewsCount || reviewsList.length} verified buyer reviews
+              <p className="font-sans text-[11px] sm:text-xs text-brand-navy/60">
+                Based on {product.reviewsCount || reviewsList.length} customer reviews
               </p>
             </div>
 
-            <div className="md:col-span-8 flex flex-col justify-center space-y-2 md:pl-4">
+            <div className="md:col-span-8 flex flex-col justify-center space-y-1.5 md:pl-4">
               {[5, 4, 3, 2, 1].map((rating) => {
                 const count = rating === 5 ? 85 : rating === 4 ? 12 : rating === 3 ? 2 : rating === 2 ? 1 : 0;
                 return (
@@ -874,11 +1114,6 @@ export default function ProductDetail() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-sans text-sm font-bold text-brand-navy">{rev.author}</span>
-                      {rev.verified && (
-                        <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-xs border border-emerald-200">
-                          <Check size={10} strokeWidth={3} /> Verified Buyer
-                        </span>
-                      )}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-brand-navy/50 font-sans">
                       <div className="flex items-center text-amber-400">
@@ -895,9 +1130,22 @@ export default function ProductDetail() {
                 </div>
 
                 <h4 className="font-serif text-base font-medium text-brand-navy mb-2">{rev.title}</h4>
-                <p className="font-sans text-xs sm:text-sm text-brand-navy/70 leading-relaxed font-light mb-4">
+                <p className="font-sans text-xs sm:text-sm text-brand-navy/70 leading-relaxed font-light mb-3">
                   {rev.content}
                 </p>
+
+                {/* Customer Uploaded Review Photo */}
+                {rev.image && (
+                  <div className="mb-4">
+                    <img
+                      src={rev.image}
+                      alt="Customer review photo"
+                      className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-md border border-brand-powder shadow-xs hover:opacity-90 transition-opacity cursor-zoom-in"
+                      onClick={() => window.open(rev.image, '_blank')}
+                      title="Click to view full image"
+                    />
+                  </div>
+                )}
 
                 <div className="flex items-center gap-4 text-xs font-sans text-brand-navy/50 pt-3 border-t border-brand-powder/40">
                   <span>Was this helpful?</span>
@@ -931,16 +1179,55 @@ export default function ProductDetail() {
 
         {/* ── RELATED PRODUCTS ───────────────────────────────── */}
         {relatedProducts.length > 0 && (
-          <div className="mt-8 pt-6 border-t border-brand-powder/60">
-            <span className="font-sans text-[10px] text-brand-teal font-semibold tracking-[0.25em] uppercase mb-1 block">
-              Complete the Look
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl text-brand-navy font-light uppercase tracking-wider mb-5">
-              You May Also Like
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+          <div className="mt-4 sm:mt-8 pt-4 sm:pt-6 border-t border-brand-powder/60 pb-2">
+            <div className="flex items-end justify-between mb-3.5">
+              <div>
+                <span className="font-sans text-[9px] sm:text-[10px] text-brand-teal font-semibold tracking-[0.25em] uppercase mb-0.5 block">
+                  Complete the Look
+                </span>
+                <h2 className="font-serif text-lg sm:text-2xl lg:text-3xl text-brand-navy font-light uppercase tracking-wider">
+                  You May Also Like
+                </h2>
+              </div>
+
+              {/* Navigation Arrows */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (relatedScrollRef.current) {
+                      relatedScrollRef.current.scrollBy({ left: -280, behavior: 'smooth' });
+                    }
+                  }}
+                  className="p-1.5 sm:p-2 border border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white rounded-sm transition-all cursor-pointer"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (relatedScrollRef.current) {
+                      relatedScrollRef.current.scrollBy({ left: 280, behavior: 'smooth' });
+                    }
+                  }}
+                  className="p-1.5 sm:p-2 border border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white rounded-sm transition-all cursor-pointer"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            </div>
+
+            {/* Horizontal Scrollable Carousel Slider */}
+            <div
+              ref={relatedScrollRef}
+              className="flex overflow-x-auto gap-3 sm:gap-6 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar snap-x snap-mandatory"
+            >
               {relatedProducts.map((rel) => (
-                <ProductCard key={rel.id} product={rel} />
+                <div key={rel.id} className="flex-none w-[190px] sm:w-[250px] lg:w-[calc(25%-1.2rem)] snap-start flex flex-col h-full">
+                  <ProductCard product={rel} />
+                </div>
               ))}
             </div>
           </div>
@@ -951,14 +1238,14 @@ export default function ProductDetail() {
       {/* ── FULL-SCREEN IMAGE LIGHTBOX MODAL ───────────────────────── */}
       {previewOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6"
+          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 select-none animate-fade-in"
           onClick={() => setPreviewOpen(false)}
         >
           {/* Header */}
           <div className="flex items-center justify-between z-10 text-white" onClick={e => e.stopPropagation()}>
             <div className="text-left">
               <h3 className="font-serif text-lg text-white font-light">{product.name}</h3>
-              <p className="font-sans text-xs text-white/70">Photo {previewIndex + 1} of {galleryImages.length} • PID: {productIdCode}</p>
+              <p className="font-sans text-xs text-white/70">Photo {previewIndex + 1} of {galleryImages.length}</p>
             </div>
             <button
               onClick={() => setPreviewOpen(false)}
@@ -1051,11 +1338,7 @@ export default function ProductDetail() {
                       className="w-16 h-20 sm:w-18 sm:h-22 object-cover object-top rounded-xs border border-brand-powder bg-white flex-shrink-0"
                     />
                     <div>
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs bg-brand-powder/60 text-brand-navy border border-brand-powder/80 mb-1">
-                        <span className="font-sans text-[9px] uppercase font-semibold text-brand-navy/70">Product ID:</span>
-                        <span className="font-mono text-[11px] font-bold text-brand-teal">{productIdCode}</span>
-                      </div>
-                      <h4 className="font-serif text-base font-medium text-brand-navy line-clamp-1">{product.name}</h4>
+                      <h4 className="font-serif text-base sm:text-lg font-medium text-brand-navy line-clamp-1">{product.name}</h4>
                       <div className="flex flex-wrap items-center gap-2 text-xs font-sans text-brand-navy/70 mt-1">
                         <span>Color: <strong className="text-brand-navy">{currentColorName}</strong></span>
                         <span>•</span>
@@ -1069,66 +1352,15 @@ export default function ProductDetail() {
                   {/* Pricing Breakdown */}
                   <div className="sm:text-right w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-brand-powder/60">
                     <span className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 block">Item Subtotal</span>
-                    <span className="font-sans text-lg font-bold text-brand-navy">
+                    <span className="font-sans text-lg sm:text-xl font-bold text-brand-navy">
                       ₹{(product.price * quantity).toLocaleString('en-IN')}
                     </span>
                   </div>
                 </div>
-
-                {/* Delivery Option Selector */}
-                <div className="mt-4 pt-3.5 border-t border-brand-powder/60 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <label
-                    className={`flex items-center justify-between p-2.5 rounded-sm border cursor-pointer transition-all ${
-                      whatsappDeliveryMethod === 'standard'
-                        ? 'border-brand-teal bg-brand-teal/5 ring-1 ring-brand-teal'
-                        : 'border-brand-powder bg-white hover:border-brand-teal/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <input
-                        type="radio"
-                        name="delivery_method"
-                        checked={whatsappDeliveryMethod === 'standard'}
-                        onChange={() => setWhatsappDeliveryMethod('standard')}
-                        className="accent-brand-teal"
-                      />
-                      <div>
-                        <p className="font-sans text-xs font-semibold text-brand-navy">Standard Delivery</p>
-                        <p className="font-sans text-[10px] text-brand-navy/60">3-5 Business Days</p>
-                      </div>
-                    </div>
-                    <span className="font-sans text-xs font-bold text-emerald-700">
-                      {(product.price * quantity) >= 1999 ? 'FREE' : '₹150'}
-                    </span>
-                  </label>
-
-                  <label
-                    className={`flex items-center justify-between p-2.5 rounded-sm border cursor-pointer transition-all ${
-                      whatsappDeliveryMethod === 'express'
-                        ? 'border-brand-teal bg-brand-teal/5 ring-1 ring-brand-teal'
-                        : 'border-brand-powder bg-white hover:border-brand-teal/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <input
-                        type="radio"
-                        name="delivery_method"
-                        checked={whatsappDeliveryMethod === 'express'}
-                        onChange={() => setWhatsappDeliveryMethod('express')}
-                        className="accent-brand-teal"
-                      />
-                      <div>
-                        <p className="font-sans text-xs font-semibold text-brand-navy">Express Delivery</p>
-                        <p className="font-sans text-[10px] text-brand-navy/60">1-2 Business Days</p>
-                      </div>
-                    </div>
-                    <span className="font-sans text-xs font-bold text-brand-navy">₹250</span>
-                  </label>
-                </div>
               </div>
 
-              {/* Saved Addresses Quick Picker */}
-              {savedAddresses.length > 0 && !isAddingNewAddress && (
+              {/* Saved Addresses Quick Picker (When user has saved addresses) */}
+              {savedAddresses.length > 0 && !isAddingNewAddress ? (
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
                     <label className="font-sans text-xs font-bold text-brand-navy uppercase tracking-wider flex items-center gap-1.5">
@@ -1157,12 +1389,12 @@ export default function ProductDetail() {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                  <div className="grid grid-cols-1 gap-2.5">
                     {savedAddresses.map((addr) => (
                       <div
                         key={addr.id}
                         onClick={() => setSelectedAddressId(addr.id)}
-                        className={`p-3 rounded-sm border cursor-pointer transition-all ${
+                        className={`p-3.5 rounded-sm border cursor-pointer transition-all ${
                           selectedAddressId === addr.id
                             ? 'border-brand-teal bg-brand-teal/5 ring-2 ring-brand-teal/30 shadow-xs'
                             : 'border-brand-powder/80 bg-white hover:border-brand-teal/60'
@@ -1179,192 +1411,217 @@ export default function ProductDetail() {
                         <p className="font-sans text-xs text-brand-navy/70 line-clamp-2 leading-relaxed">
                           {addr.street}{addr.apartment ? `, ${addr.apartment}` : ''}, {addr.city}, {addr.state} - {addr.pincode}
                         </p>
-                        <p className="font-sans text-[11px] text-brand-navy/60 mt-1">📱 {addr.phone}</p>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-brand-powder/50">
+                          <span className="font-sans text-[11px] text-brand-navy/60">📱 {addr.phone}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAddressForm({
+                                name: addr.name || '',
+                                phone: addr.phone || '',
+                                email: addr.email || user?.email || '',
+                                street: addr.street || '',
+                                apartment: addr.apartment || '',
+                                city: addr.city || '',
+                                state: addr.state || '',
+                                pincode: addr.pincode || '',
+                                saveForFuture: true,
+                              });
+                              setAddressErrors({});
+                              setIsAddingNewAddress(true);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-brand-teal/80 text-brand-teal hover:bg-brand-teal hover:text-white rounded-xs font-sans text-[11px] font-semibold transition-all shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <Eye size={12} />
+                            <span>View & Edit</span>
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
+              ) : (
+                /* Address Input Form (First time or when adding new address) */
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-sans text-xs font-bold uppercase tracking-wider text-brand-navy flex items-center gap-1.5">
+                      <MapPin size={14} className="text-brand-teal" />
+                      {isAddingNewAddress ? 'New Delivery Address' : 'Recipient & Address Details'}
+                    </h4>
+                    {isAddingNewAddress && savedAddresses.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingNewAddress(false)}
+                        className="text-brand-navy/60 hover:text-brand-navy text-xs font-sans font-semibold underline cursor-pointer"
+                      >
+                        Use Saved Address
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Name & Phone */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Pooja Sharma"
+                        value={addressForm.name}
+                        onChange={(e) => {
+                          setAddressForm({ ...addressForm, name: e.target.value });
+                          if (addressErrors.name) setAddressErrors({ ...addressErrors, name: '' });
+                        }}
+                        className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
+                          addressErrors.name ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
+                        }`}
+                      />
+                      {addressErrors.name && (
+                        <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.name}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
+                        Mobile Number <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="10-digit mobile number"
+                        value={addressForm.phone}
+                        onChange={(e) => {
+                          setAddressForm({ ...addressForm, phone: e.target.value });
+                          if (addressErrors.phone) setAddressErrors({ ...addressErrors, phone: '' });
+                        }}
+                        className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
+                          addressErrors.phone ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
+                        }`}
+                      />
+                      {addressErrors.phone && (
+                        <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.phone}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Street Address */}
+                  <div>
+                    <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
+                      Flat / House No. / Street Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Flat 402, Sunshine Heights, 12th Main Road"
+                      value={addressForm.street}
+                      onChange={(e) => {
+                        setAddressForm({ ...addressForm, street: e.target.value });
+                        if (addressErrors.street) setAddressErrors({ ...addressErrors, street: '' });
+                      }}
+                      className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
+                        addressErrors.street ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
+                      }`}
+                    />
+                    {addressErrors.street && (
+                      <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.street}</p>
+                    )}
+                  </div>
+
+                  {/* Apartment / Landmark */}
+                  <div>
+                    <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
+                      Apartment / Landmark / Locality <span className="text-brand-navy/40 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Near HDFC Bank, Bandra West"
+                      value={addressForm.apartment}
+                      onChange={(e) => setAddressForm({ ...addressForm, apartment: e.target.value })}
+                      className="w-full border border-slate-300 rounded-sm px-3 py-2 text-xs outline-none focus:border-brand-teal"
+                    />
+                  </div>
+
+                  {/* City, State, Pincode */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <div>
+                      <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
+                        City <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Mumbai"
+                        value={addressForm.city}
+                        onChange={(e) => {
+                          setAddressForm({ ...addressForm, city: e.target.value });
+                          if (addressErrors.city) setAddressErrors({ ...addressErrors, city: '' });
+                        }}
+                        className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
+                          addressErrors.city ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
+                        }`}
+                      />
+                      {addressErrors.city && (
+                        <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.city}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
+                        State <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Maharashtra"
+                        value={addressForm.state}
+                        onChange={(e) => {
+                          setAddressForm({ ...addressForm, state: e.target.value });
+                          if (addressErrors.state) setAddressErrors({ ...addressErrors, state: '' });
+                        }}
+                        className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
+                          addressErrors.state ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
+                        }`}
+                      />
+                      {addressErrors.state && (
+                        <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.state}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
+                        PIN Code <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        placeholder="6-digit PIN"
+                        value={addressForm.pincode}
+                        onChange={(e) => {
+                          setAddressForm({ ...addressForm, pincode: e.target.value.replace(/\D/g, '') });
+                          if (addressErrors.pincode) setAddressErrors({ ...addressErrors, pincode: '' });
+                        }}
+                        className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
+                          addressErrors.pincode ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
+                        }`}
+                      />
+                      {addressErrors.pincode && (
+                        <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.pincode}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Save for future checkbox */}
+                  {isAddingNewAddress && (
+                    <label className="flex items-center gap-2 cursor-pointer pt-1">
+                      <input
+                        type="checkbox"
+                        checked={addressForm.saveForFuture}
+                        onChange={(e) => setAddressForm({ ...addressForm, saveForFuture: e.target.checked })}
+                        className="accent-brand-teal rounded-xs"
+                      />
+                      <span className="font-sans text-xs text-brand-navy/80">Save this address to my account for future orders</span>
+                    </label>
+                  )}
+                </div>
               )}
-
-              {/* Address Input Form */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-sans text-xs font-bold uppercase tracking-wider text-brand-navy flex items-center gap-1.5">
-                    <MapPin size={14} className="text-brand-teal" />
-                    {isAddingNewAddress ? 'New Delivery Address' : 'Recipient & Address Details'}
-                  </h4>
-                  {isAddingNewAddress && savedAddresses.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setIsAddingNewAddress(false)}
-                      className="text-brand-navy/60 hover:text-brand-navy text-xs font-sans font-semibold underline cursor-pointer"
-                    >
-                      Choose Saved Address
-                    </button>
-                  )}
-                </div>
-
-                {/* Name & Phone */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Pooja Sharma"
-                      value={addressForm.name}
-                      onChange={(e) => {
-                        setAddressForm({ ...addressForm, name: e.target.value });
-                        if (addressErrors.name) setAddressErrors({ ...addressErrors, name: '' });
-                      }}
-                      className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
-                        addressErrors.name ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
-                      }`}
-                    />
-                    {addressErrors.name && (
-                      <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
-                      Mobile Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="10-digit mobile number"
-                      value={addressForm.phone}
-                      onChange={(e) => {
-                        setAddressForm({ ...addressForm, phone: e.target.value });
-                        if (addressErrors.phone) setAddressErrors({ ...addressErrors, phone: '' });
-                      }}
-                      className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
-                        addressErrors.phone ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
-                      }`}
-                    />
-                    {addressErrors.phone && (
-                      <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.phone}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Street Address */}
-                <div>
-                  <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
-                    Flat / House No. / Street Address <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Flat 402, Sunshine Heights, 12th Main Road"
-                    value={addressForm.street}
-                    onChange={(e) => {
-                      setAddressForm({ ...addressForm, street: e.target.value });
-                      if (addressErrors.street) setAddressErrors({ ...addressErrors, street: '' });
-                    }}
-                    className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
-                      addressErrors.street ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
-                    }`}
-                  />
-                  {addressErrors.street && (
-                    <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.street}</p>
-                  )}
-                </div>
-
-                {/* Apartment / Landmark */}
-                <div>
-                  <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
-                    Apartment / Landmark / Locality <span className="text-brand-navy/40 font-normal">(Optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Near HDFC Bank, Bandra West"
-                    value={addressForm.apartment}
-                    onChange={(e) => setAddressForm({ ...addressForm, apartment: e.target.value })}
-                    className="w-full border border-slate-300 rounded-sm px-3 py-2 text-xs outline-none focus:border-brand-teal"
-                  />
-                </div>
-
-                {/* City, State, Pincode */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <div>
-                    <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
-                      City <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Mumbai"
-                      value={addressForm.city}
-                      onChange={(e) => {
-                        setAddressForm({ ...addressForm, city: e.target.value });
-                        if (addressErrors.city) setAddressErrors({ ...addressErrors, city: '' });
-                      }}
-                      className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
-                        addressErrors.city ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
-                      }`}
-                    />
-                    {addressErrors.city && (
-                      <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.city}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
-                      State <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Maharashtra"
-                      value={addressForm.state}
-                      onChange={(e) => {
-                        setAddressForm({ ...addressForm, state: e.target.value });
-                        if (addressErrors.state) setAddressErrors({ ...addressErrors, state: '' });
-                      }}
-                      className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
-                        addressErrors.state ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
-                      }`}
-                    />
-                    {addressErrors.state && (
-                      <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.state}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="font-sans text-[11px] font-semibold text-brand-navy block mb-1">
-                      PIN Code <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="6-digit PIN"
-                      value={addressForm.pincode}
-                      onChange={(e) => {
-                        setAddressForm({ ...addressForm, pincode: e.target.value.replace(/\D/g, '') });
-                        if (addressErrors.pincode) setAddressErrors({ ...addressErrors, pincode: '' });
-                      }}
-                      className={`w-full border rounded-sm px-3 py-2 text-xs outline-none transition-colors ${
-                        addressErrors.pincode ? 'border-red-500 bg-red-50/20' : 'border-slate-300 focus:border-brand-teal'
-                      }`}
-                    />
-                    {addressErrors.pincode && (
-                      <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">{addressErrors.pincode}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Save for future checkbox */}
-                {isAddingNewAddress && (
-                  <label className="flex items-center gap-2 cursor-pointer pt-1">
-                    <input
-                      type="checkbox"
-                      checked={addressForm.saveForFuture}
-                      onChange={(e) => setAddressForm({ ...addressForm, saveForFuture: e.target.checked })}
-                      className="accent-brand-teal rounded-xs"
-                    />
-                    <span className="font-sans text-xs text-brand-navy/80">Save this address to my account for future orders</span>
-                  </label>
-                )}
-              </div>
 
               {/* Modal Footer / Action Button */}
               <div className="pt-4 border-t border-brand-powder/60 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1389,7 +1646,7 @@ export default function ProductDetail() {
                     <MessageSquare size={16} />
                     <span>Confirm & Buy on WhatsApp</span>
                     <span className="ml-1 opacity-90">
-                      (₹{((product.price * quantity) + (whatsappDeliveryMethod === 'express' ? 250 : ((product.price * quantity) >= 1999 ? 0 : 150))).toLocaleString('en-IN')})
+                      (₹{(product.price * quantity).toLocaleString('en-IN')})
                     </span>
                   </button>
                 </div>
@@ -1496,9 +1753,51 @@ export default function ProductDetail() {
                   )}
                 </div>
 
+                {/* Upload Review Photo (Optional) */}
+                <div>
+                  <label className="font-sans text-xs font-semibold text-brand-navy block mb-1.5">
+                    Add Product Photo <span className="font-normal text-slate-400 font-sans text-[11px]">(Optional)</span>
+                  </label>
+
+                  {reviewImagePreview ? (
+                    <div className="relative inline-block border border-brand-teal/30 rounded-md p-1 bg-brand-cream/20">
+                      <img
+                        src={reviewImagePreview}
+                        alt="Review upload preview"
+                        className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-sm shadow-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeReviewImage}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer"
+                        title="Remove photo"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center gap-2 border border-dashed border-brand-powder hover:border-brand-teal bg-brand-powderLight/30 hover:bg-brand-cream/20 rounded-sm py-3 px-4 cursor-pointer transition-colors group">
+                      <Camera size={16} className="text-brand-teal group-hover:scale-110 transition-transform" />
+                      <span className="font-sans text-xs font-semibold text-brand-teal">
+                        Attach Product Photo
+                      </span>
+                      <span className="font-sans text-[10px] text-brand-navy/50">(JPG, PNG, WEBP)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleReviewImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                  {reviewErrors.image && (
+                    <p className="font-sans text-[10px] text-red-500 mt-1 font-semibold">⚠️ {reviewErrors.image}</p>
+                  )}
+                </div>
+
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-xs font-bold uppercase tracking-wider py-3.5 rounded-sm transition-colors shadow-md mt-4"
+                  className="w-full flex items-center justify-center gap-2 bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-xs font-bold uppercase tracking-wider py-3.5 rounded-sm transition-colors shadow-md mt-4 cursor-pointer"
                 >
                   <Send size={14} /> Submit Review
                 </button>
