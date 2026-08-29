@@ -429,9 +429,6 @@ export default function Account() {
                         </div>
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
-                            <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-brand-powderLight text-brand-navy border border-brand-powder text-[9px] font-mono font-semibold mb-1">
-                              PID: {order.items[0].productId || order.items[0].sku || order.items[0].id}
-                            </div>
                             <h3 className="font-serif text-lg text-brand-navy mb-1">{order.items[0].name}</h3>
                             <p className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 mb-2">
                               Size: {order.items[0].selectedSize} | Qty: {order.items[0].quantity}
@@ -705,9 +702,6 @@ export default function Account() {
                   <div key={idx} className="flex items-center gap-4 p-3 bg-brand-cream/20 border border-brand-powder/40 rounded-sm">
                     <img src={item.image} alt={item.name} className="w-16 h-20 object-cover rounded-xs border border-brand-powder/40 flex-shrink-0" />
                     <div className="flex-1">
-                      <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-brand-powderLight text-brand-navy border border-brand-powder text-[9px] font-mono font-semibold mb-1">
-                        PID: {item.productId || item.sku || item.id}
-                      </div>
                       <h4 className="font-serif text-base text-brand-navy font-medium">{item.name}</h4>
                       <p className="font-sans text-[10px] text-brand-navy/60 uppercase tracking-wider mt-0.5">
                         Size: {item.selectedSize || 'Free Size'} | Qty: {item.quantity}

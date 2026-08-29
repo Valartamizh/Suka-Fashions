@@ -66,13 +66,13 @@ export default function CuratedCollections() {
           </Link>
         </div>
 
-        {/* Grid: 2 Columns on Mobile, 4 Columns on Desktop */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5 lg:gap-6">
+        {/* Grid / Slider: Horizontal Snap on Mobile, 4 Columns on Desktop */}
+        <div className="flex overflow-x-auto lg:grid lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar snap-x snap-mandatory">
           {collections.map((col, index) => (
             <Link
               key={col.id}
               to={col.link}
-              className={`reveal reveal-delay-${index + 1} group block relative aspect-[3/4] overflow-hidden rounded-md bg-white shadow-2xs hover:shadow-xl transition-all duration-400 border border-brand-powder/40`}
+              className={`reveal reveal-delay-${index + 1} flex-none w-[70vw] max-w-[260px] lg:max-w-none lg:w-full snap-start group block relative aspect-[3/4] overflow-hidden rounded-md bg-white shadow-2xs hover:shadow-xl transition-all duration-400 border border-brand-powder/40`}
             >
               <div className="absolute inset-0 overflow-hidden">
                 <img

@@ -15,33 +15,19 @@ export function CartProvider({ children }) {
     }
   });
 
-  // Clear cart state if logged out
+  // Persist cart items to localStorage
   useEffect(() => {
-    if (!isLoggedIn) {
-      setCartItems([]);
-      try {
-        localStorage.removeItem('suka_cart');
-      } catch (e) {
-        console.error('Error clearing cart', e);
-      }
+    try {
+      localStorage.setItem('suka_cart', JSON.stringify(cartItems));
+    } catch (e) {
+      console.error('Error saving cart to localStorage', e);
     }
-  }, [isLoggedIn]);
-
-  // Persist cart items to localStorage when logged in
-  useEffect(() => {
-    if (isLoggedIn) {
-      try {
-        localStorage.setItem('suka_cart', JSON.stringify(cartItems));
-      } catch (e) {
-        console.error('Error saving cart to localStorage', e);
-      }
-    }
-  }, [cartItems, isLoggedIn]);
+  }, [cartItems]);
 
   const addToCart = (product, quantity = 1, selectedSize = 'Free Size', selectedColor = '') => {
     setCartItems((prevItems) => {
       const existingIndex = prevItems.findIndex(
-        (item) => item.id === product.id && item.selectedSize === selectedSize
+        (item) => item.id === product.id && item.selectedSize === selectedSize && (item.selectedColor || '') === (selectedColor || '')
       );
 
       if (existingIndex > -1) {
@@ -86,14 +72,13 @@ export function CartProvider({ children }) {
     setCartItems([]);
   };
 
-  const activeCartItems = isLoggedIn ? cartItems : [];
-  const cartCount = activeCartItems.reduce((total, item) => total + item.quantity, 0);
-  const cartSubtotal = activeCartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartSubtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return (
     <CartContext.Provider
       value={{
-        cartItems: activeCartItems,
+        cartItems,
         cartCount,
         cartSubtotal,
         addToCart,

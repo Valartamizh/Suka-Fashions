@@ -132,9 +132,6 @@ export default function Cart() {
                   </div>
 
                   <div className="font-sans text-xs text-brand-navy/60 mb-4 space-y-1">
-                    <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-brand-powderLight text-brand-navy border border-brand-powder text-[9px] font-mono font-semibold">
-                      PID: {item.productId || item.sku || (products.find(p => p.id === item.id)?.productId) || item.id}
-                    </div>
                     <p>
                       Size: <span className="font-medium text-brand-navy">{item.selectedSize || 'Free Size'}</span>
                       {item.selectedColor ? <span className="ml-2 text-brand-navy/60">· Color: <strong className="text-brand-navy">{item.selectedColor}</strong></span> : null}
