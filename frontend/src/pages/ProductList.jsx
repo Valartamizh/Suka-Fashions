@@ -3,42 +3,23 @@ import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { Filter, X, SlidersHorizontal, Sparkles, Check } from 'lucide-react';
 import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
-
-const SORT_OPTIONS = [
-  { id: 'recommended', label: 'Recommended' },
-  { id: 'newest', label: 'Newest Arrivals' },
-  { id: 'price-low', label: 'Price: Low to High' },
-  { id: 'price-high', label: 'Price: High to Low' },
-];
-
-const COLOR_FILTER_OPTIONS = [
-  { id: 'all', name: 'All Colors', hex: null },
-  { id: 'teal', name: 'Teal', hex: '#006B70' },
-  { id: 'gold', name: 'Gold / Zari', hex: '#D4AF37' },
-  { id: 'pink', name: 'Blush Pink', hex: '#F8C8DC' },
-  { id: 'navy', name: 'Navy Blue', hex: '#0F1E2E' },
-  { id: 'black', name: 'Midnight Black', hex: '#000000' },
-  { id: 'maroon', name: 'Maroon', hex: '#800000' },
-  { id: 'yellow', name: 'Mustard Yellow', hex: '#FFDB58' },
-  { id: 'white', name: 'Pure White / Ivory', hex: '#FFFFFF' },
-  { id: 'green', name: 'Emerald Green', hex: '#50C878' },
-  { id: 'red', name: 'Crimson Red', hex: '#DC143C' },
-];
-
-const SIZE_OPTIONS = ['all', 'Free Size', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
-const OCCASION_OPTIONS = ['all', 'Wedding', 'Festive', 'Party', 'Casual', 'Office', 'Haldi / Mehendi'];
-const PATTERN_OPTIONS = ['all', 'Floral', 'Embroidered', 'Zari Work', 'Chikankari', 'Printed', 'Handloom', 'Solid'];
-
-const TAG_OPTIONS = [
-  { id: 'all', label: 'All Collection' },
-  { id: 'new', label: 'New Arrivals ✨' },
-  { id: 'bestseller', label: 'Best Sellers 🔥' },
-];
+import { useFilterCatalog } from '../context/FilterContext';
 
 export default function ProductList() {
+  const { filters } = useFilterCatalog();
   const { categoryName } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Dynamic filter facet options from admin Filter Catalog
+  const SORT_OPTIONS = (filters.sortOptions || []).filter(o => o.active);
+  const PRICE_RANGES = (filters.priceRanges || []).filter(p => p.active);
+  const TAG_OPTIONS = [{ id: 'all', label: 'All Collection' }, ...(filters.highlights || []).filter(h => h.active)];
+  const SIZE_OPTIONS = ['all', ...(filters.sizes || []).filter(s => s.active).map(s => s.name)];
+  const COLOR_FILTER_OPTIONS = [{ id: 'all', name: 'All Colors', hex: null }, ...(filters.colors || []).filter(c => c.active)];
+  const FABRIC_OPTIONS = ['all', ...(filters.fabrics || []).filter(f => f.active).map(f => f.name)];
+  const OCCASION_OPTIONS = ['all', ...(filters.occasions || []).filter(o => o.active).map(o => o.name)];
+  const PATTERN_OPTIONS = ['all', ...(filters.crafts || []).filter(c => c.active).map(c => c.name)];
   
   const searchQuery = searchParams.get('search') || '';
   const fabricParam = searchParams.get('fabric') || 'all';
@@ -170,12 +151,17 @@ export default function ProductList() {
   }
 
   // 10. Price Range
-  if (priceRange === 'under-2000') {
-    displayProducts = displayProducts.filter(p => p.price < 2000);
-  } else if (priceRange === '2000-5000') {
-    displayProducts = displayProducts.filter(p => p.price >= 2000 && p.price <= 5000);
-  } else if (priceRange === 'above-5000') {
-    displayProducts = displayProducts.filter(p => p.price > 5000);
+  if (priceRange && priceRange !== 'all') {
+    const matchedRange = PRICE_RANGES.find(r => r.id === priceRange);
+    if (matchedRange) {
+      displayProducts = displayProducts.filter(p => p.price >= matchedRange.min && p.price <= matchedRange.max);
+    } else if (priceRange === 'under-2000') {
+      displayProducts = displayProducts.filter(p => p.price < 2000);
+    } else if (priceRange === '2000-5000') {
+      displayProducts = displayProducts.filter(p => p.price >= 2000 && p.price <= 5000);
+    } else if (priceRange === 'above-5000') {
+      displayProducts = displayProducts.filter(p => p.price > 5000);
+    }
   }
 
   // 11. Sort
@@ -189,15 +175,7 @@ export default function ProductList() {
 
   const categoriesList = ['all', 'sarees', 'kurtis', 'lehengas', 'dresses'];
 
-  const fabricOptions = {
-    sarees: ['all', 'Silk', 'Organza', 'Georgette', 'Cotton', 'Banarasi'],
-    kurtis: ['all', 'Cotton', 'Silk', 'Rayon', 'Georgette'],
-    lehengas: ['all', 'Organza', 'Net', 'Raw Silk', 'Georgette'],
-    dresses: ['all', 'Cotton Silk', 'Georgette', 'Velvet', 'Cotton'],
-    all: ['all', 'Silk', 'Cotton', 'Organza', 'Georgette', 'Banarasi'],
-  };
-
-  const currentFabrics = fabricOptions[selectedCategory] || fabricOptions.all;
+  const currentFabrics = FABRIC_OPTIONS;
 
   const updateParam = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
@@ -310,7 +288,7 @@ export default function ProductList() {
 
             {priceRange !== 'all' && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
-                Price: <strong>{priceRange}</strong>
+                Price: <strong>{PRICE_RANGES.find(p => p.id === priceRange)?.label || priceRange}</strong>
                 <button type="button" onClick={() => { setPriceRange('all'); updateParam('price', 'all'); }} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove price filter"><X size={11} strokeWidth={2} /></button>
               </span>
             )}
@@ -352,8 +330,8 @@ export default function ProductList() {
 
             {selectedPattern !== 'all' && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
-                Pattern: <strong>{selectedPattern}</strong>
-                <button type="button" onClick={() => updateParam('pattern', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove pattern filter"><X size={11} strokeWidth={2} /></button>
+                Work / Craft: <strong>{selectedPattern}</strong>
+                <button type="button" onClick={() => updateParam('pattern', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove work filter"><X size={11} strokeWidth={2} /></button>
               </span>
             )}
           </div>
@@ -433,12 +411,19 @@ export default function ProductList() {
               Price
             </h3>
             <div className="flex flex-col gap-2.5">
-              {[
-                { id: 'all', label: 'All Prices' },
-                { id: 'under-2000', label: 'Under ₹2000' },
-                { id: '2000-5000', label: '₹2000 - ₹5000' },
-                { id: 'above-5000', label: 'Above ₹5000' },
-              ].map(pr => (
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input 
+                  type="radio" 
+                  name="price" 
+                  checked={priceRange === 'all'} 
+                  onChange={() => { setPriceRange('all'); updateParam('price', 'all'); }}
+                  className="w-3.5 h-3.5 text-brand-teal border-brand-powder focus:ring-brand-teal cursor-pointer"
+                />
+                <span className={`font-sans text-xs tracking-wider transition-colors ${priceRange === 'all' ? 'text-brand-teal font-semibold' : 'text-brand-navy/70 group-hover:text-brand-teal'}`}>
+                  All Prices
+                </span>
+              </label>
+              {PRICE_RANGES.map(pr => (
                 <label key={pr.id} className="flex items-center gap-3 cursor-pointer group">
                   <input 
                     type="radio" 
@@ -578,10 +563,10 @@ export default function ProductList() {
             </div>
           </div>
 
-          {/* 8. Pattern */}
+          {/* 8. Work / Craft */}
           <div className="border-t border-brand-powder/50 pt-5">
             <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-semibold text-brand-navy mb-3">
-              Pattern
+              Work / Craft
             </h3>
             <div className="flex flex-wrap gap-2">
               {PATTERN_OPTIONS.map(pat => (
@@ -684,12 +669,17 @@ export default function ProductList() {
           <div className="border-t border-brand-powder/50 pt-5">
             <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-semibold text-brand-navy mb-3">Price</h3>
             <div className="flex flex-col gap-3">
-              {[
-                { id: 'all', label: 'All Prices' },
-                { id: 'under-2000', label: 'Under ₹2000' },
-                { id: '2000-5000', label: '₹2000 - ₹5000' },
-                { id: 'above-5000', label: 'Above ₹5000' },
-              ].map(pr => (
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="mobile_price" 
+                  checked={priceRange === 'all'} 
+                  onChange={() => { setPriceRange('all'); updateParam('price', 'all'); }} 
+                  className="w-4 h-4 text-brand-teal border-brand-powder focus:ring-brand-teal cursor-pointer" 
+                />
+                <span className={`font-sans text-xs tracking-wider ${priceRange === 'all' ? 'text-brand-teal font-medium' : 'text-brand-navy/70'}`}>All Prices</span>
+              </label>
+              {PRICE_RANGES.map(pr => (
                 <label key={pr.id} className="flex items-center gap-3 cursor-pointer">
                   <input 
                     type="radio" 
@@ -805,9 +795,9 @@ export default function ProductList() {
             </div>
           </div>
 
-          {/* 8. Mobile Pattern */}
+          {/* 8. Mobile Work / Craft */}
           <div className="border-t border-brand-powder/50 pt-5">
-            <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-semibold text-brand-navy mb-3">Pattern</h3>
+            <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-semibold text-brand-navy mb-3">Work / Craft</h3>
             <div className="flex flex-wrap gap-2">
               {PATTERN_OPTIONS.map(pat => (
                 <button

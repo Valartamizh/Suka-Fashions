@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useReveal } from '../hooks/useReveal';
+import { useContent } from '../context/ContentContext';
 
 // Import local assets for 100% reliable image loading
 import sareeGolden from '../assets/saree_golden.jpg';
@@ -17,7 +18,7 @@ const InstagramSVG = ({ size = 24 }) => (
   </svg>
 );
 
-const instagramImages = [
+const defaultInstagramImages = [
   { url: sareeGolden, alt: 'Teal saree editorial — Suka Fashions' },
   { url: lehengaRed, alt: 'Bridal lehenga close-up — Suka Fashions' },
   { url: anarkaliBlack, alt: 'Ivory handloom anarkali — Suka Fashions' },
@@ -28,23 +29,20 @@ const instagramImages = [
   { url: festiveSuit, alt: 'Indian fashion editorial — Suka Fashions' },
 ];
 
-// Duplicate for seamless infinite loop
-const trackImages = [...instagramImages, ...instagramImages];
-
-function MarqueeImage({ img }) {
+function MarqueeImage({ img, handle }) {
   return (
     <a
-      href="https://instagram.com/sukafashions"
+      href={`https://instagram.com/${handle.replace('@', '')}`}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`View on Instagram: ${img.alt}`}
+      aria-label={`View on Instagram: ${img.alt || 'Suka Fashions'}`}
       className="group relative flex-shrink-0 mx-1.5 overflow-hidden rounded-sm bg-brand-cream"
       style={{ width: 'clamp(170px, 18vw, 290px)', height: 'clamp(200px, 22vw, 340px)' }}
     >
       {/* Photo */}
       <img
         src={img.url}
-        alt={img.alt}
+        alt={img.alt || 'Suka Look'}
         loading="lazy"
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
       />
@@ -64,6 +62,19 @@ function MarqueeImage({ img }) {
 
 export default function InstagramGallery() {
   const sectionRef = useReveal();
+  const { getSectionContent } = useContent();
+  const content = getSectionContent('instagram');
+
+  const handle = content?.handle || '@sukafashions';
+  const title = content?.title || `Follow ${handle}`;
+  const subtitle = content?.subtitle || 'Tag us in your looks for a chance to be featured';
+
+  const trackImages = useMemo(() => {
+    const images = (content?.images && Array.isArray(content.images) && content.images.length > 0)
+      ? content.images.map((img, i) => ({ url: typeof img === 'string' ? img : img.url, alt: `Suka Look ${i + 1}` }))
+      : defaultInstagramImages;
+    return [...images, ...images];
+  }, [content]);
 
   return (
     <section ref={sectionRef} className="pt-4 pb-3 sm:py-6 lg:py-8 bg-white border-b border-brand-powder/30 overflow-hidden">
@@ -71,14 +82,14 @@ export default function InstagramGallery() {
       {/* ── Section Heading ───────────────────────── */}
       <div className="text-center mb-3 sm:mb-4 px-4 reveal">
         <p className="font-sans text-[9.5px] sm:text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-1 sm:mb-2">
-          Instagram
+          Instagram Community
         </p>
         <h2 className="font-serif text-xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
-          Follow @SukaFashions
+          {title}
         </h2>
         <div className="section-divider mt-1.5 sm:mt-2" />
         <p className="font-sans text-[11px] sm:text-xs text-brand-navy/55 mt-2 sm:mt-3">
-          Tag us in your looks for a chance to be featured
+          {subtitle}
         </p>
       </div>
 
@@ -99,14 +110,14 @@ export default function InstagramGallery() {
           aria-hidden="true"
         />
 
-        {/* Scrolling viewport — hover pauses via CSS */}
+        {/* Scrolling viewport */}
         <div className="marquee-viewport w-full overflow-hidden cursor-pointer">
           <div
             className="marquee-track py-1"
             aria-label="Instagram fashion gallery — scroll pauses on hover"
           >
             {trackImages.map((img, i) => (
-              <MarqueeImage key={i} img={img} />
+              <MarqueeImage key={i} img={img} handle={handle} />
             ))}
           </div>
         </div>
@@ -115,13 +126,13 @@ export default function InstagramGallery() {
       {/* ── CTA Button ──────────────────────────── */}
       <div className="text-center mt-3.5 sm:mt-6 reveal">
         <a
-          href="https://instagram.com/sukafashions"
+          href={`https://instagram.com/${handle.replace('@', '')}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 font-sans text-[10px] sm:text-[11px] tracking-[0.2em] uppercase font-semibold text-brand-teal border border-brand-teal px-6 sm:px-8 py-2.5 sm:py-3 hover:bg-brand-teal hover:text-white transition-all duration-300 rounded-sm"
         >
           <InstagramSVG size={13} />
-          Follow Us on Instagram
+          Follow {handle}
         </a>
       </div>
 

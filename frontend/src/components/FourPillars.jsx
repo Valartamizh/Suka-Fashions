@@ -1,43 +1,50 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Feather, Compass, Award, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
-
-const PILLARS = [
-  {
-    num: '01',
-    icon: Users,
-    tag: '500+ Female Weavers',
-    title: 'Artisan Empowerment',
-    desc: 'Empowering over 500+ female artisans across rural handloom clusters through fair wages and skill upliftment.',
-    gradient: 'from-teal-500/10 to-emerald-500/10',
-  },
-  {
-    num: '02',
-    icon: Feather,
-    tag: '100% Pure Silks',
-    title: 'Purity & Quality',
-    desc: 'Certified pure silks, organzas, georgettes, and hand-embroidered threads that stand the test of time.',
-    gradient: 'from-amber-500/10 to-orange-500/10',
-  },
-  {
-    num: '03',
-    icon: Compass,
-    tag: 'Eco-Conscious Craft',
-    title: 'Sustainable Fashion',
-    desc: 'Slow, conscious production with minimal chemical dyes and eco-friendly packaging materials.',
-    gradient: 'from-cyan-500/10 to-blue-500/10',
-  },
-  {
-    num: '04',
-    icon: Award,
-    tag: 'Bespoke Fit & Poise',
-    title: 'Unmatched Elegance',
-    desc: 'Contemporary cuts tailored to accentuate grace, dignity, and regal poise for every festive moment.',
-    gradient: 'from-purple-500/10 to-pink-500/10',
-  },
-];
+import { useContent } from '../context/ContentContext';
 
 export default function FourPillars() {
+  const { getSectionContent } = useContent();
+  const content = getSectionContent('four-pillars');
+
+  const eyebrow = content?.eyebrow || 'The Suka Promise';
+  const title = content?.title || 'THE FOUR PILLARS';
+
+  const pillars = useMemo(() => [
+    {
+      num: '01',
+      icon: Users,
+      tag: 'Certified Pure Weaves',
+      title: content?.item1Title || 'Artisan Empowerment',
+      desc: content?.item1Desc || 'Empowering over 500+ female artisans across rural handloom clusters through fair wages and skill upliftment.',
+      gradient: 'from-teal-500/10 to-emerald-500/10',
+    },
+    {
+      num: '02',
+      icon: Feather,
+      tag: '100% Pure Silks',
+      title: content?.item2Title || 'Purity & Quality',
+      desc: content?.item2Desc || 'Certified pure silks, organzas, georgettes, and hand-embroidered threads that stand the test of time.',
+      gradient: 'from-amber-500/10 to-orange-500/10',
+    },
+    {
+      num: '03',
+      icon: Compass,
+      tag: 'Complimentary Express',
+      title: content?.item3Title || 'Complimentary Express',
+      desc: content?.item3Desc || 'Secure doorstep express delivery across all pin codes in India with reliable tracking.',
+      gradient: 'from-cyan-500/10 to-blue-500/10',
+    },
+    {
+      num: '04',
+      icon: Award,
+      tag: 'Easy 7-Day Exchange',
+      title: content?.item4Title || 'Easy 7-Day Returns',
+      desc: content?.item4Desc || 'Hassle-free exchange and returns guarantee for complete peace of mind on every festive purchase.',
+      gradient: 'from-purple-500/10 to-pink-500/10',
+    },
+  ], [content]);
+
   return (
     <section className="w-full py-4 sm:py-6 lg:py-8 bg-gradient-to-b from-brand-cream/40 via-white to-brand-cream/30 border-y border-brand-powder/40">
       <div className="max-w-[1600px] mx-auto px-3.5 sm:px-6 lg:px-10 xl:px-14">
@@ -49,13 +56,13 @@ export default function FourPillars() {
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-teal text-white shadow-xs mb-2 select-none">
             <Sparkles size={11} className="text-amber-300 animate-pulse" />
             <span className="font-sans text-[9px] sm:text-[10.5px] font-bold uppercase tracking-[0.24em]">
-              ABOUT US
+              {eyebrow}
             </span>
           </div>
 
           {/* Main Title */}
           <h2 className="font-serif text-xl sm:text-3xl lg:text-4xl text-brand-navy tracking-wider uppercase font-light mb-1">
-            THE FOUR PILLARS
+            {title}
           </h2>
           
           <div className="w-10 h-0.5 bg-brand-teal mx-auto mb-2" />
@@ -68,9 +75,9 @@ export default function FourPillars() {
 
         {/* 4 Pillars Aligned in 2x2 Grid on Mobile, 4 Cols on Desktop */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-6">
-          {PILLARS.map(({ num, icon: Icon, tag, title, desc, gradient }) => (
+          {pillars.map(({ num, icon: Icon, tag, title: pTitle, desc, gradient }) => (
             <div
-              key={title}
+              key={num}
               className="relative bg-white border border-brand-powder/70 hover:border-brand-teal/60 rounded-lg sm:rounded-xl p-3.5 sm:p-5 lg:p-6 text-left shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between group overflow-hidden"
             >
               {/* Subtle Ambient Hover Glow */}
@@ -89,7 +96,7 @@ export default function FourPillars() {
 
                 {/* Title */}
                 <h3 className="font-serif text-[12.5px] sm:text-base font-semibold text-brand-navy mb-1 sm:mb-2 tracking-wide group-hover:text-brand-teal transition-colors line-clamp-1 sm:line-clamp-none">
-                  {title}
+                  {pTitle}
                 </h3>
 
                 {/* Description */}

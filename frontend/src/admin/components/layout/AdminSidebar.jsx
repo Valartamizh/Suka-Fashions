@@ -15,7 +15,8 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
   const isProductsSection =
     location.pathname === '/admin/products' ||
     location.pathname.startsWith('/admin/products/') ||
-    location.pathname === '/admin/categories';
+    location.pathname === '/admin/categories' ||
+    location.pathname === '/admin/filters';
 
   // Products dropdown expanded state — defaults to true if inside products section
   const [productsOpen, setProductsOpen] = useState(isProductsSection);
@@ -101,6 +102,7 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
                     { label: 'All Products', to: '/admin/products' },
                     { label: 'Add Product', to: '/admin/products/add' },
                     { label: 'Categories', to: '/admin/categories' },
+                    { label: 'Filter Catalog', to: '/admin/filters' },
                   ].map(child => {
                     // EXACT ROUTE MATCHING logic
                     const isChildActive = location.pathname === child.to;

@@ -6,15 +6,16 @@ import {
   Package, ShoppingBag, Users, X, ArrowRight
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useCustomers } from '../../../context/CustomerContext';
 import { adminProducts } from '../../data/adminProducts';
 import { adminOrders } from '../../data/adminOrders';
-import { adminCustomers } from '../../data/adminCustomers';
 import StatusBadge from '../ui/StatusBadge';
 import logo from '../../../assets/logo.jpg';
 
 export default function AdminHeader({ onMenuToggle }) {
   const navigate = useNavigate();
   const { admin, logout } = useAdminAuth();
+  const { customers } = useCustomers();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,14 +53,14 @@ export default function AdminHeader({ onMenuToggle }) {
       (o.customer.phone && o.customer.phone.includes(q))
     ).slice(0, 4);
 
-    const matchedCustomers = adminCustomers.filter(c =>
+    const matchedCustomers = customers.filter(c =>
       c.name.toLowerCase().includes(q) ||
       c.email.toLowerCase().includes(q) ||
-      c.phone.includes(q)
+      (c.phone && c.phone.includes(q))
     ).slice(0, 4);
 
     return { products: matchedProducts, orders: matchedOrders, customers: matchedCustomers };
-  }, [searchQuery]);
+  }, [searchQuery, customers]);
 
   const hasResults =
     searchResults.products.length > 0 ||

@@ -2,10 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../hooks/useReveal';
 import { useCategories } from '../context/CategoryContext';
+import { useContent } from '../context/ContentContext';
 
 export default function CategorySection() {
   const sectionRef = useReveal();
   const { homepageCategories } = useCategories();
+  const { getSectionContent } = useContent();
+  const content = getSectionContent('categories');
+
+  const eyebrow = content?.eyebrow || 'Collections';
+  const title = content?.title || 'Shop By Category';
 
   const displayList = homepageCategories.filter(c => c.id !== 'sale');
 
@@ -16,10 +22,10 @@ export default function CategorySection() {
         {/* Heading */}
         <div className="text-center mb-4 reveal">
           <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
-            Collections
+            {eyebrow}
           </p>
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
-            Shop By Category
+            {title}
           </h2>
           <div className="section-divider" />
         </div>
@@ -75,4 +81,3 @@ export default function CategorySection() {
     </section>
   );
 }
-

@@ -60,11 +60,11 @@ const COLOR_PRESETS = [
 ];
 
 const WIZARD_STEPS = [
-  { id: 1, title: 'Basic Details', icon: Info, desc: 'Name, Category, Pricing' },
+  { id: 1, title: 'Basic Details', icon: Info, desc: 'Name, category & brand' },
   { id: 2, title: 'Media & Gallery', icon: ImagePlus, desc: 'Product photos & assets' },
-  { id: 3, title: 'Variants & Stock', icon: Box, desc: 'Colors, sizes & inventory' },
+  { id: 3, title: 'Variants & Stock', icon: Box, desc: 'Colors, pricing & stock' },
   { id: 4, title: 'Attributes & Badges', icon: Sliders, desc: 'Fabric, occasion & flags' },
-  { id: 5, title: 'SEO & Review', icon: Sparkles, desc: 'Search tags & live preview' },
+  { id: 5, title: 'Review & Publish', icon: CheckCircle2, desc: 'Complete product review' },
 ];
 
 function FormField({ label, required, children, hint, toolTip, actionButton }) {
@@ -144,63 +144,157 @@ export default function AddProductPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [previewTab, setPreviewTab] = useState('card'); // 'card' | 'page'
 
+  // Generate a fresh unique product ID for new listings
+  const initialNewId = useMemo(() => `PRD-${Math.floor(1000 + Math.random() * 9000)}`, []);
+
   const [form, setForm] = useState({
+    id: initialNewId,
     name: '',
+    tagline: '',
     slug: '',
     description: '',
     shortDescription: '',
     category: 'Sarees',
-    subcategory: 'Organza',
+    subcategory: 'Silk Sarees',
     brand: 'Suka Fashions',
-    sku: 'SUK-SAR-101',
-    sellingPrice: '3499',
-    mrp: '4999',
-    costPrice: '1800',
+    sku: '',
+    sellingPrice: '',
+    mrp: '',
+    discount: '',
+    costPrice: '',
     gst: '5',
-    fabric: 'Organza',
-    occasion: 'Wedding',
-    work: 'Embroidered',
-    pattern: 'Floral',
-    fit: 'Regular',
-    sleeve: '3/4 Sleeve',
-    neck: 'Sweetheart',
+    fabric: '',
+    occasion: '',
+    work: '',
+    pattern: '',
+    fit: '',
+    sleeve: '',
+    neck: '',
     careInstructions: 'Dry clean only',
     countryOfOrigin: 'India',
     metaTitle: '',
     metaDescription: '',
+    badge: 'new',
     isNew: true,
-    isBestSeller: true,
+    isBestSeller: false,
     isFeatured: false,
-    isTrending: true,
-    showOnHomepage: true,
+    isTrending: false,
+    showOnHomepage: false,
     allowCOD: true,
     returnable: true,
   });
 
   const [variants, setVariants] = useState([
     {
-      color: 'Teal',
+      color: '',
       colorHex: '#006B70',
       sizes: [
-        { size: 'S', stock: '10', sku: 'SUK-SAR-101-S' },
-        { size: 'M', stock: '15', sku: 'SUK-SAR-101-M' },
-        { size: 'L', stock: '12', sku: 'SUK-SAR-101-L' },
-        { size: 'XL', stock: '8', sku: 'SUK-SAR-101-XL' },
+        { size: '', price: '', mrp: '', stock: '', sku: '' },
       ],
     },
   ]);
 
-  const [images, setImages] = useState([
-    { name: 'Golden Zari Saree', url: sareeGolden, primary: true },
-  ]);
+  const [images, setImages] = useState([]);
 
-  // Pre-populate if editing or duplicating an existing product
+  const [customBadges, setCustomBadges] = useState([]);
+
+  const addCustomBadge = () => {
+    const newId = Date.now();
+    setCustomBadges(b => [
+      ...b,
+      { id: newId, label: 'Exclusive', color: 'bg-brand-teal' },
+    ]);
+    setForm(f => ({
+      ...f,
+      badge: `custom_${newId}`,
+      isNew: false,
+      isBestSeller: false,
+      isFeatured: false,
+      isTrending: false,
+    }));
+  };
+
+  const updateCustomBadge = (id, key, val) => {
+    setCustomBadges(b => b.map(badge => badge.id === id ? { ...badge, [key]: val } : badge));
+  };
+
+  const removeCustomBadge = (id) => {
+    setCustomBadges(b => b.filter(badge => badge.id !== id));
+    if (form.badge === `custom_${id}`) {
+      setForm(f => ({ ...f, badge: 'new', isNew: true, isBestSeller: false, isFeatured: false, isTrending: false }));
+    }
+  };
+
+  const handleBadgeSelect = (badgeId) => {
+    setForm(f => ({
+      ...f,
+      badge: badgeId,
+      isNew: badgeId === 'new',
+      isBestSeller: badgeId === 'bestSeller',
+      isFeatured: badgeId === 'featured',
+      isTrending: badgeId === 'trending',
+    }));
+  };
+
+  const resetFormToBlank = () => {
+    setForm({
+      id: `PRD-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: '',
+      tagline: '',
+      slug: '',
+      description: '',
+      shortDescription: '',
+      category: 'Sarees',
+      subcategory: 'Silk Sarees',
+      brand: 'Suka Fashions',
+      sku: '',
+      sellingPrice: '',
+      mrp: '',
+      discount: '',
+      costPrice: '',
+      gst: '5',
+      fabric: '',
+      occasion: '',
+      work: '',
+      pattern: '',
+      fit: '',
+      sleeve: '',
+      neck: '',
+      careInstructions: 'Dry clean only',
+      countryOfOrigin: 'India',
+      metaTitle: '',
+      metaDescription: '',
+      badge: 'new',
+      isNew: true,
+      isBestSeller: false,
+      isFeatured: false,
+      isTrending: false,
+      showOnHomepage: false,
+      allowCOD: true,
+      returnable: true,
+    });
+    setVariants([
+      {
+        color: '',
+        colorHex: '#006B70',
+        sizes: [
+          { size: '', price: '', mrp: '', stock: '', sku: '' },
+        ],
+      },
+    ]);
+    setImages([]);
+    setCustomBadges([]);
+  };
+
+  // Pre-populate if editing or duplicating an existing product, or reset to blank
   React.useEffect(() => {
     if (targetId) {
       const existing = adminProducts.find(p => p.id === targetId || p.slug === targetId);
       if (existing) {
         setForm({
+          id: duplicateId ? `${existing.id}-COPY` : (existing.id || 'PRD-1029'),
           name: duplicateId ? `${existing.name} (Copy)` : (existing.name || ''),
+          tagline: existing.tagline || existing.shortDescription || '',
           slug: duplicateId ? `${existing.slug}-copy` : (existing.slug || ''),
           description: existing.description || '',
           shortDescription: existing.shortDescription || '',
@@ -208,17 +302,17 @@ export default function AddProductPage() {
           subcategory: existing.subcategory || '',
           brand: existing.brand || 'Suka Fashions',
           sku: duplicateId ? `${existing.sku}-COPY` : (existing.sku || ''),
-          sellingPrice: existing.price ? existing.price.toString() : (existing.sellingPrice ? existing.sellingPrice.toString() : '3499'),
-          mrp: existing.mrp ? existing.mrp.toString() : '4999',
-          costPrice: existing.costPrice ? existing.costPrice.toString() : '1800',
+          sellingPrice: existing.price ? existing.price.toString() : (existing.sellingPrice ? existing.sellingPrice.toString() : ''),
+          mrp: existing.mrp ? existing.mrp.toString() : '',
+          costPrice: existing.costPrice ? existing.costPrice.toString() : '',
           gst: existing.gst ? existing.gst.toString() : '5',
-          fabric: existing.attributes?.fabric || existing.fabric || 'Organza',
-          occasion: existing.attributes?.occasion || existing.occasion || 'Wedding',
-          work: existing.attributes?.work || existing.work || 'Embroidered',
-          pattern: existing.attributes?.pattern || existing.pattern || 'Floral',
-          fit: existing.attributes?.fit || existing.fit || 'Regular',
-          sleeve: existing.attributes?.sleeve || existing.sleeve || '3/4 Sleeve',
-          neck: existing.attributes?.neck || existing.neck || 'Sweetheart',
+          fabric: existing.attributes?.fabric || existing.fabric || '',
+          occasion: existing.attributes?.occasion || existing.occasion || '',
+          work: existing.attributes?.work || existing.work || '',
+          pattern: existing.attributes?.pattern || existing.pattern || '',
+          fit: existing.attributes?.fit || existing.fit || '',
+          sleeve: existing.attributes?.sleeve || existing.sleeve || '',
+          neck: existing.attributes?.neck || existing.neck || '',
           careInstructions: existing.attributes?.careInstructions || existing.careInstructions || 'Dry clean only',
           countryOfOrigin: existing.attributes?.countryOfOrigin || existing.countryOfOrigin || 'India',
           metaTitle: existing.seo?.metaTitle || '',
@@ -227,18 +321,20 @@ export default function AddProductPage() {
           isBestSeller: existing.isBestSeller ?? false,
           isFeatured: existing.featured ?? existing.isFeatured ?? false,
           isTrending: existing.isTrending ?? false,
-          showOnHomepage: existing.showOnHomepage ?? true,
+          showOnHomepage: existing.showOnHomepage ?? false,
           allowCOD: existing.allowCOD ?? true,
           returnable: existing.returnable ?? true,
         });
 
         if (existing.variants && existing.variants.length > 0) {
           setVariants(existing.variants.map(v => ({
-            color: v.color || 'Color',
+            color: v.color || '',
             colorHex: v.colorHex || '#006B70',
             sizes: (v.sizes || []).map(s => ({
-              size: s.size,
-              stock: s.stock !== undefined ? s.stock.toString() : '10',
+              size: s.size || '',
+              price: s.price !== undefined ? s.price.toString() : '',
+              mrp: s.mrp !== undefined ? s.mrp.toString() : '',
+              stock: s.stock !== undefined ? s.stock.toString() : '',
               sku: s.sku || '',
             })),
           })));
@@ -259,6 +355,8 @@ export default function AddProductPage() {
           setImages(imgList);
         }
       }
+    } else {
+      resetFormToBlank();
     }
   }, [targetId, duplicateId]);
 
@@ -281,13 +379,16 @@ export default function AddProductPage() {
   };
 
   const discountPercent = useMemo(() => {
+    if (form.discount) {
+      return parseFloat(form.discount) || 0;
+    }
     const sp = parseFloat(form.sellingPrice);
     const mrp = parseFloat(form.mrp);
     if (mrp && sp && mrp > sp) {
       return Math.round(((mrp - sp) / mrp) * 100);
     }
     return 0;
-  }, [form.sellingPrice, form.mrp]);
+  }, [form.discount, form.sellingPrice, form.mrp]);
 
   const profitMargin = useMemo(() => {
     const sp = parseFloat(form.sellingPrice);
@@ -312,15 +413,47 @@ export default function AddProductPage() {
     return score;
   }, [form, images, variants]);
 
+  const BADGE_OPTIONS = [
+    { id: 'new', label: 'New Arrival Badge', ribbon: 'NEW', color: 'bg-brand-teal', description: "Show 'NEW' ribbon on product cards", icon: Sparkles },
+    { id: 'bestSeller', label: 'Best Seller Badge', ribbon: 'BESTSELLER', color: 'bg-amber-500', description: 'Highlight as top customer favorite', icon: CheckCircle2 },
+    { id: 'featured', label: 'Featured Product', ribbon: 'FEATURED', color: 'bg-brand-navy', description: 'Include in featured collections ribbon', icon: Tag },
+    { id: 'trending', label: 'Trending Now', ribbon: 'TRENDING', color: 'bg-purple-600', description: 'Show in trending style picks', icon: ShoppingBag },
+    { id: 'none', label: 'No Badge / None', ribbon: null, color: 'bg-slate-400', description: 'Do not show any promotional ribbon on the card', icon: X },
+  ];
+
+  const activeBadge = useMemo(() => {
+    if (form.badge === 'none') return null;
+    if (form.badge === 'new' || (!form.badge && form.isNew)) return { label: 'NEW', color: 'bg-brand-teal' };
+    if (form.badge === 'bestSeller' || (!form.badge && form.isBestSeller)) return { label: 'BESTSELLER', color: 'bg-amber-500' };
+    if (form.badge === 'featured' || (!form.badge && form.isFeatured)) return { label: 'FEATURED', color: 'bg-brand-navy' };
+    if (form.badge === 'trending' || (!form.badge && form.isTrending)) return { label: 'TRENDING', color: 'bg-purple-600' };
+    if (form.badge?.startsWith('custom_')) {
+      const customId = form.badge.replace('custom_', '');
+      const cb = customBadges.find(b => b.id.toString() === customId.toString());
+      if (cb && cb.label?.trim()) {
+        return { label: cb.label.toUpperCase(), color: cb.color || 'bg-brand-teal' };
+      }
+    }
+    return null;
+  }, [form.badge, form.isNew, form.isBestSeller, form.isFeatured, form.isTrending, customBadges]);
+
   const addVariant = (presetColor) => {
-    const colorName = presetColor?.name || 'New Color';
-    const colorHex = presetColor?.hex || '#006B70';
+    const colorName = presetColor?.name || '';
+    const colorHex = presetColor?.hex || '#1e293b';
+    const currentDiscount = parseFloat(form.discount) || 0;
+    const defaultMrp = form.mrp || '';
+    let defaultPrice = form.sellingPrice || '';
+    if (defaultMrp && currentDiscount > 0) {
+      defaultPrice = Math.round(parseFloat(defaultMrp) - (parseFloat(defaultMrp) * currentDiscount) / 100).toString();
+    }
     setVariants(v => [
       ...v,
       {
         color: colorName,
         colorHex: colorHex,
-        sizes: SIZES.slice(1, 5).map(s => ({ size: s, stock: '10', sku: `${form.sku || 'SUK-PRD'}-${s.size}` })),
+        sizes: [
+          { size: '', price: defaultPrice, mrp: defaultMrp, stock: '', sku: '' },
+        ],
       },
     ]);
   };
@@ -331,6 +464,83 @@ export default function AddProductPage() {
     setVariants(v => v.map((variant, i) => (i === vi ? { ...variant, [key]: val } : variant)));
   };
 
+  const handleProductDiscountChange = (discountVal) => {
+    set('discount', discountVal);
+    const dNum = parseFloat(discountVal) || 0;
+
+    setVariants(vList =>
+      vList.map(variant => ({
+        ...variant,
+        sizes: variant.sizes.map(s => {
+          const mrpNum = parseFloat(s.mrp) || 0;
+          if (mrpNum > 0) {
+            const calculatedPrice = dNum > 0
+              ? Math.round(mrpNum - (mrpNum * Math.min(100, Math.max(0, dNum))) / 100).toString()
+              : mrpNum.toString();
+            return { ...s, price: calculatedPrice };
+          }
+          return s;
+        }),
+      }))
+    );
+
+    // Update global form selling price if form.mrp exists
+    const globalMrpNum = parseFloat(form.mrp) || 0;
+    if (globalMrpNum > 0) {
+      const calculatedGlobalSp = dNum > 0
+        ? Math.round(globalMrpNum - (globalMrpNum * Math.min(100, Math.max(0, dNum))) / 100).toString()
+        : globalMrpNum.toString();
+      set('sellingPrice', calculatedGlobalSp);
+    }
+  };
+
+  const handleSizeMrpChange = (vi, si, newMrp) => {
+    setVariants(v =>
+      v.map((variant, i) => {
+        if (i !== vi) return variant;
+        const mrpNum = parseFloat(newMrp) || 0;
+        const discountNum = parseFloat(form.discount) || 0;
+        let newPrice = variant.sizes[si].price;
+
+        if (mrpNum > 0) {
+          if (discountNum > 0) {
+            newPrice = Math.round(mrpNum - (mrpNum * Math.min(100, discountNum)) / 100).toString();
+          } else if (!newPrice) {
+            newPrice = newMrp;
+          }
+        }
+
+        const updatedSizes = variant.sizes.map((s, j) =>
+          j !== si ? s : { ...s, mrp: newMrp, price: newPrice }
+        );
+
+        if (vi === 0 && si === 0) {
+          set('mrp', newMrp);
+          if (newPrice) set('sellingPrice', newPrice);
+        }
+
+        return { ...variant, sizes: updatedSizes };
+      })
+    );
+  };
+
+  const handleSizePriceChange = (vi, si, newPrice) => {
+    setVariants(v =>
+      v.map((variant, i) => {
+        if (i !== vi) return variant;
+        const updatedSizes = variant.sizes.map((s, j) =>
+          j !== si ? s : { ...s, price: newPrice }
+        );
+
+        if (vi === 0 && si === 0) {
+          set('sellingPrice', newPrice);
+        }
+
+        return { ...variant, sizes: updatedSizes };
+      })
+    );
+  };
+
   const updateVariantSize = (vi, si, key, val) => {
     setVariants(v =>
       v.map((variant, i) =>
@@ -339,6 +549,48 @@ export default function AddProductPage() {
           : {
               ...variant,
               sizes: variant.sizes.map((s, j) => (j !== si ? s : { ...s, [key]: val })),
+            }
+      )
+    );
+  };
+
+  const addSizeToVariant = (vi) => {
+    setVariants(v =>
+      v.map((variant, i) => {
+        if (i !== vi) return variant;
+        const prevSize = variant.sizes[variant.sizes.length - 1];
+        const defaultMrp = prevSize?.mrp || form.mrp || '';
+        const currentDiscount = parseFloat(form.discount) || 0;
+        let defaultPrice = prevSize?.price || form.sellingPrice || '';
+        if (defaultMrp && currentDiscount > 0) {
+          defaultPrice = Math.round(parseFloat(defaultMrp) - (parseFloat(defaultMrp) * currentDiscount) / 100).toString();
+        }
+
+        return {
+          ...variant,
+          sizes: [
+            ...variant.sizes,
+            {
+              size: '',
+              mrp: defaultMrp,
+              price: defaultPrice,
+              stock: '',
+              sku: '',
+            },
+          ],
+        };
+      })
+    );
+  };
+
+  const removeSizeFromVariant = (vi, si) => {
+    setVariants(v =>
+      v.map((variant, i) =>
+        i !== vi
+          ? variant
+          : {
+              ...variant,
+              sizes: variant.sizes.filter((_, idx) => idx !== si),
             }
       )
     );
@@ -518,47 +770,47 @@ export default function AddProductPage() {
                     <Info size={18} />
                   </div>
                   <div>
-                    <h2 className="font-sans font-bold text-slate-800 text-base">Basic Details & Pricing</h2>
-                    <p className="text-xs text-slate-400">Core title, category, pricing and inventory code</p>
+                    <h2 className="font-sans font-bold text-slate-800 text-base">Basic Details</h2>
+                    <p className="text-xs text-slate-400">Core title, category, subcategory and brand information</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={generateAutoSKU}
-                  className="px-3 py-1.5 border border-brand-teal/30 bg-brand-powder/20 text-brand-teal text-xs font-semibold rounded-lg hover:bg-brand-teal hover:text-white transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <RefreshCw size={12} /> Auto-Generate SKU
-                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                {/* Product ID (LEFT) and Product Title (RIGHT) */}
+                <FormField label="Product ID" required hint="Permanent catalog identifier">
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-2.5 text-xs text-brand-teal font-mono font-bold">#</span>
+                    <input
+                      className={`${inputClass} pl-7 font-mono font-bold text-brand-navy uppercase bg-slate-50/70 border-slate-300/80`}
+                      placeholder="PRD-1029"
+                      value={form.id}
+                      onChange={e => set('id', e.target.value)}
+                    />
+                  </div>
+                </FormField>
+
+                <FormField label="Product Title / Name" required toolTip="Displayed as main headline across store">
+                  <input
+                    className={inputClass}
+                    placeholder="e.g. Teal Embroidered Organza Saree"
+                    value={form.name}
+                    onChange={e => {
+                      set('name', e.target.value);
+                      set('slug', autoSlug(e.target.value));
+                    }}
+                  />
+                </FormField>
+
+                {/* Product Tagline */}
                 <div className="col-span-2">
-                  <FormField label="Product Title" required toolTip="Displayed as main headline across store">
+                  <FormField label="Product Tagline / Catchphrase" hint="Short promotional phrase displayed under product title and on banners">
                     <input
                       className={inputClass}
-                      placeholder="e.g. Teal Embroidered Organza Saree"
-                      value={form.name}
-                      onChange={e => {
-                        set('name', e.target.value);
-                        set('slug', autoSlug(e.target.value));
-                      }}
+                      placeholder="e.g. Handcrafted festive elegance with pure zari handloom detailing"
+                      value={form.tagline}
+                      onChange={e => set('tagline', e.target.value)}
                     />
-                  </FormField>
-                </div>
-
-                <div className="col-span-2">
-                  <FormField label="URL Slug" hint="SEO friendly permalink for product page">
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-mono">
-                        sukafashions.com/product/
-                      </span>
-                      <input
-                        className={`${inputClass} pl-[170px] font-mono text-xs`}
-                        value={form.slug}
-                        onChange={e => set('slug', e.target.value)}
-                        placeholder="teal-embroidered-organza-saree"
-                      />
-                    </div>
                   </FormField>
                 </div>
 
@@ -586,77 +838,10 @@ export default function AddProductPage() {
                   </select>
                 </FormField>
 
-                <FormField label="Base SKU" required hint="Unique inventory code">
-                  <input
-                    className={`${inputClass} font-mono uppercase font-bold`}
-                    placeholder="SUK-SAR-001"
-                    value={form.sku}
-                    onChange={e => set('sku', e.target.value)}
-                  />
-                </FormField>
-
-                <FormField label="Brand">
-                  <input className={inputClass} value={form.brand} onChange={e => set('brand', e.target.value)} />
-                </FormField>
-
-                <div className="col-span-2 grid grid-cols-3 gap-4 pt-2 border-t border-slate-100">
-                  <FormField label="Selling Price (₹)" required>
-                    <input
-                      type="number"
-                      className={`${inputClass} font-bold text-brand-teal`}
-                      placeholder="3499"
-                      value={form.sellingPrice}
-                      onChange={e => set('sellingPrice', e.target.value)}
-                    />
+                <div className="col-span-2">
+                  <FormField label="Brand">
+                    <input className={inputClass} value={form.brand} onChange={e => set('brand', e.target.value)} />
                   </FormField>
-
-                  <FormField label="MRP (₹)" required hint="Strikethrough original price">
-                    <input
-                      type="number"
-                      className={inputClass}
-                      placeholder="4999"
-                      value={form.mrp}
-                      onChange={e => set('mrp', e.target.value)}
-                    />
-                  </FormField>
-
-                  <FormField label="Cost Price (₹)" hint="Admin internal margin estimate">
-                    <input
-                      type="number"
-                      className={inputClass}
-                      placeholder="1800"
-                      value={form.costPrice}
-                      onChange={e => set('costPrice', e.target.value)}
-                    />
-                  </FormField>
-                </div>
-
-                {/* Smart Pricing Calculations */}
-                <div className="col-span-2 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2">
-                    <Percent size={14} className="text-brand-teal" />
-                    <span className="text-slate-600 font-medium">Calculated Discount:</span>
-                    <span className="font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                      {discountPercent}% OFF
-                    </span>
-                  </div>
-                  {profitMargin && (
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <span>Profit per item:</span>
-                      <span className="font-bold text-slate-800">₹{profitMargin.profit.toLocaleString('en-IN')}</span>
-                      <span className="text-slate-400">({profitMargin.margin}% Margin)</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1.5 text-slate-500">
-                    <span>GST:</span>
-                    <select
-                      className="border border-slate-200 rounded px-1.5 py-0.5 text-xs font-semibold bg-white"
-                      value={form.gst}
-                      onChange={e => set('gst', e.target.value)}
-                    >
-                      {['0', '5', '12', '18', '28'].map(g => <option key={g} value={g}>{g}%</option>)}
-                    </select>
-                  </div>
                 </div>
 
                 <div className="col-span-2">
@@ -684,95 +869,62 @@ export default function AddProductPage() {
                   </div>
                   <div>
                     <h2 className="font-sans font-bold text-slate-800 text-base">Media & Photo Gallery</h2>
-                    <p className="text-xs text-slate-400">Upload high quality photos or pick from sample library</p>
+                    <p className="text-xs text-slate-400">Upload high quality photos for product catalog and zoom view</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowSamplePicker(!showSamplePicker)}
-                  className="px-3.5 py-1.5 bg-brand-powder text-brand-teal font-semibold text-xs rounded-xl hover:bg-brand-teal hover:text-white transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Sparkles size={13} /> Select From Sample Library
-                </button>
               </div>
-
-              {/* Sample Library Drawer Strip */}
-              {showSamplePicker && (
-                <div className="bg-slate-50 border border-brand-powder rounded-2xl p-4 animate-in fade-in zoom-in-95">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-bold text-slate-700">Instant Demo Images (Click to Add)</p>
-                    <button onClick={() => setShowSamplePicker(false)} className="text-slate-400 hover:text-slate-600">
-                      <X size={14} />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-5 sm:grid-cols-10 gap-2.5">
-                    {SAMPLE_IMAGES.map((s, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => addSampleImage(s)}
-                        className="group relative aspect-square rounded-xl overflow-hidden border border-slate-200 cursor-pointer hover:border-brand-teal hover:scale-105 transition-all shadow-xs"
-                      >
-                        <img src={s.url} alt={s.name} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-brand-teal/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                          <Plus size={16} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Drag & Drop Upload Zone */}
               <div
                 onDrop={handleImageDrop}
                 onDragOver={e => e.preventDefault()}
                 onClick={() => document.getElementById('img-upload-input').click()}
-                className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-brand-teal hover:bg-brand-powder/20 transition-all cursor-pointer group bg-slate-50/50"
+                className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-brand-teal hover:bg-brand-powder/20 transition-all cursor-pointer group bg-slate-50/50"
               >
                 <input id="img-upload-input" type="file" multiple accept="image/*" className="hidden" onChange={handleImageDrop} />
-                <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 text-slate-400 group-hover:text-brand-teal group-hover:border-brand-teal/40 flex items-center justify-center mx-auto mb-3 transition-colors shadow-xs">
-                  <Upload size={22} />
+                <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 group-hover:text-brand-teal group-hover:border-brand-teal/40 flex items-center justify-center mx-auto mb-2.5 transition-colors shadow-xs">
+                  <Upload size={18} />
                 </div>
-                <p className="text-sm font-bold text-slate-700 group-hover:text-brand-teal transition-colors">
+                <p className="text-xs font-bold text-slate-700 group-hover:text-brand-teal transition-colors">
                   Drag & Drop images here or click to browse
                 </p>
-                <p className="text-xs text-slate-400 mt-1">Supports PNG, JPG, WEBP up to 5MB each. First image set as primary cover photo.</p>
+                <p className="text-[10px] text-slate-400 mt-1">Supports PNG, JPG, WEBP up to 5MB each. First image set as primary cover photo.</p>
               </div>
 
-              {/* Uploaded Gallery Grid */}
+              {/* Uploaded Gallery Grid (Compact Sized Thumbnails) */}
               {images.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-slate-700 mb-3">Gallery ({images.length} photos added)</p>
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                  <p className="text-xs font-bold text-slate-700 mb-2.5">Gallery ({images.length} photos added)</p>
+                  <div className="flex flex-wrap gap-2.5">
                     {images.map((img, i) => (
                       <div
                         key={i}
-                        className={`relative group aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all ${
-                          img.primary ? 'border-brand-teal ring-2 ring-brand-teal/20 shadow-sm' : 'border-slate-200 hover:border-slate-300'
+                        className={`relative group w-20 aspect-[3/4] rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 bg-slate-100 ${
+                          img.primary ? 'border-brand-teal ring-2 ring-brand-teal/20 shadow-xs' : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
                         <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
                         
                         {img.primary ? (
-                          <span className="absolute top-1.5 left-1.5 bg-brand-teal text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs">
-                            PRIMARY COVER
+                          <span className="absolute top-1 left-1 bg-brand-teal text-white text-[7.5px] font-bold px-1 py-0.2 rounded shadow-2xs">
+                            COVER
                           </span>
                         ) : (
                           <button
                             type="button"
                             onClick={() => setPrimaryImage(i)}
-                            className="absolute top-1.5 left-1.5 bg-black/60 hover:bg-brand-teal text-white text-[9px] font-bold px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-all"
+                            className="absolute top-1 left-1 bg-black/60 hover:bg-brand-teal text-white text-[7.5px] font-bold px-1 py-0.2 rounded opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                           >
-                            Set Cover
+                            Cover
                           </button>
                         )}
 
                         <button
                           type="button"
                           onClick={() => setImages(imgs => imgs.filter((_, j) => j !== i))}
-                          className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs cursor-pointer"
+                          className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-2xs cursor-pointer"
                         >
-                          <X size={12} />
+                          <X size={9} />
                         </button>
                       </div>
                     ))}
@@ -797,16 +949,45 @@ export default function AddProductPage() {
                 </div>
               </div>
 
-              {/* Color Presets Picker Bar */}
+              {/* Single Product Discount Bar */}
+              <div className="bg-brand-powder/20 border border-brand-teal/20 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-2.5">
+                  <span className="p-2 bg-brand-teal text-white rounded-xl text-xs shadow-xs">
+                    <Tag size={16} />
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-800">Product Discount Percentage</h3>
+                    <p className="text-[10px] text-slate-500">Enter a single discount (%) for this product — applied automatically to calculate selling prices for all sizes</p>
+                  </div>
+                </div>
+
+                {/* Single Product Discount % Input */}
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="0"
+                      value={form.discount || ''}
+                      onChange={(e) => handleProductDiscountChange(e.target.value)}
+                      className="w-24 pl-3.5 pr-7 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal shadow-2xs text-center"
+                    />
+                    <span className="absolute right-2.5 top-2 text-xs font-bold text-slate-400">%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Add Color Presets Bar (Without custom color picker) */}
               <div>
-                <p className="text-xs font-semibold text-slate-600 mb-2">Quick Add Preset Color:</p>
-                <div className="flex flex-wrap gap-2">
+                <p className="text-xs font-semibold text-slate-600 mb-2">Quick Add Color:</p>
+                <div className="flex flex-wrap gap-2 items-center">
                   {COLOR_PRESETS.map((cp) => (
                     <button
                       key={cp.name}
                       type="button"
                       onClick={() => addVariant(cp)}
-                      className="px-3 py-1.5 bg-slate-50 hover:bg-brand-powder/30 border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold flex items-center gap-2 transition-all cursor-pointer"
+                      className="px-3 py-1.5 bg-slate-50 hover:bg-brand-powder/30 border border-slate-200 hover:border-brand-teal rounded-xl text-xs text-slate-700 font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
                     >
                       <span className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-xs" style={{ backgroundColor: cp.hex }} />
                       {cp.name}
@@ -840,28 +1021,25 @@ export default function AddProductPage() {
                         />
                       </div>
 
-                      {/* Quick Bulk Stock Action */}
+                      {/* Total Stock Display Badge & Apply Button */}
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500 font-medium">Bulk Stock:</span>
-                        <input
-                          type="number"
-                          placeholder="Qty"
-                          className="w-16 border border-slate-200 rounded-lg px-2 py-1 text-xs text-center bg-white"
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              bulkSetStock(vi, e.target.value);
-                            }
-                          }}
-                          id={`bulk-stock-${vi}`}
-                        />
+                        <div className="flex items-center gap-1.5 bg-brand-powder/50 border border-brand-teal/20 px-3 py-1 rounded-xl shadow-2xs">
+                          <span className="text-[11px] font-semibold text-slate-600">Total Stock:</span>
+                          <span className="text-xs font-bold text-brand-teal font-mono">
+                            {variant.sizes.reduce((sum, s) => sum + (parseInt(s.stock) || 0), 0)} Units
+                          </span>
+                        </div>
                         <button
                           type="button"
+                          id={`apply-btn-${vi}`}
                           onClick={() => {
-                            const val = document.getElementById(`bulk-stock-${vi}`)?.value || '10';
-                            bulkSetStock(vi, val);
+                            const btn = document.getElementById(`apply-btn-${vi}`);
+                            if (btn) {
+                              btn.textContent = 'Applied ✓';
+                              setTimeout(() => { btn.textContent = 'Apply'; }, 1500);
+                            }
                           }}
-                          className="px-2.5 py-1 bg-slate-200 hover:bg-brand-teal hover:text-white text-slate-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                          className="px-3.5 py-1 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs"
                         >
                           Apply
                         </button>
@@ -869,7 +1047,8 @@ export default function AddProductPage() {
                           <button
                             type="button"
                             onClick={() => removeVariant(vi)}
-                            className="p-1.5 text-slate-400 hover:text-red-500 transition-colors ml-2"
+                            className="p-1.5 text-slate-400 hover:text-red-500 transition-colors ml-1 cursor-pointer"
+                            title="Remove Variant"
                           >
                             <X size={16} />
                           </button>
@@ -877,42 +1056,101 @@ export default function AddProductPage() {
                       </div>
                     </div>
 
-                    {/* Size & Stock Table */}
+                    {/* Size, Pricing & Stock Table (Cleaned: No discount column, no variant SKU column) */}
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
                           <tr className="text-slate-400 uppercase tracking-wider text-[10px] text-left border-b border-slate-200">
-                            <th className="pb-2 font-bold w-16">Size</th>
-                            <th className="pb-2 font-bold">Stock Quantity</th>
-                            <th className="pb-2 font-bold">Variant SKU</th>
+                            <th className="pb-2 font-bold w-32">Size</th>
+                            <th className="pb-2 font-bold w-36">Selling Price (₹)</th>
+                            <th className="pb-2 font-bold w-36">MRP (₹)</th>
+                            <th className="pb-2 font-bold w-28">Stock Qty</th>
+                            <th className="pb-2 font-bold text-right pr-2">Action</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                           {variant.sizes.map((s, si) => (
-                            <tr key={s.size}>
-                              <td className="py-2.5 font-bold text-slate-700">{s.size}</td>
-                              <td className="py-2.5 pr-4">
+                            <tr key={si} className="hover:bg-slate-50/50 transition-colors">
+                              {/* Size Name */}
+                              <td className="py-2.5 pr-3">
+                                <input
+                                  value={s.size}
+                                  onChange={e => updateVariantSize(vi, si, 'size', e.target.value)}
+                                  className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-white w-full focus:border-brand-teal focus:outline-none"
+                                  placeholder="e.g. S, M, Free Size"
+                                />
+                              </td>
+
+                              {/* Selling Price (₹) */}
+                              <td className="py-2.5 pr-3">
+                                <div className="relative">
+                                  <span className="absolute left-2.5 top-1.5 text-xs font-bold text-brand-teal">₹</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={s.price !== undefined ? s.price : form.sellingPrice}
+                                    onChange={e => handleSizePriceChange(vi, si, e.target.value)}
+                                    className="w-full pl-6 pr-2 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-brand-navy bg-white focus:border-brand-teal focus:outline-none"
+                                    placeholder="3499"
+                                  />
+                                </div>
+                              </td>
+
+                              {/* MRP (₹) */}
+                              <td className="py-2.5 pr-3">
+                                <div className="relative">
+                                  <span className="absolute left-2.5 top-1.5 text-xs font-bold text-slate-400">₹</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={s.mrp !== undefined ? s.mrp : form.mrp}
+                                    onChange={e => handleSizeMrpChange(vi, si, e.target.value)}
+                                    className="w-full pl-6 pr-2 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 bg-white focus:border-brand-teal focus:outline-none"
+                                    placeholder="4999"
+                                  />
+                                </div>
+                              </td>
+
+                              {/* Stock */}
+                              <td className="py-2.5 pr-3">
                                 <input
                                   type="number"
                                   min="0"
                                   value={s.stock}
                                   onChange={e => updateVariantSize(vi, si, 'stock', e.target.value)}
-                                  className="w-24 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 bg-white font-bold focus:border-brand-teal"
+                                  className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white font-bold focus:border-brand-teal focus:outline-none"
                                   placeholder="0"
                                 />
                               </td>
-                              <td className="py-2.5">
-                                <input
-                                  value={s.sku}
-                                  onChange={e => updateVariantSize(vi, si, 'sku', e.target.value)}
-                                  className="w-44 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-600 font-mono bg-white focus:border-brand-teal"
-                                  placeholder={`${form.sku}-${s.size}`}
-                                />
+
+                              {/* Delete */}
+                              <td className="py-2.5 text-right pr-2">
+                                {variant.sizes.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSizeFromVariant(vi, si)}
+                                    className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg transition-colors cursor-pointer"
+                                    title="Delete Size"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
+                    </div>
+
+                    {/* Add Size Button */}
+                    <div className="pt-2 border-t border-slate-100 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => addSizeToVariant(vi)}
+                        className="px-3.5 py-1.5 border border-dashed border-brand-teal/40 hover:border-brand-teal bg-brand-powder/20 hover:bg-brand-powder/40 text-brand-teal text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <Plus size={13} /> Add Size
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -937,72 +1175,143 @@ export default function AddProductPage() {
                 </div>
                 <div>
                   <h2 className="font-sans font-bold text-slate-800 text-base">Product Attributes & Merchandising Badges</h2>
-                  <p className="text-xs text-slate-400">Specify fabric, occasion and homepage highlight flags</p>
+                  <p className="text-xs text-slate-400">Specify fabric, occasion, craftsmanship and promotional badges</p>
                 </div>
               </div>
 
-              {/* Product Badges & Flags Grid */}
+              {/* Product Badges & Flags Grid with Add Custom Badge Button (Single Choice Option) */}
               <div>
-                <p className="text-xs font-bold text-slate-700 mb-3">Storefront Badges & Visibility</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <ToggleCard
-                    label="New Arrival Badge"
-                    description="Show 'NEW' ribbon on product cards"
-                    checked={form.isNew}
-                    onChange={v => set('isNew', v)}
-                    icon={Sparkles}
-                  />
-                  <ToggleCard
-                    label="Best Seller Badge"
-                    description="Highlight as top customer favorite"
-                    checked={form.isBestSeller}
-                    onChange={v => set('isBestSeller', v)}
-                    icon={CheckCircle2}
-                  />
-                  <ToggleCard
-                    label="Featured Product"
-                    description="Include in featured collections slider"
-                    checked={form.isFeatured}
-                    onChange={v => set('isFeatured', v)}
-                    icon={Tag}
-                  />
-                  <ToggleCard
-                    label="Trending Now"
-                    description="Show in trending style picks"
-                    checked={form.isTrending}
-                    onChange={v => set('isTrending', v)}
-                    icon={ShoppingBag}
-                  />
-                  <ToggleCard
-                    label="Allow Cash on Delivery (COD)"
-                    description="Enable COD payment option"
-                    checked={form.allowCOD}
-                    onChange={v => set('allowCOD', v)}
-                    icon={ShieldCheck}
-                  />
-                  <ToggleCard
-                    label="7-Day Easy Returnable"
-                    description="Mark item eligible for easy exchange/return"
-                    checked={form.returnable}
-                    onChange={v => set('returnable', v)}
-                    icon={RefreshCw}
-                  />
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-xs font-bold text-slate-700">Storefront Badges & Visibility</p>
+                    <p className="text-[10px] text-slate-400">Select one badge to display on the product card (only one shown on card)</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addCustomBadge}
+                    className="px-3 py-1.5 bg-brand-powder/40 hover:bg-brand-powder border border-dashed border-brand-teal/40 hover:border-brand-teal text-brand-teal text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <Plus size={13} /> Add Custom Badge
+                  </button>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {BADGE_OPTIONS.map((opt) => {
+                    const isSelected = form.badge === opt.id || (!form.badge && opt.id === 'new' && form.isNew);
+                    const OptIcon = opt.icon;
+                    return (
+                      <div
+                        key={opt.id}
+                        onClick={() => handleBadgeSelect(opt.id)}
+                        className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? 'border-brand-teal bg-brand-powder/20 ring-2 ring-brand-teal/15 shadow-xs'
+                            : 'border-slate-100 bg-white hover:border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${isSelected ? 'bg-brand-teal text-white' : 'bg-slate-100 text-slate-500'}`}>
+                            <OptIcon size={16} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className={`text-xs font-bold ${isSelected ? 'text-brand-teal' : 'text-slate-700'}`}>{opt.label}</p>
+                              {opt.ribbon && (
+                                <span className={`${opt.color} text-white text-[8px] font-extrabold px-1.5 py-0.2 rounded shadow-2xs`}>
+                                  {opt.ribbon}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 leading-tight mt-0.5">{opt.description}</p>
+                          </div>
+                        </div>
+
+                        {/* Radio Selection Indicator */}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                          isSelected ? 'border-brand-teal bg-brand-teal' : 'border-slate-300 bg-white'
+                        }`}>
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Custom Badges Dynamic List */}
+                {customBadges.length > 0 && (
+                  <div className="mt-3.5 pt-3.5 border-t border-slate-100 space-y-2.5">
+                    <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Custom Badges ({customBadges.length})</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {customBadges.map((badge) => {
+                        const isCustomSelected = form.badge === `custom_${badge.id}`;
+                        return (
+                          <div
+                            key={badge.id}
+                            onClick={() => handleBadgeSelect(`custom_${badge.id}`)}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 bg-white ${
+                              isCustomSelected ? 'border-brand-teal bg-brand-powder/20 ring-2 ring-brand-teal/15 shadow-xs' : 'border-slate-200 hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <span className={`w-3 h-3 rounded-full flex-shrink-0 ${badge.color || 'bg-brand-teal'}`} />
+                              <input
+                                value={badge.label}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={e => updateCustomBadge(badge.id, 'label', e.target.value)}
+                                placeholder="Badge Label (e.g. Pure Handloom)"
+                                className="text-xs font-bold text-slate-800 bg-transparent border-b border-transparent focus:border-brand-teal focus:outline-none w-full truncate"
+                              />
+                              {/* Color Tag Selector */}
+                              <select
+                                value={badge.color}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={e => updateCustomBadge(badge.id, 'color', e.target.value)}
+                                className="text-[10px] font-semibold border border-slate-200 rounded px-1.5 py-0.5 bg-slate-50 text-slate-700 cursor-pointer"
+                              >
+                                <option value="bg-brand-teal">Teal</option>
+                                <option value="bg-amber-500">Gold</option>
+                                <option value="bg-rose-500">Rose</option>
+                                <option value="bg-purple-600">Purple</option>
+                                <option value="bg-emerald-600">Emerald</option>
+                                <option value="bg-blue-600">Navy</option>
+                                <option value="bg-red-600">Crimson</option>
+                              </select>
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                isCustomSelected ? 'border-brand-teal bg-brand-teal' : 'border-slate-300 bg-white'
+                              }`}>
+                                {isCustomSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeCustomBadge(badge.id);
+                                }}
+                                className="p-1 text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                                title="Delete Badge"
+                              >
+                                <X size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Spec Attributes */}
+              {/* Spec Attributes (Fabric, Occasion, Work) */}
               <div>
                 <p className="text-xs font-bold text-slate-700 mb-3">Material & Design Attributes</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
                     ['Fabric Material', 'fabric', FABRICS],
                     ['Occasion', 'occasion', OCCASIONS],
                     ['Work / Craft', 'work', ['Embroidered', 'Printed', 'Zari', 'Plain', 'Sequin', 'Handwork']],
-                    ['Pattern Type', 'pattern', ['Solid', 'Floral', 'Paisley', 'Geometric', 'Abstract', 'Brocade']],
-                    ['Fit Style', 'fit', ['Regular', 'Slim', 'Flared', 'Wrap', 'Straight']],
-                    ['Sleeve Type', 'sleeve', ['Sleeveless', 'Short', '3/4 Sleeve', 'Full Sleeve', 'Cap Sleeve']],
-                    ['Neckline', 'neck', ['Round', 'V-Neck', 'Square', 'Sweetheart', 'Halter', 'N/A']],
-                    ['Country of Origin', 'countryOfOrigin', ['India', 'Bangladesh', 'China']],
                   ].map(([label, key, options]) => (
                     <FormField key={key} label={label}>
                       <select className={selectClass} value={form[key]} onChange={e => set(key, e.target.value)}>
@@ -1016,51 +1325,274 @@ export default function AddProductPage() {
             </div>
           )}
 
-          {/* STEP 5 / SEO & PUBLISH */}
+          {/* STEP 5 / REVIEW & PUBLISH */}
           {(viewMode === 'single' || currentStep === 5) && (
             <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-6">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
-                <div className="p-2 bg-brand-powder text-brand-teal rounded-xl">
-                  <Sparkles size={18} />
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-brand-powder text-brand-teal rounded-xl">
+                    <CheckCircle2 size={18} />
+                  </div>
+                  <div>
+                    <h2 className="font-sans font-bold text-slate-800 text-base">Product Review & Summary</h2>
+                    <p className="text-xs text-slate-400">Review all listing details before publishing to the storefront</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="font-sans font-bold text-slate-800 text-base">Search Engine Optimization (SEO)</h2>
-                  <p className="text-xs text-slate-400">Optimize meta titles and Google search snippet preview</p>
-                </div>
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-2xs">
+                  <Check size={13} /> Ready to Publish
+                </span>
               </div>
 
               <div className="space-y-4">
-                <FormField label="Meta Title">
-                  <input
-                    className={inputClass}
-                    placeholder={`${form.name || 'Product Title'} | Suka Fashions`}
-                    value={form.metaTitle}
-                    onChange={e => set('metaTitle', e.target.value)}
-                  />
-                </FormField>
+                {/* 1. Basic Details Review Card */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4.5 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1 bg-brand-powder text-brand-teal rounded-md text-xs">
+                        <Info size={13} />
+                      </span>
+                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">1. Basic Details</h3>
+                    </div>
+                    {viewMode === 'wizard' && (
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(1)}
+                        className="text-[11px] font-bold text-brand-teal hover:underline cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
 
-                <FormField label="Meta Description">
-                  <textarea
-                    className={textareaClass}
-                    rows={3}
-                    placeholder="Buy authentic ethnic wear online at Suka Fashions. Free shipping & COD available..."
-                    value={form.metaDescription}
-                    onChange={e => set('metaDescription', e.target.value)}
-                  />
-                </FormField>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Product ID</span>
+                      <span className="font-mono font-bold text-brand-teal bg-white px-2 py-0.5 rounded border border-slate-200 inline-block mt-0.5">
+                        #{form.id || 'PRD-1029'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Category</span>
+                      <span className="font-semibold text-slate-800 mt-0.5 block">{form.category || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Subcategory</span>
+                      <span className="font-semibold text-slate-800 mt-0.5 block">{form.subcategory || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Brand</span>
+                      <span className="font-semibold text-slate-800 mt-0.5 block">{form.brand || 'Suka Fashions'}</span>
+                    </div>
+                  </div>
 
-                {/* Google Search Result Card Snippet Preview */}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Google Snippet Preview</p>
-                  <p className="text-xs text-[#202124] font-sans truncate">
-                    https://sukafashions.com › product › {form.slug || 'product-slug'}
-                  </p>
-                  <h3 className="text-base text-[#1a0dab] font-semibold hover:underline cursor-pointer truncate mt-0.5">
-                    {form.metaTitle || `${form.name || 'Teal Embroidered Organza Saree'} | Suka Fashions`}
-                  </h3>
-                  <p className="text-xs text-[#4d5156] line-clamp-2 mt-1">
-                    {form.metaDescription || form.description || 'Shop luxury handcrafted sarees, kurtis, lehengas at Suka Fashions. Free shipping, cash on delivery and 7 days easy returns across India.'}
-                  </p>
+                  <div className="pt-1 text-xs">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Product Title</span>
+                    <span className="font-bold text-slate-800 text-sm mt-0.5 block">{form.name || 'Untitled Product'}</span>
+                  </div>
+
+                  {form.tagline && (
+                    <div className="text-xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tagline</span>
+                      <p className="text-xs text-slate-600 italic mt-0.5">{form.tagline}</p>
+                    </div>
+                  )}
+
+                  {form.description && (
+                    <div className="text-xs pt-1 border-t border-slate-200/50">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Description</span>
+                      <p className="text-xs text-slate-600 mt-1 line-clamp-3 leading-relaxed">{form.description}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Media Gallery Review Card */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4.5 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1 bg-brand-powder text-brand-teal rounded-md text-xs">
+                        <ImagePlus size={13} />
+                      </span>
+                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        2. Media Gallery ({images.length} Photos)
+                      </h3>
+                    </div>
+                    {viewMode === 'wizard' && (
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(2)}
+                        className="text-[11px] font-bold text-brand-teal hover:underline cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+
+                  {images.length > 0 ? (
+                    <div className="flex flex-wrap gap-2.5">
+                      {images.map((img, i) => (
+                        <div
+                          key={i}
+                          className={`relative w-16 aspect-[3/4] rounded-lg overflow-hidden border bg-white shadow-2xs ${
+                            img.primary ? 'ring-2 ring-brand-teal border-brand-teal' : 'border-slate-200'
+                          }`}
+                        >
+                          <img src={img.url} alt="Product" className="w-full h-full object-cover" />
+                          {img.primary && (
+                            <span className="absolute top-0.5 left-0.5 bg-brand-teal text-white text-[7px] font-bold px-1 rounded">
+                              COVER
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">No photos uploaded yet.</p>
+                  )}
+                </div>
+
+                {/* 3. Variants, Pricing & Stock Matrix Review Card */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4.5 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1 bg-brand-powder text-brand-teal rounded-md text-xs">
+                        <Box size={13} />
+                      </span>
+                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        3. Pricing & Color Variants Matrix
+                      </h3>
+                    </div>
+                    {viewMode === 'wizard' && (
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(3)}
+                        className="text-[11px] font-bold text-brand-teal hover:underline cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-4 text-xs pb-1">
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
+                      <Tag size={13} className="text-brand-teal" />
+                      <span className="text-slate-500 font-medium">Product Discount:</span>
+                      <span className="font-bold text-brand-teal font-mono">
+                        {form.discount ? `${form.discount}% OFF` : '0%'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
+                      <span className="text-slate-500 font-medium">Total Inventory:</span>
+                      <span className="font-bold text-slate-800 font-mono">
+                        {variants.reduce((total, v) => total + v.sizes.reduce((sum, s) => sum + (parseInt(s.stock) || 0), 0), 0)} Units
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Variants Breakdown List */}
+                  <div className="space-y-3 pt-1">
+                    {variants.map((v, vi) => (
+                      <div key={vi} className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="w-4 h-4 rounded-full border border-slate-300 shadow-2xs"
+                              style={{ backgroundColor: v.colorHex }}
+                            />
+                            <span className="text-xs font-bold text-slate-800">
+                              {v.color || `Variant ${vi + 1}`}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-500 font-mono font-semibold">
+                            {v.sizes.reduce((sum, s) => sum + (parseInt(s.stock) || 0), 0)} units total
+                          </span>
+                        </div>
+
+                        {/* Size Table */}
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-slate-400 text-[10px] uppercase font-bold text-left border-b border-slate-100">
+                                <th className="pb-1 w-28">Size</th>
+                                <th className="pb-1 w-32">Selling Price</th>
+                                <th className="pb-1 w-32">MRP</th>
+                                <th className="pb-1">Stock</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                              {v.sizes.map((s, si) => (
+                                <tr key={si} className="text-slate-700">
+                                  <td className="py-1.5 font-bold text-slate-800">{s.size || 'Standard'}</td>
+                                  <td className="py-1.5 font-bold text-brand-teal font-mono">
+                                    ₹{s.price ? parseInt(s.price).toLocaleString('en-IN') : '—'}
+                                  </td>
+                                  <td className="py-1.5 text-slate-400 line-through font-mono">
+                                    ₹{s.mrp ? parseInt(s.mrp).toLocaleString('en-IN') : '—'}
+                                  </td>
+                                  <td className="py-1.5 font-semibold text-slate-700 font-mono">
+                                    {s.stock || '0'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. Attributes & Badges Review Card */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4.5 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1 bg-brand-powder text-brand-teal rounded-md text-xs">
+                        <Sliders size={13} />
+                      </span>
+                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        4. Attributes & Badges
+                      </h3>
+                    </div>
+                    {viewMode === 'wizard' && (
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(4)}
+                        className="text-[11px] font-bold text-brand-teal hover:underline cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fabric Material</span>
+                      <span className="font-semibold text-slate-800 mt-0.5 block">{form.fabric || 'Not specified'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Occasion</span>
+                      <span className="font-semibold text-slate-800 mt-0.5 block">{form.occasion || 'Not specified'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Work / Craft</span>
+                      <span className="font-semibold text-slate-800 mt-0.5 block">{form.work || 'Not specified'}</span>
+                    </div>
+                  </div>
+
+                  {/* Active Merchandising Badge (Single Badge) */}
+                  <div className="pt-2 border-t border-slate-200/50">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                      Active Merchandising Badge
+                    </span>
+                    <div>
+                      {activeBadge ? (
+                        <span className={`${activeBadge.color} text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-2xs inline-block`}>
+                          {activeBadge.label}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">No promotional badge selected (Standard Listing).</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1069,7 +1601,7 @@ export default function AddProductPage() {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(4)}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <ArrowLeft size={13} /> Back
                 </button>
@@ -1155,19 +1687,14 @@ export default function AddProductPage() {
                       </div>
                     )}
 
-                    {/* Merchandising Ribbons */}
-                    <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                      {form.isNew && (
-                        <span className="bg-brand-teal text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow-xs">
-                          NEW
+                    {/* Merchandising Ribbon (Single Badge) */}
+                    {activeBadge && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className={`${activeBadge.color} text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow-xs`}>
+                          {activeBadge.label}
                         </span>
-                      )}
-                      {form.isBestSeller && (
-                        <span className="bg-amber-500 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow-xs">
-                          BESTSELLER
-                        </span>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {discountPercent > 0 && (
                       <span className="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-xs">
@@ -1178,12 +1705,25 @@ export default function AddProductPage() {
 
                   {/* Product Meta */}
                   <div className="p-3.5 space-y-1.5 text-left">
-                    <p className="text-[10px] font-bold text-brand-teal uppercase tracking-widest">
-                      {form.category} {form.subcategory ? `· ${form.subcategory}` : ''}
-                    </p>
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-[10px] font-bold text-brand-teal uppercase tracking-widest truncate">
+                        {form.category} {form.subcategory ? `· ${form.subcategory}` : ''}
+                      </p>
+                      <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded flex-shrink-0">
+                        #{form.id || 'PRD-1029'}
+                      </span>
+                    </div>
+
                     <h4 className="font-serif text-xs font-bold text-brand-navy truncate">
                       {form.name || 'Untitled Product'}
                     </h4>
+
+                    {form.tagline && (
+                      <p className="text-[10px] text-slate-500 italic truncate font-sans leading-tight">
+                        {form.tagline}
+                      </p>
+                    )}
+
                     <div className="flex items-center gap-2 pt-1">
                       <span className="font-sans text-sm font-bold text-brand-navy">
                         ₹{form.sellingPrice ? parseInt(form.sellingPrice).toLocaleString('en-IN') : '0'}
@@ -1224,9 +1764,12 @@ export default function AddProductPage() {
                       )}
                     </div>
                     <div className="space-y-1 min-w-0">
-                      <span className="text-[9px] font-bold text-brand-teal uppercase tracking-wider">{form.category}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-bold text-brand-teal uppercase tracking-wider">{form.category}</span>
+                        <span className="text-[9px] font-mono font-bold text-slate-400 bg-slate-100 px-1 py-0.5 rounded">#{form.id || 'PRD-1029'}</span>
+                      </div>
                       <h4 className="font-bold text-slate-800 leading-tight truncate">{form.name || 'Product Title'}</h4>
-                      <p className="text-[10px] text-slate-500">SKU: {form.sku}</p>
+                      {form.tagline && <p className="text-[10px] text-slate-500 italic truncate">{form.tagline}</p>}
                       <div className="flex items-center gap-1.5 pt-1">
                         <span className="font-bold text-slate-900">₹{form.sellingPrice || '0'}</span>
                         <span className="text-slate-400 line-through text-[10px]">₹{form.mrp || '0'}</span>
@@ -1237,7 +1780,7 @@ export default function AddProductPage() {
                   <div className="border-t border-slate-100 pt-2 space-y-1 text-[11px]">
                     <p><span className="font-bold text-slate-700">Fabric:</span> {form.fabric || 'Not specified'}</p>
                     <p><span className="font-bold text-slate-700">Occasion:</span> {form.occasion || 'Not specified'}</p>
-                    <p><span className="font-bold text-slate-700">COD Available:</span> {form.allowCOD ? 'Yes' : 'No'}</p>
+                    <p><span className="font-bold text-slate-700">Work/Craft:</span> {form.work || 'Not specified'}</p>
                   </div>
                 </div>
               )}
@@ -1287,9 +1830,10 @@ export default function AddProductPage() {
               <button
                 onClick={() => {
                   setShowSuccessModal(false);
+                  resetFormToBlank();
                   setCurrentStep(1);
                 }}
-                className="w-full py-2.5 border border-slate-200 text-slate-600 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors"
+                className="w-full py-2.5 border border-slate-200 text-slate-600 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Add Another Product
               </button>

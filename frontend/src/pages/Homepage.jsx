@@ -26,7 +26,7 @@ export default function Homepage() {
       {isSectionActive('categories') && <CategorySection />}
       {isSectionActive('new-arrivals') && <NewArrivals />}
       {isSectionActive('best-sellers') && <BestSellers />}
-      <FourPillars />
+      {isSectionActive('four-pillars') && <FourPillars />}
       {isSectionActive('promo-banners') && <PromoBanner />}
       {isSectionActive('trending') && <TrendingNow />}
       {isSectionActive('occasion') && <OccasionSection />}

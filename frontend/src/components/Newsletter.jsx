@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { CheckCircle, MessageSquare } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
+import { useContent } from '../context/ContentContext';
 
 const WhatsAppIcon = ({ className = "w-4 h-4 fill-current" }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
@@ -8,6 +9,15 @@ const WhatsAppIcon = ({ className = "w-4 h-4 fill-current" }) => (
 );
 
 export default function Newsletter() {
+  const { getSectionContent } = useContent();
+  const content = getSectionContent('newsletter');
+
+  const eyebrow = content?.eyebrow || 'VIP WhatsApp Club';
+  const title = content?.title || 'Stay in Style on WhatsApp';
+  const subtitle = content?.subtitle || 'Join our exclusive VIP WhatsApp community to get instant new collection drops, festival sale offers, and personal styling support straight on WhatsApp.';
+  const buttonText = content?.buttonText || 'Connect';
+  const placeholder = content?.placeholder || 'Enter your WhatsApp number (e.g. +91 98765 43210)';
+
   const [phone, setPhone] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,24 +57,24 @@ export default function Newsletter() {
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 text-center">
 
         <p className="font-sans text-[10px] tracking-[0.32em] text-emerald-300 uppercase font-bold mb-3 flex items-center justify-center gap-2">
-          <WhatsAppIcon className="w-4 h-4 text-emerald-400 fill-current" /> VIP WhatsApp Club
+          <WhatsAppIcon className="w-4 h-4 text-emerald-400 fill-current" /> {eyebrow}
         </p>
 
         <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-white tracking-wider uppercase mb-3">
-          Stay in Style on WhatsApp
+          {title}
         </h2>
 
         <div className="w-10 h-[1px] bg-brand-powder/40 mx-auto mb-4" />
 
         <p className="font-sans text-xs sm:text-sm text-brand-powder/80 font-light mb-7 leading-relaxed max-w-md mx-auto">
-          Join our exclusive VIP WhatsApp community to get instant new collection drops, festival sale offers, and personal styling support straight on WhatsApp.
+          {subtitle}
         </p>
 
         {subscribed ? (
           <div className="inline-flex items-center gap-3 bg-emerald-600/40 border border-emerald-300/40 rounded-sm px-8 py-4 fade-in-up">
             <CheckCircle size={18} strokeWidth={1.8} className="text-emerald-300" />
             <span className="font-sans text-sm text-white font-medium tracking-wide">
-              Welcome to the Suka VIP WhatsApp Club! Opening WhatsApp...
+              Welcome to the Suka VIP Club! Opening WhatsApp...
             </span>
           </div>
         ) : (
@@ -76,7 +86,7 @@ export default function Newsletter() {
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="Enter your WhatsApp number (e.g. +91 98765 43210)"
+              placeholder={placeholder}
               required
               className="flex-1 bg-white/10 border border-brand-powder/30 py-3.5 px-5 text-sm text-white placeholder-brand-powder/50 focus:outline-none focus:border-emerald-300 focus:bg-white/15 transition-all duration-300 font-sans rounded-sm"
             />
@@ -90,7 +100,7 @@ export default function Newsletter() {
               ) : (
                 <>
                   <WhatsAppIcon className="w-4 h-4 text-white fill-current" />
-                  Connect
+                  {buttonText}
                 </>
               )}
             </button>
@@ -105,4 +115,3 @@ export default function Newsletter() {
     </section>
   );
 }
-

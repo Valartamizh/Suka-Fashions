@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Gem, Sparkles, Music2, Coffee, Briefcase, Flower2 } from 'lucide-react';
 import { useReveal } from '../hooks/useReveal';
+import { useContent } from '../context/ContentContext';
 
 // Import local assets for 100% reliable image loading
 import lehengaRed from '../assets/lehenga_red.jpg';
@@ -58,6 +59,11 @@ const occasions = [
 
 export default function OccasionSection() {
   const sectionRef = useReveal();
+  const { getSectionContent } = useContent();
+  const content = getSectionContent('occasion');
+
+  const eyebrow = content?.eyebrow || 'Style For Every Moment';
+  const title = content?.title || 'Shop By Occasion';
 
   return (
     <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-b border-brand-powder/30">
@@ -66,10 +72,10 @@ export default function OccasionSection() {
         {/* Heading */}
         <div className="text-center mb-4 reveal">
           <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
-            Style For Every Moment
+            {eyebrow}
           </p>
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
-            Shop By Occasion
+            {title}
           </h2>
           <div className="section-divider" />
         </div>
@@ -84,7 +90,7 @@ export default function OccasionSection() {
                 to={occ.path}
                 className={`reveal reveal-delay-${Math.min(idx + 1, 5)} flex-none w-[160px] sm:w-[200px] lg:w-auto snap-start group relative block aspect-[3/4] overflow-hidden rounded-md border border-brand-powder/50 bg-brand-cream shadow-xs hover:shadow-xl transition-all duration-300`}
               >
-                {/* Background Fashion Image (object-top positioning) */}
+                {/* Background Fashion Image */}
                 <img
                   src={occ.image}
                   alt={occ.name}
@@ -92,7 +98,7 @@ export default function OccasionSection() {
                   loading="lazy"
                 />
 
-                {/* Dark Gradient Overlay for legible text */}
+                {/* Dark Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/90 via-brand-navy/35 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
 
                 {/* Top Badge Icon */}

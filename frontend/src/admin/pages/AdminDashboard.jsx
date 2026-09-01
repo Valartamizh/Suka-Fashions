@@ -12,7 +12,7 @@ import StatusBadge from '../components/ui/StatusBadge';
 import { adminOrders, salesData } from '../data/adminOrders';
 import { adminProducts } from '../data/adminProducts';
 import { adminInventory, getStockStatus } from '../data/adminInventory';
-import { adminCustomers } from '../data/adminCustomers';
+import { useCustomers } from '../../context/CustomerContext';
 
 const DATE_RANGES = ['Today', '7 Days', '30 Days', 'This Month'];
 
@@ -131,28 +131,108 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+const RANGE_METRICS_MAP = {
+  'today': {
+    revenue: '₹18,450',
+    revenueChange: '+4.2% vs yesterday',
+    revenueChangeType: 'up',
+    orders: '14',
+    ordersChange: '+2 orders vs yesterday',
+    ordersChangeType: 'up',
+    customers: '3',
+    customersChange: '+3 new today',
+    customersChangeType: 'up',
+    statusCounts: { processing: 3, shipped: 4, delivered: 5, returned: 1, cancelled: 1 },
+    chartData: [
+      { label: '9 AM', revenue: 2400, orders: 2 },
+      { label: '12 PM', revenue: 4800, orders: 4 },
+      { label: '3 PM', revenue: 3900, orders: 3 },
+      { label: '6 PM', revenue: 5200, orders: 4 },
+      { label: '9 PM', revenue: 2150, orders: 1 },
+    ],
+  },
+  '7days': {
+    revenue: '₹2,48,650',
+    revenueChange: '+12.5% vs last week',
+    revenueChangeType: 'up',
+    orders: '126',
+    ordersChange: '+8.2% this period',
+    ordersChangeType: 'up',
+    customers: '18',
+    customersChange: '+5.1% this week',
+    customersChangeType: 'up',
+    statusCounts: { processing: 18, shipped: 32, delivered: 68, returned: 4, cancelled: 4 },
+    chartData: salesData['7days'],
+  },
+  '30days': {
+    revenue: '₹7,53,650',
+    revenueChange: '+18.4% vs last month',
+    revenueChangeType: 'up',
+    orders: '412',
+    ordersChange: '+14.6% this period',
+    ordersChangeType: 'up',
+    customers: '42',
+    customersChange: '+12.3% this month',
+    customersChangeType: 'up',
+    statusCounts: { processing: 24, shipped: 58, delivered: 302, returned: 14, cancelled: 14 },
+    chartData: salesData['30days'],
+  },
+  '12months': {
+    revenue: '₹68,40,000',
+    revenueChange: '+34.2% vs previous year',
+    revenueChangeType: 'up',
+    orders: '3,420',
+    ordersChange: '+28.6% annual orders',
+    ordersChangeType: 'up',
+    customers: '420',
+    customersChange: '+26.4% active base',
+    customersChangeType: 'up',
+    statusCounts: { processing: 38, shipped: 145, delivered: 3100, returned: 68, cancelled: 69 },
+    chartData: salesData['12months'],
+  },
+  'overall': {
+    revenue: '₹75,00,000',
+    revenueChange: '+38.5% all-time growth',
+    revenueChangeType: 'up',
+    orders: '3,800',
+    ordersChange: '+31.4% all-time volume',
+    ordersChangeType: 'up',
+    customers: '480',
+    customersChange: '+29.1% customer base',
+    customersChangeType: 'up',
+    statusCounts: { processing: 45, shipped: 160, delivered: 3450, returned: 75, cancelled: 70 },
+    chartData: salesData['12months'],
+  },
+};
+
+const PERIOD_OPTIONS = [
+  { label: 'Today', key: 'today' },
+  { label: '7 Days', key: '7days' },
+  { label: '30 Days', key: '30days' },
+  { label: '12 Months', key: '12months' },
+  { label: 'Overall', key: 'overall' },
+];
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [dateRange, setDateRange] = useState('7 Days');
-  const [customChartData, setCustomChartData] = useState(null);
-  const [activeChartRange, setActiveChartRange] = useState('7days');
+  const { customers } = useCustomers();
+  const [graphMode, setGraphMode] = useState('both'); // 'revenue' | 'sales' | 'both'
+  const [chartRange, setChartRange] = useState('7days'); // 'today' | '7days' | '30days' | '12months' | 'overall'
 
-  const currentMetrics = RANGE_METRICS[dateRange] || RANGE_METRICS['7 Days'];
-  
-  // Use custom selected chart range if clicked, otherwise follow top date range
-  const chartData = customChartData || currentMetrics.chartData;
-
-  const handleDateRangeChange = (range) => {
-    setDateRange(range);
-    setCustomChartData(null); // Reset to follow top date range
-  };
-
-  const handleChartRangeClick = (key) => {
-    setActiveChartRange(key);
-    setCustomChartData(salesData[key]);
-  };
-
+  const currentMetrics = RANGE_METRICS_MAP[chartRange] || RANGE_METRICS_MAP['7days'];
   const totalStatusCount = Object.values(currentMetrics.statusCounts).reduce((a, b) => a + b, 0);
+  const activeChartData = currentMetrics.chartData || salesData['7days'];
+
+  const periodLabel =
+    chartRange === 'today'
+      ? 'Today'
+      : chartRange === '7days'
+      ? 'Past 7 Days'
+      : chartRange === '30days'
+      ? 'Past 30 Days'
+      : chartRange === '12months'
+      ? 'Past 12 Months'
+      : 'Overall Performance';
 
   return (
     <div className="space-y-6">
@@ -161,29 +241,29 @@ export default function AdminDashboard() {
         <div>
           <h1 className="font-sans text-xl font-bold text-slate-800">Dashboard</h1>
           <p className="text-sm text-slate-400 mt-0.5">
-            Showing metrics for <span className="font-semibold text-brand-teal">{dateRange}</span>.
+            Showing performance metrics for <span className="font-semibold text-brand-teal">{periodLabel}</span>.
           </p>
         </div>
         
-        {/* Dynamic Interactive Date Range Filter */}
-        <div className="flex gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-2xs">
-          {DATE_RANGES.map(r => (
+        {/* Dynamic Period Filter: Today, 7 Days, 30 Days, Overall */}
+        <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-2xs">
+          {PERIOD_OPTIONS.map(r => (
             <button
-              key={r}
-              onClick={() => handleDateRangeChange(r)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                dateRange === r
-                  ? 'bg-brand-teal text-white shadow-sm scale-102'
+              key={r.key}
+              onClick={() => setChartRange(r.key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                chartRange === r.key
+                  ? 'bg-brand-teal text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
               }`}
             >
-              {r}
+              {r.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* KPI Cards (Dynamically updated based on Date Range) */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Revenue"
@@ -218,7 +298,7 @@ export default function AdminDashboard() {
         />
         <StatCard
           title="Customers"
-          value={currentMetrics.customers}
+          value={customers.length.toString()}
           change={currentMetrics.customersChange}
           changeType={currentMetrics.customersChangeType}
           icon={Users}
@@ -226,55 +306,190 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Middle row: Sales Chart + Order Status */}
+      {/* Middle row: Sales & Revenue Graph + Order Status */}
       <div className="grid lg:grid-cols-3 gap-4">
-        {/* Sales Chart */}
+        {/* Graph Card */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
-              <h3 className="font-sans font-bold text-slate-800 text-sm">Sales Overview</h3>
+              <div className="flex items-center gap-2.5">
+                <h3 className="font-sans font-bold text-slate-800 text-sm">
+                  {graphMode === 'revenue' ? 'Revenue Graph' : graphMode === 'sales' ? 'Sales Graph (Orders)' : 'Revenue & Sales Overview'}
+                </h3>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                {customChartData ? 'Custom period trends' : currentMetrics.chartLabel}
+                {graphMode === 'revenue' && 'Financial earnings timeline'}
+                {graphMode === 'sales' && 'Order volume timeline'}
+                {graphMode === 'both' && 'Comparative trends with distinct colored metrics'}
               </p>
             </div>
-            <div className="flex gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1">
-              {CHART_RANGES.map(r => (
-                <button
-                  key={r.key}
-                  onClick={() => handleChartRangeClick(r.key)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                    (customChartData ? activeChartRange === r.key : false)
-                      ? 'bg-brand-teal text-white shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
+
+            {/* Graph Switcher Tabs (Sales Graph vs Revenue Graph vs Both) */}
+            <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/70">
+              <button
+                type="button"
+                onClick={() => setGraphMode('revenue')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  graphMode === 'revenue'
+                    ? 'bg-white text-teal-800 shadow-xs border border-slate-200/60'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-[#006B70]" />
+                <span>Revenue Graph</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setGraphMode('sales')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  graphMode === 'sales'
+                    ? 'bg-white text-indigo-800 shadow-xs border border-slate-200/60'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-[#6366F1]" />
+                <span>Sales Graph</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setGraphMode('both')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  graphMode === 'both'
+                    ? 'bg-white text-slate-800 shadow-xs border border-slate-200/60'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span>Both</span>
+              </button>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={chartData} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+
+          {/* Graph Legend */}
+          <div className="flex items-center gap-4 mb-3 text-[11px] text-slate-500">
+            {(graphMode === 'revenue' || graphMode === 'both') && (
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-1 rounded-full bg-[#006B70]" />
+                <span className="font-semibold text-slate-700">Revenue (₹)</span>
+              </div>
+            )}
+            {(graphMode === 'sales' || graphMode === 'both') && (
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-1 rounded-full bg-[#6366F1]" />
+                <span className="font-semibold text-slate-700">Sales / Orders</span>
+              </div>
+            )}
+          </div>
+
+          <ResponsiveContainer width="100%" height={210}>
+            <AreaChart data={activeChartData} margin={{ top: 8, right: 10, left: -15, bottom: 0 }}>
               <defs>
+                {/* Revenue Gradient (Teal/Emerald) */}
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#006B70" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#006B70" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#006B70" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#006B70" stopOpacity={0.0} />
+                </linearGradient>
+                {/* Sales / Orders Gradient (Electric Violet/Indigo) */}
+                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366F1" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#6366F1" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false}
-                tickFormatter={v => v >= 1000 ? `₹${(v/1000).toFixed(0)}k` : `₹${v}`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="#006B70"
-                strokeWidth={2}
-                fill="url(#colorRevenue)"
-                dot={false}
-                activeDot={{ r: 4, fill: '#006B70' }}
+              
+              {/* Left Y Axis for Revenue */}
+              {(graphMode === 'revenue' || graphMode === 'both') && (
+                <YAxis
+                  yAxisId="revenue"
+                  tick={{ fontSize: 10, fill: '#006B70' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={v => v >= 100000 ? `₹${(v/100000).toFixed(1)}L` : v >= 1000 ? `₹${(v/1000).toFixed(0)}k` : `₹${v}`}
+                />
+              )}
+
+              {/* Right Y Axis for Sales / Orders */}
+              {graphMode === 'sales' && (
+                <YAxis
+                  yAxisId="sales"
+                  tick={{ fontSize: 10, fill: '#6366F1' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={v => `${v}`}
+                />
+              )}
+
+              {graphMode === 'both' && (
+                <YAxis
+                  yAxisId="sales"
+                  orientation="right"
+                  tick={{ fontSize: 10, fill: '#6366F1' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={v => `${v}`}
+                />
+              )}
+
+              <Tooltip
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-slate-900 text-white rounded-xl shadow-xl p-3 text-xs space-y-1.5 border border-slate-700">
+                        <p className="font-bold text-slate-300 border-b border-slate-700 pb-1">{label}</p>
+                        {payload.map((entry, idx) => (
+                          <div key={idx} className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: entry.stroke || entry.color }}
+                              />
+                              <span className="text-slate-300 capitalize">
+                                {entry.dataKey === 'revenue' ? 'Revenue' : 'Sales'}
+                              </span>
+                            </div>
+                            <span className="font-bold text-white font-mono">
+                              {entry.dataKey === 'revenue'
+                                ? `₹${Number(entry.value).toLocaleString('en-IN')}`
+                                : `${entry.value} Orders`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
               />
+
+              {/* Revenue Line (Teal) */}
+              {(graphMode === 'revenue' || graphMode === 'both') && (
+                <Area
+                  yAxisId="revenue"
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#006B70"
+                  strokeWidth={2.5}
+                  fill="url(#colorRevenue)"
+                  dot={{ r: 3, fill: '#006B70', strokeWidth: 1.5, stroke: '#ffffff' }}
+                  activeDot={{ r: 5, fill: '#006B70', stroke: '#ffffff', strokeWidth: 2 }}
+                />
+              )}
+
+              {/* Sales Line (Indigo / Violet) */}
+              {(graphMode === 'sales' || graphMode === 'both') && (
+                <Area
+                  yAxisId="sales"
+                  type="monotone"
+                  dataKey="orders"
+                  stroke="#6366F1"
+                  strokeWidth={2.5}
+                  fill="url(#colorSales)"
+                  dot={{ r: 3, fill: '#6366F1', strokeWidth: 1.5, stroke: '#ffffff' }}
+                  activeDot={{ r: 5, fill: '#6366F1', stroke: '#ffffff', strokeWidth: 2 }}
+                />
+              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -284,7 +499,7 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-sans font-bold text-slate-800 text-sm">Order Overview</h3>
             <span className="text-[11px] font-semibold text-brand-teal bg-brand-powderLight px-2 py-0.5 rounded-full">
-              {dateRange}
+              {periodLabel}
             </span>
           </div>
           <div className="space-y-2.5">
@@ -343,7 +558,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {adminOrders.slice(0, dateRange === 'Today' ? 3 : 6).map(order => (
+                {adminOrders.slice(0, 6).map(order => (
                   <tr
                     key={order.id}
                     onClick={() => navigate(`/admin/orders/${order.id}`)}

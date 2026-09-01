@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../hooks/useReveal';
+import { useContent } from '../context/ContentContext';
 
-// Import local assets for 100% reliable image loading
+// Import local assets for fallback
 import kurtiTealPrinted from '../assets/kurti_teal_printed.jpg';
 import sareeBeigeMaroonFull2 from '../assets/saree_beige_maroon_full2.jpg';
 import festiveSuit from '../assets/festive_suit.jpg';
 
-const trending = [
+const defaultTrending = [
   {
     id: 1,
     title: 'Modern Classics',
@@ -33,6 +34,11 @@ const trending = [
 
 export default function TrendingNow() {
   const sectionRef = useReveal();
+  const { getSectionContent } = useContent();
+  const content = getSectionContent('trending');
+
+  const eyebrow = content?.eyebrow || 'In The Spotlight';
+  const title = content?.title || 'Trending Now';
 
   return (
     <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-b border-brand-powder/30">
@@ -41,17 +47,17 @@ export default function TrendingNow() {
         {/* Header */}
         <div className="text-center mb-4 reveal">
           <p className="font-sans text-[10px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-2">
-            In The Spotlight
+            {eyebrow}
           </p>
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
-            Trending Now
+            {title}
           </h2>
           <div className="section-divider" />
         </div>
 
-        {/* Cards: Horizontal Snap Slider on Mobile, 3-Column Grid on Desktop */}
+        {/* Cards */}
         <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar snap-x snap-mandatory">
-          {trending.map((item, index) => (
+          {defaultTrending.map((item, index) => (
             <Link 
               key={item.id} 
               to={item.link}
