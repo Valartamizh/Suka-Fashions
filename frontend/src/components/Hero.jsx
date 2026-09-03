@@ -91,7 +91,16 @@ export default function Hero() {
 
   const slides = useMemo(() => {
     if (heroContent?.slides && Array.isArray(heroContent.slides) && heroContent.slides.length > 0) {
-      return heroContent.slides;
+      return heroContent.slides.map((s, idx) => {
+        const def = defaultSlides[idx % defaultSlides.length];
+        return {
+          ...def,
+          ...s,
+          mainImage: s.mainImage || def.mainImage,
+          detailImageLeft: s.detailImageLeft || def.detailImageLeft,
+          detailImageRight: s.detailImageRight || def.detailImageRight,
+        };
+      });
     }
     return defaultSlides;
   }, [heroContent]);
@@ -140,7 +149,7 @@ export default function Hero() {
         <div className="absolute inset-0 z-0">
           <img
             key={slide.id || current}
-            src={slide.mainImage || lehengaRed}
+            src={slide.mainImage}
             alt={slide.mainLabel || 'Suka Fashions'}
             className="w-full h-full object-cover object-top transition-transform duration-1000 scale-105"
             style={{ animation: 'heroFadeIn 0.6s cubic-bezier(0.16,1,0.3,1) both' }}
@@ -324,7 +333,7 @@ export default function Hero() {
                   {/* 1. LEFT Detail Card */}
                   <div className="absolute left-0 top-[60px] xl:top-[80px] w-[160px] xl:w-[195px] h-[280px] xl:h-[330px] z-20 rounded-xl overflow-hidden shadow-xl border border-white/40 bg-white p-1.5 transition-transform duration-500">
                     <img
-                      src={slide.detailImageLeft || lehengaPink}
+                      src={slide.detailImageLeft}
                       alt="Craftsmanship detail"
                       className="w-full h-full object-cover object-top rounded-lg"
                     />
@@ -341,7 +350,7 @@ export default function Hero() {
                   {/* 2. MAIN Fashion Card (Center) */}
                   <div className="relative z-30 w-[310px] xl:w-[380px] h-[450px] xl:h-[510px] rounded-2xl overflow-hidden shadow-2xl bg-white border border-brand-powder/40 p-2 transform hover:scale-[1.01] transition-transform duration-500">
                     <img
-                      src={slide.mainImage || lehengaRed}
+                      src={slide.mainImage}
                       alt={slide.mainLabel || 'New Collection'}
                       className="w-full h-full object-cover object-top rounded-xl"
                     />
@@ -358,7 +367,7 @@ export default function Hero() {
                   {/* 3. RIGHT Detail Card */}
                   <div className="absolute right-0 top-[70px] xl:top-[90px] w-[165px] xl:w-[200px] h-[290px] xl:h-[340px] z-20 rounded-xl overflow-hidden shadow-xl border border-white/40 bg-white p-1.5 transition-transform duration-500">
                     <img
-                      src={slide.detailImageRight || lehengaMint}
+                      src={slide.detailImageRight}
                       alt="Fabric styling detail"
                       className="w-full h-full object-cover object-top rounded-lg"
                     />

@@ -115,8 +115,12 @@ const lowStockItems = adminInventory.filter(i => {
 
 // Top selling products
 const topProducts = [...adminProducts]
-  .sort((a, b) => b.unitsSold - a.unitsSold)
-  .slice(0, 4);
+  .sort((a, b) => (b.unitsSold || 0) - (a.unitsSold || 0))
+  .slice(0, 4)
+  .map((p) => ({
+    ...p,
+    revenue: p.revenue !== undefined ? p.revenue : (p.unitsSold || 0) * (p.price || 0),
+  }));
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -605,9 +609,9 @@ export default function AdminDashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-slate-800 truncate leading-tight group-hover:text-brand-teal transition-colors">{p.name}</p>
                   <p className="text-[10px] text-slate-400 mt-0.5">
-                    <span className="text-emerald-600 font-bold">{p.unitsSold} sold</span>
+                    <span className="text-emerald-600 font-bold">{p.unitsSold || 0} sold</span>
                     <span className="mx-1.5">·</span>
-                    ₹{p.revenue.toLocaleString('en-IN')}
+                    ₹{Number(p.revenue || 0).toLocaleString('en-IN')}
                   </p>
                 </div>
               </div>

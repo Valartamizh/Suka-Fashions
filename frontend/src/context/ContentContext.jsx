@@ -348,12 +348,38 @@ export function ContentProvider({ children }) {
           return initialDefaultSections.map(defaultSec => {
             const matched = parsed.find(p => p.id === defaultSec.id);
             if (!matched) return defaultSec;
+
+            if (defaultSec.id === 'hero') {
+              const defaultSlides = defaultSec.content?.slides || [];
+              const matchedSlides = matched.content?.slides || [];
+              const mergedSlides = defaultSlides.map((defSlide, idx) => {
+                const mSlide = matchedSlides[idx] || {};
+                return {
+                  ...defSlide,
+                  ...mSlide,
+                  mainImage: mSlide.mainImage || defSlide.mainImage,
+                  detailImageLeft: mSlide.detailImageLeft || defSlide.detailImageLeft,
+                  detailImageRight: mSlide.detailImageRight || defSlide.detailImageRight,
+                };
+              });
+              return {
+                ...defaultSec,
+                ...matched,
+                content: {
+                  ...defaultSec.content,
+                  ...matched.content,
+                  slides: mergedSlides,
+                },
+              };
+            }
+
             return {
               ...defaultSec,
               ...matched,
               content: {
                 ...defaultSec.content,
                 ...matched.content,
+                image: matched.content?.image || defaultSec.content?.image,
               },
             };
           });

@@ -29,20 +29,20 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
   }, [location.pathname, isProductsSection]);
 
   const SidebarContent = ({ onNavigate }) => (
-    <div className="flex flex-col h-full bg-white text-slate-700">
+    <div className="flex flex-col h-full bg-white text-slate-900">
       
       {/* Mobile Header Close Button */}
       {onNavigate && (
-        <div className="p-4 flex items-center justify-between border-b border-slate-100 lg:hidden flex-shrink-0">
-          <span className="font-bold text-slate-800 text-sm">Navigation</span>
-          <button onClick={onNavigate} className="p-1 text-slate-400 hover:text-slate-600">
-            <X size={20} />
+        <div className="p-4 flex items-center justify-between border-b border-slate-200 lg:hidden flex-shrink-0">
+          <span className="font-extrabold text-slate-950 text-base">Navigation</span>
+          <button onClick={onNavigate} className="p-1 text-slate-700 hover:text-slate-950">
+            <X size={22} />
           </button>
         </div>
       )}
 
       {/* Navigation List */}
-      <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-5 no-scrollbar">
+      <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-6 no-scrollbar">
         
         {/* Dashboard Link (Top Item) */}
         <div>
@@ -51,16 +51,16 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
             end
             onClick={onNavigate}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all shadow-2xs ${
+              `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all shadow-2xs ${
                 isActive
                   ? 'bg-brand-teal text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <LayoutDashboard size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
+                <LayoutDashboard size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
                 <span>Dashboard</span>
               </>
             )}
@@ -69,29 +69,29 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
 
         {/* PRODUCT MANAGEMENT */}
         <div>
-          <p className="px-4 text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">
+          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
             PRODUCT MANAGEMENT
           </p>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {/* Products Dropdown Parent */}
             <div>
               <button
                 type="button"
                 onClick={() => setProductsOpen(o => !o)}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all group ${
+                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all group ${
                   isProductsSection
-                    ? 'text-brand-teal font-semibold bg-brand-powder/40'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                    ? 'text-brand-teal font-extrabold bg-brand-powder/60'
+                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Package size={18} className={isProductsSection ? 'text-brand-teal' : 'text-slate-400 group-hover:text-slate-600'} />
+                  <Package size={20} className={isProductsSection ? 'text-brand-teal' : 'text-slate-700 group-hover:text-slate-900'} />
                   <span>Products</span>
                 </div>
                 {productsOpen ? (
-                  <ChevronDown size={15} className={isProductsSection ? 'text-brand-teal' : 'text-slate-400'} />
+                  <ChevronDown size={18} className={isProductsSection ? 'text-brand-teal' : 'text-slate-700'} />
                 ) : (
-                  <ChevronRight size={15} className="text-slate-400" />
+                  <ChevronRight size={18} className="text-slate-700" />
                 )}
               </button>
 
@@ -111,15 +111,15 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
                         key={child.to}
                         to={child.to}
                         onClick={onNavigate}
-                        className={`flex items-center gap-2.5 pl-11 pr-4 py-2 rounded-lg text-xs transition-all ${
+                        className={`flex items-center gap-3 pl-11 pr-4 py-2.5 rounded-xl text-sm transition-all ${
                           isChildActive
-                            ? 'text-brand-teal font-semibold bg-brand-powder/60 shadow-2xs'
-                            : 'text-slate-500 font-normal hover:text-brand-teal hover:bg-brand-powder/20'
+                            ? 'text-brand-teal font-extrabold bg-brand-powder/80 shadow-2xs'
+                            : 'text-slate-800 font-bold hover:text-brand-teal hover:bg-brand-powder/30'
                         }`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${
-                            isChildActive ? 'bg-brand-teal' : 'bg-slate-300'
+                          className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
+                            isChildActive ? 'bg-brand-teal' : 'bg-slate-400'
                           }`}
                         />
                         <span>{child.label}</span>
@@ -135,16 +135,16 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
               to="/admin/inventory"
               onClick={onNavigate}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
                   isActive
                     ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Boxes size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
+                  <Boxes size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
                   <span>Inventory</span>
                 </>
               )}
@@ -154,24 +154,24 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
 
         {/* SALES */}
         <div>
-          <p className="px-4 text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">
+          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
             SALES
           </p>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <NavLink
               to="/admin/orders"
               onClick={onNavigate}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
                   isActive
                     ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <ShoppingBag size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
+                  <ShoppingBag size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
                   <span>Orders</span>
                 </>
               )}
@@ -181,16 +181,16 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
               to="/admin/customers"
               onClick={onNavigate}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
                   isActive
                     ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Users size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
+                  <Users size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
                   <span>Customers</span>
                 </>
               )}
@@ -200,24 +200,24 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
 
         {/* ENGAGEMENT */}
         <div>
-          <p className="px-4 text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">
+          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
             ENGAGEMENT
           </p>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <NavLink
               to="/admin/reviews"
               onClick={onNavigate}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
                   isActive
                     ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Star size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
+                  <Star size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
                   <span>Reviews</span>
                 </>
               )}
@@ -227,24 +227,24 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
 
         {/* STORE */}
         <div>
-          <p className="px-4 text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">
+          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
             STORE
           </p>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <NavLink
               to="/admin/content"
               onClick={onNavigate}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
                   isActive
                     ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <PanelsTopLeft size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
+                  <PanelsTopLeft size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
                   <span>Content Management</span>
                 </>
               )}
@@ -254,24 +254,24 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
 
         {/* ADMINISTRATION */}
         <div>
-          <p className="px-4 text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">
+          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
             ADMINISTRATION
           </p>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <NavLink
               to="/admin/users"
               onClick={onNavigate}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
                   isActive
                     ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <ShieldCheck size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
+                  <ShieldCheck size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
                   <span>Users & Roles</span>
                 </>
               )}
@@ -281,16 +281,16 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
               to="/admin/settings"
               onClick={onNavigate}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
                   isActive
                     ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Settings size={18} className={isActive ? 'text-white' : 'text-slate-400'} />
+                  <Settings size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
                   <span>Settings</span>
                 </>
               )}
@@ -301,12 +301,12 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
       </nav>
 
       {/* Logout at bottom */}
-      <div className="px-4 py-4 border-t border-slate-100 flex-shrink-0">
+      <div className="px-4 py-4 border-t border-slate-200 flex-shrink-0">
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all group"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold text-slate-900 hover:bg-red-50 hover:text-red-600 transition-all group cursor-pointer"
         >
-          <LogOut size={18} className="text-slate-400 group-hover:text-red-500" />
+          <LogOut size={20} className="text-slate-700 group-hover:text-red-600" />
           <span>Logout</span>
         </button>
       </div>

@@ -6,50 +6,91 @@ import { useContent } from '../context/ContentContext';
 const defaultTestimonials = [
   {
     id: 1,
-    quote: 'The quality, the fit, the elegance — absolutely love every piece from Suka Fashions! The saree fabric feels so rich.',
-    author: 'Radhika S.',
-    name: 'Radhika S.',
+    quote: 'The crimson lehenga exceeded all my expectations. The fabric quality and zardozi detailing are magnificent! Suka Fashions is my go-to boutique.',
+    author: 'Ananya Deshmukh',
+    name: 'Ananya Deshmukh',
     location: 'Mumbai, Maharashtra',
     city: 'Mumbai',
-    tag: 'Pure Silk Saree',
-    product: 'Blush Pink Pure Silk Saree',
+    tag: 'Bridal Edit',
+    product: 'Bridal Edit',
     stars: 5,
-    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=120&auto=format&fit=crop&crop=face',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120&auto=format&fit=crop&crop=face',
     date: '3 days ago',
   },
   {
     id: 2,
-    quote: 'The organza saree is incredibly lightweight and looks so luxurious. Got so many compliments at my cousin\'s wedding!',
-    author: 'Priyanka K.',
-    name: 'Priyanka K.',
+    quote: 'I wore the Kanchipuram silk drape for my sister\'s wedding and received non-stop compliments. Truly royal craftsmanship and rich zari.',
+    author: 'Pooja Sundaram',
+    name: 'Pooja Sundaram',
     location: 'Bengaluru, Karnataka',
     city: 'Bengaluru',
-    tag: 'Organza Drape',
-    product: 'Teal Embroidered Organza Saree',
+    tag: 'Pure Silk Saree',
+    product: 'Pure Silk Saree',
     stars: 5,
-    avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=120&auto=format&fit=crop&crop=face',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=120&auto=format&fit=crop&crop=face',
     date: '1 week ago',
   },
   {
     id: 3,
-    quote: 'Extremely fast shipping and the cotton kurti fabric is perfect for everyday wear. Truly a premium and delightful experience.',
-    author: 'Anjali M.',
-    name: 'Anjali M.',
+    quote: 'The organza saree drapes effortlessly and feels weightless. Suka Fashions delivers unmatched luxury and fine ethnic artistry.',
+    author: 'Ritu Khurana',
+    name: 'Ritu Khurana',
     location: 'New Delhi, Delhi',
     city: 'New Delhi',
-    tag: 'Bridal Edit',
-    product: 'Floral Printed Cotton Kurti Set',
+    tag: 'Organza Drape',
+    product: 'Organza Drape',
     stars: 5,
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=120&auto=format&fit=crop&crop=face',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=120&auto=format&fit=crop&crop=face',
     date: '2 weeks ago',
+  },
+  {
+    id: 4,
+    quote: 'Ordered the Royal Purple Anarkali set. The embroidery, packaging, and speedy delivery were all top-notch. Absolutely in love with the look!',
+    author: 'Meera Sengupta',
+    name: 'Meera Sengupta',
+    location: 'Kolkata, West Bengal',
+    city: 'Kolkata',
+    tag: 'Anarkali Suits',
+    product: 'Anarkali Suits',
+    stars: 5,
+    avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=120&auto=format&fit=crop&crop=face',
+    date: '3 weeks ago',
+  },
+  {
+    id: 5,
+    quote: 'The printed coord set has become my wardrobe favorite. Breathable modal silk, flawless stitch, and so elegant for gatherings.',
+    author: 'Kavita Menon',
+    name: 'Kavita Menon',
+    location: 'Chennai, Tamil Nadu',
+    city: 'Chennai',
+    tag: 'Modern Co-ords',
+    product: 'Modern Co-ords',
+    stars: 5,
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=120&auto=format&fit=crop&crop=face',
+    date: '1 month ago',
+  },
+  {
+    id: 6,
+    quote: 'The festive suit with Banarasi dupatta is pure opulence. The color richness and handwork border are exactly as shown.',
+    author: 'Shreya Kapoor',
+    name: 'Shreya Kapoor',
+    location: 'Chandigarh, Punjab',
+    city: 'Chandigarh',
+    tag: 'Festive Wear',
+    product: 'Festive Wear',
+    stars: 5,
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=120&auto=format&fit=crop&crop=face',
+    date: '1 month ago',
   },
 ];
 
 const AVATAR_FALLBACKS = [
-  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=120&auto=format&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=120&auto=format&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120&auto=format&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=120&auto=format&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=120&auto=format&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=120&auto=format&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=120&auto=format&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=120&auto=format&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=120&auto=format&fit=crop&crop=face',
 ];
 
 export default function Testimonials() {
@@ -57,8 +98,8 @@ export default function Testimonials() {
   const { getSectionContent } = useContent();
   const content = getSectionContent('testimonials');
 
-  const eyebrow = content?.eyebrow || 'What They Say';
-  const title = content?.title || 'Customer Love';
+  const eyebrow = content?.eyebrow || 'TESTIMONIALS';
+  const title = content?.title || 'LOVED BY THOUSANDS';
 
   const testimonials = useMemo(() => {
     if (content?.items && Array.isArray(content.items) && content.items.length > 0) {
@@ -86,7 +127,7 @@ export default function Testimonials() {
   }, [testimonials.length]);
 
   useEffect(() => {
-    const timer = setInterval(next, 7000);
+    const timer = setInterval(next, 8000);
     return () => clearInterval(timer);
   }, [next]);
 
@@ -100,8 +141,8 @@ export default function Testimonials() {
   }, [testimonials, startIndex]);
 
   return (
-    <section ref={sectionRef} className="py-6 lg:py-8 bg-brand-cream/40 border-b border-brand-powder/30 overflow-hidden">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
+    <section ref={sectionRef} className="py-6 lg:py-8 bg-brand-cream/40 border-b border-brand-powder/30 overflow-hidden relative">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 2xl:px-16">
 
         {/* Header Row */}
         <div className="flex items-end justify-between mb-4 pb-2 border-b border-brand-powder/40 reveal">
@@ -115,55 +156,82 @@ export default function Testimonials() {
             <div className="section-divider-left mt-1.5 sm:mt-2" />
           </div>
 
-          {/* Prominent Overall Rating Badge */}
-          <div className="flex items-center gap-2 sm:gap-3 bg-white border border-brand-powder/90 px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full shadow-2xs">
-            <div className="flex items-center gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={16} className="fill-amber-400 text-amber-400 sm:w-[18px] sm:h-[18px]" />
-              ))}
+          {/* Prominent Overall Rating Badge + Header Next/Prev Buttons */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 bg-white border border-brand-powder/90 px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full shadow-2xs">
+              <div className="flex items-center gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={15} className="fill-amber-400 text-amber-400 sm:w-[17px] sm:h-[17px]" />
+                ))}
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="font-serif text-base sm:text-lg font-bold text-brand-navy">4.9</span>
+                <span className="font-sans text-[10px] sm:text-xs font-semibold text-brand-navy/60 uppercase tracking-wider">/ 5</span>
+              </div>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="font-serif text-base sm:text-xl font-bold text-brand-navy">4.9</span>
-              <span className="font-sans text-[10px] sm:text-xs font-semibold text-brand-navy/60 uppercase tracking-wider">/ 5</span>
-            </div>
+
+            {/* Header Arrow Controls */}
+            {testimonials.length > 1 && (
+              <div className="hidden sm:flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={prev}
+                  aria-label="Previous review"
+                  className="w-9 h-9 rounded-full bg-white border border-brand-powder/80 shadow-xs text-brand-navy hover:bg-brand-teal hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                >
+                  <ChevronLeft size={16} strokeWidth={2} />
+                </button>
+                <button
+                  type="button"
+                  onClick={next}
+                  aria-label="Next review"
+                  className="w-9 h-9 rounded-full bg-white border border-brand-powder/80 shadow-xs text-brand-navy hover:bg-brand-teal hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                >
+                  <ChevronRight size={16} strokeWidth={2} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Review Cards */}
-        <div className="relative reveal">
-          {testimonials.length > 3 && (
-            <>
-              <button
-                type="button"
-                onClick={prev}
-                aria-label="Previous review"
-                className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white border border-brand-powder/80 shadow-md text-brand-navy hover:bg-brand-teal hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
-              >
-                <ChevronLeft size={18} strokeWidth={2} />
-              </button>
-
-              <button
-                type="button"
-                onClick={next}
-                aria-label="Next review"
-                className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white border border-brand-powder/80 shadow-md text-brand-navy hover:bg-brand-teal hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
-              >
-                <ChevronRight size={18} strokeWidth={2} />
-              </button>
-            </>
+        {/* Review Cards with Left/Right Navigation Buttons */}
+        <div className="relative px-2 sm:px-4 reveal">
+          {/* Previous Review Button (Left) */}
+          {testimonials.length > 1 && (
+            <button
+              type="button"
+              onClick={prev}
+              aria-label="Previous review"
+              className="absolute -left-2 sm:-left-5 lg:-left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 backdrop-blur-md border border-brand-powder shadow-lg text-brand-navy hover:bg-brand-teal hover:text-white hover:scale-110 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95"
+            >
+              <ChevronLeft size={20} strokeWidth={2.5} />
+            </button>
           )}
 
+          {/* Next Review Button (Right) */}
+          {testimonials.length > 1 && (
+            <button
+              type="button"
+              onClick={next}
+              aria-label="Next review"
+              className="absolute -right-2 sm:-right-5 lg:-right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 backdrop-blur-md border border-brand-powder shadow-lg text-brand-navy hover:bg-brand-teal hover:text-white hover:scale-110 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95"
+            >
+              <ChevronRight size={20} strokeWidth={2.5} />
+            </button>
+          )}
+
+          {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
             {visibleCards.map((item, idx) => (
               <div
                 key={`${item.id || idx}-${startIndex}`}
-                className={`relative bg-white border border-brand-powder/70 rounded-xl p-5 sm:p-7 flex flex-col justify-between shadow-sm hover:shadow-xl transition-all duration-300 group ${
+                className={`relative bg-white border border-brand-powder/70 rounded-xl p-5 sm:p-7 flex flex-col justify-between shadow-sm hover:shadow-xl transition-all duration-300 group min-h-[260px] ${
                   idx === 0 ? 'flex' : idx === 1 ? 'hidden md:flex' : 'hidden lg:flex'
                 }`}
               >
                 {/* Top Row: Stars */}
                 <div>
-                  <div className="flex items-center justify-between mb-3.5 sm:mb-4">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className="flex items-center gap-0.5">
                       {[...Array(item.stars || 5)].map((_, i) => (
                         <Star key={i} size={14} className="fill-amber-400 text-amber-400 sm:w-[15px] sm:h-[15px]" />
@@ -212,6 +280,23 @@ export default function Testimonials() {
               </div>
             ))}
           </div>
+
+          {/* Indicator Dots */}
+          {testimonials.length > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-5">
+              {testimonials.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setStartIndex(i)}
+                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                    startIndex === i ? 'w-6 bg-brand-teal' : 'w-2 bg-brand-powder hover:bg-brand-teal/50'
+                  }`}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

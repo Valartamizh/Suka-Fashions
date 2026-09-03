@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Import local assets for built-in category fallbacks
+import sareeGolden from '../assets/saree_golden.jpg';
 import sareeBeigeMaroonFull2 from '../assets/saree_beige_maroon_full2.jpg';
 import anarkaliBlackMulticolor from '../assets/anarkali_black_multicolor.jpg';
+import lehengaRed from '../assets/lehenga_red.jpg';
 import lehengaMint from '../assets/lehenga_mint.jpg';
 import dressNavy from '../assets/dress_navy.jpg';
 import coordSet from '../assets/coord_set.jpg';
@@ -10,8 +12,8 @@ import dupattaSilk from '../assets/dupatta_silk.jpg';
 import festiveSuit from '../assets/festive_suit.jpg';
 
 const defaultImageMap = {
-  sarees: sareeBeigeMaroonFull2,
-  lehengas: lehengaMint,
+  sarees: sareeGolden,
+  lehengas: lehengaRed,
   kurtis: anarkaliBlackMulticolor,
   dresses: dressNavy,
   coords: coordSet,
@@ -23,7 +25,7 @@ const initialDefaultCategories = [
   {
     id: 'sarees',
     name: 'Sarees',
-    image: sareeBeigeMaroonFull2,
+    image: sareeGolden,
     displayOrder: 1,
     active: true,
     showOnHomepage: true,
@@ -33,7 +35,7 @@ const initialDefaultCategories = [
   {
     id: 'lehengas',
     name: 'Lehengas',
-    image: lehengaMint,
+    image: lehengaRed,
     displayOrder: 2,
     active: true,
     showOnHomepage: true,
@@ -76,7 +78,7 @@ const initialDefaultCategories = [
     image: dupattaSilk,
     displayOrder: 6,
     active: true,
-    showOnHomepage: false,
+    showOnHomepage: true,
     subcategories: ['Silk', 'Chiffon', 'Cotton', 'Banarasi'],
     link: '/category/dupattas',
   },
@@ -101,10 +103,17 @@ export function CategoryProvider({ children }) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map(c => ({
-            ...c,
-            image: (c.image && c.image.length > 0) ? c.image : (defaultImageMap[c.id] || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=80'),
-          }));
+          const mergedDefaults = initialDefaultCategories.map(defaultCat => {
+            const matched = parsed.find(p => p.id === defaultCat.id);
+            if (!matched) return defaultCat;
+            return {
+              ...defaultCat,
+              ...matched,
+              image: defaultImageMap[defaultCat.id] || matched.image || defaultCat.image,
+            };
+          });
+          const customCats = parsed.filter(p => !initialDefaultCategories.some(d => d.id === p.id));
+          return [...mergedDefaults, ...customCats];
         }
       } catch (err) {
         console.error('Error parsing suka_categories:', err);

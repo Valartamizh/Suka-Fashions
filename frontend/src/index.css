@@ -24,15 +24,33 @@
   }
   html {
     scroll-behavior: smooth;
+    font-size: 16px; /* Reduced by exactly 1 size from 18px */
   }
   body {
-    @apply bg-white text-brand-navy font-sans antialiased overflow-x-hidden;
+    @apply bg-white font-sans antialiased overflow-x-hidden;
+    color: #0f172a;
+    font-weight: 500;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif text-brand-navy;
+    @apply font-serif;
+    color: #090e17;
+    font-weight: 700;
   }
+
+  /* Deepen text contrast throughout the entire design system */
+  .text-slate-400 { color: #475569 !important; }
+  .text-slate-500 { color: #334155 !important; }
+  .text-slate-600 { color: #1e293b !important; }
+  .text-slate-700 { color: #0f172a !important; }
+  .text-slate-800 { color: #090e17 !important; }
+  .text-slate-900 { color: #020617 !important; }
+  .text-gray-400  { color: #4b5563 !important; }
+  .text-gray-500  { color: #374151 !important; }
+  .text-gray-600  { color: #1f2937 !important; }
+  .text-gray-700  { color: #111827 !important; }
+  .text-gray-800  { color: #030712 !important; }
 }
 
 /* Premium scrollbar */
@@ -65,19 +83,19 @@
 
 /* ─── Scroll-triggered reveal animations ────────────────────────────────────── */
 .reveal {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .reveal.visible {
   opacity: 1;
   transform: translateY(0);
 }
-.reveal-delay-1 { transition-delay: 0.1s; }
-.reveal-delay-2 { transition-delay: 0.2s; }
-.reveal-delay-3 { transition-delay: 0.3s; }
-.reveal-delay-4 { transition-delay: 0.4s; }
-.reveal-delay-5 { transition-delay: 0.5s; }
+.reveal-delay-1 { transition-delay: 0.05s; }
+.reveal-delay-2 { transition-delay: 0.1s; }
+.reveal-delay-3 { transition-delay: 0.15s; }
+.reveal-delay-4 { transition-delay: 0.2s; }
+.reveal-delay-5 { transition-delay: 0.25s; }
 
 /* ─── Fade-in-up (instant, for mounting) ──────────────────────────────────── */
 .fade-in-up {

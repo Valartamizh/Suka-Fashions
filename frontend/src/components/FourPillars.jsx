@@ -52,10 +52,15 @@ export default function FourPillars() {
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto mb-4 sm:mb-6 lg:mb-8">
           
+          {/* Prominent Eyebrow: ABOUT US */}
+          <p className="font-sans text-[10px] sm:text-[11.5px] font-extrabold uppercase tracking-[0.32em] text-brand-teal mb-2">
+            ABOUT US
+          </p>
+
           {/* Branded Badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-teal text-white shadow-xs mb-2 select-none">
             <Sparkles size={11} className="text-amber-300 animate-pulse" />
-            <span className="font-sans text-[9px] sm:text-[10.5px] font-bold uppercase tracking-[0.24em]">
+            <span className="font-sans text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.24em]">
               {eyebrow}
             </span>
           </div>

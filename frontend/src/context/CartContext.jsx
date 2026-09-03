@@ -24,10 +24,16 @@ export function CartProvider({ children }) {
     }
   }, [cartItems]);
 
-  const addToCart = (product, quantity = 1, selectedSize = 'Free Size', selectedColor = '') => {
+  const addToCart = (product, quantity = 1, selectedSize = '', selectedColor = '') => {
+    const colorId = product.colorId || '';
+    const colorName = product.colorName || selectedColor || 'Standard';
+    const size = product.size || selectedSize || product.selectedSize || product.sizes?.[0] || 'Free Size';
+    const colorImage = product.selectedColorImage || product.image || '';
+    const itemPrice = product.sellingPrice || product.price || 0;
+
     setCartItems((prevItems) => {
       const existingIndex = prevItems.findIndex(
-        (item) => item.id === product.id && item.selectedSize === selectedSize && (item.selectedColor || '') === (selectedColor || '')
+        (item) => item.id === product.id && item.selectedSize === size && (item.colorName || item.selectedColor || '') === colorName
       );
 
       if (existingIndex > -1) {
@@ -40,10 +46,19 @@ export function CartProvider({ children }) {
       } else {
         const newItem = {
           ...product,
-          cartId: `${product.id}-${Date.now()}`,
+          id: product.id,
+          productId: product.productId || product.id,
+          name: product.name,
+          cartId: `${product.id}-${colorName}-${size}-${Date.now()}`,
           quantity,
-          selectedSize: selectedSize || product.sizes?.[0] || 'Free Size',
-          selectedColor: selectedColor || 'Standard',
+          selectedSize: size,
+          size,
+          selectedColor: colorName,
+          colorName,
+          colorId,
+          price: itemPrice,
+          sellingPrice: itemPrice,
+          image: colorImage,
         };
         return [...prevItems, newItem];
       }

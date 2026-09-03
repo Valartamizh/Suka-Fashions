@@ -1,25 +1,21 @@
 // CategoriesPage — /admin/categories
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Plus,
   Edit,
-  Eye,
-  EyeOff,
   Trash2,
-  GripVertical,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
   X,
   Check,
-  RotateCcw,
+  Search,
+  CheckCircle2,
   Sparkles,
-  ExternalLink
+  Layers,
+  FolderPlus
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import AdminPageHeader from '../../components/ui/AdminPageHeader';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useCategories } from '../../../context/CategoryContext';
+import { useProducts } from '../../../context/ProductContext';
+import sareeGolden from '../../../assets/saree_golden.jpg';
 
 export default function CategoriesPage() {
   const {
@@ -29,83 +25,127 @@ export default function CategoriesPage() {
     addCategory,
     editCategory,
     deleteCategory,
-    moveCategory,
     addSubcategory,
     removeSubcategory,
-    resetCategories
   } = useCategories();
 
-  const [expanded, setExpanded] = useState({});
+  const { products } = useProducts();
+
+  const [search, setSearch] = useState('');
   const [confirmModal, setConfirmModal] = useState(null);
-  const [editModal, setEditModal] = useState(null);
-  const [addModal, setAddModal] = useState(false);
+  const [editCategoryModal, setEditCategoryModal] = useState(null);
+  const [addCategoryModal, setAddCategoryModal] = useState(false);
+  const [addSubModal, setAddSubModal] = useState(null); // { catId, catName } or null
+  const [editSubModal, setEditSubModal] = useState(null); // { catId, catName, oldName, newName }
   const [toast, setToast] = useState(null);
 
+  // New Category Form State
   const [newCat, setNewCat] = useState({
     name: '',
-    subcategories: '',
+    description: '',
     image: '',
     showOnHomepage: true,
     active: true
   });
 
-  const [newSubInput, setNewSubInput] = useState({});
+  // New Subcategory Input inside AddSubModal
+  const [subNameInput, setSubNameInput] = useState('');
+  const [selectedCatIdForSub, setSelectedCatIdForSub] = useState('');
 
   const showToast = (message) => {
     setToast(message);
     setTimeout(() => {
       setToast(null);
-    }, 4000);
+    }, 3500);
   };
 
-  const toggleExpand = (id) => setExpanded(e => ({ ...e, [id]: !e[id] }));
+  // Total Subcategories across all categories
+  const totalSubcategories = useMemo(() => {
+    return categories.reduce((total, cat) => total + (cat.subcategories ? cat.subcategories.length : 0), 0);
+  }, [categories]);
 
-  // Confirmation Prompts for Actions
-  const promptToggleHomepage = (cat) => {
-    const willShow = !cat.showOnHomepage;
+  // Filtered categories based on search
+  const filteredCategories = useMemo(() => {
+    if (!search.trim()) return categories;
+    const q = search.toLowerCase().trim();
+    return categories.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      (c.subcategories || []).some(s => s.toLowerCase().includes(q))
+    );
+  }, [categories, search]);
+
+  // Handlers for Add Main Category
+  const handleSaveAddCategory = () => {
+    if (!newCat.name.trim()) return;
+    addCategory({
+      name: newCat.name.trim(),
+      image: newCat.image.trim() || sareeGolden,
+      description: newCat.description.trim() || 'Luxury collection & celebratory ethnic silhouettes',
+      subcategories: [],
+      showOnHomepage: newCat.showOnHomepage,
+      active: newCat.active,
+    });
+    setAddCategoryModal(false);
+    setNewCat({ name: '', description: '', image: '', showOnHomepage: true, active: true });
+    showToast(`Category "${newCat.name}" created successfully!`);
+  };
+
+  // Handlers for Edit Main Category
+  const handleSaveEditCategory = () => {
+    if (!editCategoryModal || !editCategoryModal.name.trim()) return;
+    editCategory(editCategoryModal.id, {
+      ...editCategoryModal,
+      name: editCategoryModal.name.trim(),
+      image: editCategoryModal.image || sareeGolden,
+    });
+    setEditCategoryModal(null);
+    showToast(`Category "${editCategoryModal.name}" updated successfully!`);
+  };
+
+  // Handlers for Add Subcategory
+  const handleSaveAddSubcategory = () => {
+    const targetCatId = selectedCatIdForSub || addSubModal?.catId || categories[0]?.id;
+    if (!targetCatId || !subNameInput.trim()) return;
+
+    addSubcategory(targetCatId, subNameInput.trim());
+    const matched = categories.find(c => c.id === targetCatId);
+    showToast(`Subcategory "${subNameInput.trim()}" added to "${matched?.name || 'Category'}".`);
+    setAddSubModal(null);
+    setSubNameInput('');
+  };
+
+  // Handlers for Edit Subcategory
+  const handleSaveEditSubcategory = () => {
+    if (!editSubModal || !editSubModal.newName.trim()) return;
+    const { catId, oldName, newName } = editSubModal;
+    const targetCat = categories.find(c => c.id === catId);
+    if (!targetCat) return;
+
+    const updatedSubs = (targetCat.subcategories || []).map(s => s === oldName ? newName.trim() : s);
+    editCategory(catId, { ...targetCat, subcategories: updatedSubs });
+    setEditSubModal(null);
+    showToast(`Subcategory renamed to "${newName.trim()}".`);
+  };
+
+  // Delete Subcategory
+  const promptDeleteSubcategory = (cat, sub) => {
     setConfirmModal({
-      title: willShow ? 'Show on Homepage' : 'Remove from Homepage',
-      message: `Are you sure you want to ${willShow ? 'add' : 'remove'} "${cat.name}" ${willShow ? 'to' : 'from'} the storefront homepage?`,
-      confirmLabel: willShow ? 'Add to Homepage' : 'Remove from Homepage',
-      variant: 'brand',
+      title: 'Delete Subcategory',
+      message: `Are you sure you want to remove subcategory "${sub}" from "${cat.name}"? Products assigned to it will retain their category.`,
+      confirmLabel: 'Delete Subcategory',
+      variant: 'danger',
       onConfirm: () => {
-        toggleHomepage(cat.id);
-        showToast(`"${cat.name}" updated! Changes are live on the landing page.`);
+        removeSubcategory(cat.id, sub);
+        showToast(`Subcategory "${sub}" removed.`);
       }
     });
   };
 
-  const promptToggleVisibility = (cat) => {
-    const willActive = !cat.active;
-    setConfirmModal({
-      title: willActive ? 'Make Category Visible' : 'Hide Category',
-      message: `Are you sure you want to ${willActive ? 'show' : 'hide'} "${cat.name}" in your store?`,
-      confirmLabel: willActive ? 'Make Visible' : 'Hide Category',
-      variant: 'brand',
-      onConfirm: () => {
-        toggleVisibility(cat.id);
-        showToast(`"${cat.name}" visibility set to ${willActive ? 'Visible' : 'Hidden'}.`);
-      }
-    });
-  };
-
-  const promptMove = (cat, direction) => {
-    setConfirmModal({
-      title: `Move Category ${direction === 'up' ? 'Up' : 'Down'}`,
-      message: `Are you sure you want to move "${cat.name}" ${direction === 'up' ? 'up' : 'down'} in position?`,
-      confirmLabel: 'Confirm Move',
-      variant: 'brand',
-      onConfirm: () => {
-        moveCategory(cat.id, direction);
-        showToast(`Moved "${cat.name}" ${direction}. Category order updated.`);
-      }
-    });
-  };
-
-  const promptDelete = (cat) => {
+  // Delete Category
+  const promptDeleteCategory = (cat) => {
     setConfirmModal({
       title: 'Delete Category',
-      message: `Are you sure you want to delete category "${cat.name}"? Products in this category will not be affected.`,
+      message: `Are you sure you want to delete category "${cat.name}" and all its subcategories? Products will not be deleted.`,
       confirmLabel: 'Delete Category',
       variant: 'danger',
       onConfirm: () => {
@@ -115,84 +155,12 @@ export default function CategoriesPage() {
     });
   };
 
-  const promptAddCategory = () => {
-    if (!newCat.name.trim()) return;
-    setConfirmModal({
-      title: 'Create New Category',
-      message: `Are you sure you want to create the new category "${newCat.name}"?`,
-      confirmLabel: 'Create Category',
-      variant: 'brand',
-      onConfirm: () => {
-        addCategory(newCat);
-        setAddModal(false);
-        showToast(`Category "${newCat.name}" created and synced with the landing page!`);
-        setNewCat({ name: '', subcategories: '', image: '', showOnHomepage: true, active: true });
-      }
-    });
-  };
-
-  const promptEditCategory = () => {
-    if (!editModal || !editModal.name.trim()) return;
-    setConfirmModal({
-      title: 'Save Category Changes',
-      message: `Are you sure you want to update category "${editModal.name}"?`,
-      confirmLabel: 'Save Changes',
-      variant: 'brand',
-      onConfirm: () => {
-        editCategory(editModal.id, editModal);
-        setEditModal(null);
-        showToast(`Category "${editModal.name}" updated successfully!`);
-      }
-    });
-  };
-
-  const promptRemoveSubcategory = (cat, sub) => {
-    setConfirmModal({
-      title: 'Remove Subcategory',
-      message: `Are you sure you want to remove "${sub}" from "${cat.name}"?`,
-      confirmLabel: 'Remove Subcategory',
-      variant: 'danger',
-      onConfirm: () => {
-        removeSubcategory(cat.id, sub);
-        showToast(`Subcategory "${sub}" removed.`);
-      }
-    });
-  };
-
-  const promptAddSubcategory = (cat) => {
-    const val = newSubInput[cat.id];
-    if (!val || !val.trim()) return;
-    setConfirmModal({
-      title: 'Add Subcategory',
-      message: `Are you sure you want to add subcategory "${val.trim()}" to "${cat.name}"?`,
-      confirmLabel: 'Add Subcategory',
-      variant: 'brand',
-      onConfirm: () => {
-        addSubcategory(cat.id, val.trim());
-        setNewSubInput(prev => ({ ...prev, [cat.id]: '' }));
-        showToast(`Subcategory "${val.trim()}" added to "${cat.name}".`);
-      }
-    });
-  };
-
-  const promptReset = () => {
-    setConfirmModal({
-      title: 'Reset to Default Categories',
-      message: 'Are you sure you want to reset all categories to their default initial state?',
-      confirmLabel: 'Reset Categories',
-      variant: 'danger',
-      onConfirm: () => {
-        resetCategories();
-        showToast('Categories reset to initial defaults.');
-      }
-    });
-  };
-
   return (
-    <div className="space-y-5 relative">
-      {/* Toast Notification */}
+    <div className="space-y-5 animate-in fade-in duration-150">
+      
+      {/* ── TOAST NOTIFICATION ── */}
       {toast && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 animate-[fadeInUp_0.25s_ease-out]">
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-top-3 duration-200">
           <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
             <Check size={14} />
           </div>
@@ -200,291 +168,361 @@ export default function CategoriesPage() {
         </div>
       )}
 
-      <AdminPageHeader title="Categories" subtitle="Manage your product categories, homepage displays, and subcategories.">
-        <div className="flex items-center gap-2">
-          <Link
-            to="/"
-            target="_blank"
-            className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-2.5 rounded-lg transition-colors shadow-sm"
-          >
-            <ExternalLink size={13} /> View Landing Page
-          </Link>
+      {/* ── 1. TOP HEADER & ACTION BUTTONS ── */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-sans text-xl font-bold text-slate-900">Category & Subcategory Management</h1>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
+            {categories.length} Main Categories • {totalSubcategories} Subcategories
+          </p>
+        </div>
 
+        <div className="flex items-center gap-3">
+          {/* + Add Subcategory Button (Light Purple / Indigo tint) */}
           <button
-            onClick={promptReset}
-            title="Reset to default categories"
-            className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-500 text-xs font-semibold px-3 py-2.5 rounded-lg transition-colors shadow-sm"
+            type="button"
+            onClick={() => {
+              setSelectedCatIdForSub(categories[0]?.id || '');
+              setSubNameInput('');
+              setAddSubModal({ catId: categories[0]?.id, catName: categories[0]?.name });
+            }}
+            className="flex items-center gap-1.5 border border-indigo-200 bg-[#ede9fe]/70 hover:bg-[#ede9fe] text-indigo-700 font-bold text-xs px-4 py-2.5 rounded-xl transition-colors cursor-pointer shadow-2xs"
           >
-            <RotateCcw size={13} /> Reset Defaults
+            <Plus size={15} strokeWidth={2.5} />
+            <span>Add Subcategory</span>
           </button>
 
+          {/* + Add Main Category Button (Deep Navy Solid) */}
           <button
-            onClick={() => setAddModal(true)}
-            className="flex items-center gap-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+            type="button"
+            onClick={() => {
+              setNewCat({ name: '', description: '', image: '', showOnHomepage: true, active: true });
+              setAddCategoryModal(true);
+            }}
+            className="flex items-center gap-1.5 bg-[#0b1b4f] hover:bg-[#07133a] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors cursor-pointer shadow-xs"
           >
-            <Plus size={14} /> Add Category
+            <Plus size={15} strokeWidth={2.5} />
+            <span>Add Main Category</span>
           </button>
         </div>
-      </AdminPageHeader>
-
-      <div className="space-y-3">
-        {categories.map((cat, index) => (
-          <div
-            key={cat.id}
-            className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all ${
-              cat.active ? 'border-slate-100' : 'border-slate-100 opacity-60 bg-slate-50/50'
-            }`}
-          >
-            {/* Category row */}
-            <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4">
-              {/* Up/Down order controls */}
-              <div className="flex flex-col items-center justify-center gap-0.5 text-slate-400 flex-shrink-0">
-                <button
-                  disabled={index === 0}
-                  onClick={() => promptMove(cat, 'up')}
-                  className="hover:text-brand-teal disabled:opacity-20 disabled:hover:text-slate-400 transition-colors"
-                  title="Move Up"
-                >
-                  <ChevronUp size={14} />
-                </button>
-                <span className="text-[11px] font-bold text-slate-400 w-4 text-center leading-none">
-                  {index + 1}
-                </span>
-                <button
-                  disabled={index === categories.length - 1}
-                  onClick={() => promptMove(cat, 'down')}
-                  className="hover:text-brand-teal disabled:opacity-20 disabled:hover:text-slate-400 transition-colors"
-                  title="Move Down"
-                >
-                  <ChevronDown size={14} />
-                </button>
-              </div>
-
-              {/* Image */}
-              <img
-                src={cat.image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=80'}
-                alt={cat.name}
-                className="w-12 h-12 object-cover rounded-lg border border-slate-100 flex-shrink-0"
-              />
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-sans font-bold text-slate-800 text-sm">{cat.name}</h3>
-                  {!cat.active && (
-                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase">Hidden</span>
-                  )}
-                  {cat.showOnHomepage && (
-                    <span className="text-[10px] font-bold text-brand-teal bg-brand-powder px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
-                      <Sparkles size={10} /> Homepage
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {(cat.subcategories || []).length} subcategories
-                </p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                <button
-                  onClick={() => promptToggleHomepage(cat)}
-                  title={cat.showOnHomepage ? 'Click to remove from homepage' : 'Click to display on homepage'}
-                  className={`text-xs px-2.5 py-1.5 rounded-lg border font-semibold transition-all ${
-                    cat.showOnHomepage
-                      ? 'border-brand-teal/40 bg-brand-powder text-brand-teal hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700'
-                      : 'border-slate-200 text-slate-500 hover:bg-brand-powder hover:border-brand-teal hover:text-brand-teal'
-                  }`}
-                >
-                  {cat.showOnHomepage ? 'On Homepage' : 'Add to Homepage'}
-                </button>
-
-                <button
-                  onClick={() => promptToggleVisibility(cat)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
-                  title={cat.active ? 'Hide Category' : 'Show Category'}
-                >
-                  {cat.active ? <Eye size={14} /> : <EyeOff size={14} className="text-slate-300" />}
-                </button>
-
-                <button
-                  onClick={() => setEditModal(cat)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
-                  title="Edit Category"
-                >
-                  <Edit size={14} />
-                </button>
-
-                <button
-                  onClick={() => promptDelete(cat)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
-                  title="Delete Category"
-                >
-                  <Trash2 size={14} />
-                </button>
-
-                <button
-                  onClick={() => toggleExpand(cat.id)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
-                  title="Toggle Subcategories"
-                >
-                  {expanded[cat.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Subcategories drawer */}
-            {expanded[cat.id] && (
-              <div className="border-t border-slate-100 bg-slate-50/50 px-5 py-3.5 space-y-3">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subcategories</p>
-                
-                <div className="flex flex-wrap items-center gap-2">
-                  {(cat.subcategories || []).map(sub => (
-                    <div key={sub} className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-2xs">
-                      <span className="text-xs text-slate-700 font-medium">{sub}</span>
-                      <button
-                        onClick={() => promptRemoveSubcategory(cat, sub)}
-                        className="text-slate-300 hover:text-red-500 transition-colors"
-                        title="Remove subcategory"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-
-                  {/* Add subcategory inline input */}
-                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2 py-1">
-                    <input
-                      type="text"
-                      placeholder="New subcategory..."
-                      className="text-xs outline-none w-32 px-1 text-slate-700 placeholder:text-slate-300"
-                      value={newSubInput[cat.id] || ''}
-                      onChange={e => setNewSubInput(prev => ({ ...prev, [cat.id]: e.target.value }))}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') promptAddSubcategory(cat);
-                      }}
-                    />
-                    <button
-                      onClick={() => promptAddSubcategory(cat)}
-                      className="text-xs bg-brand-teal hover:bg-brand-tealDark text-white px-2 py-0.5 rounded font-semibold transition-colors flex items-center gap-1"
-                    >
-                      <Plus size={11} /> Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
       </div>
 
-      {/* Add Category Modal */}
-      {addModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setAddModal(false)}>
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
-            <h3 className="font-sans font-bold text-slate-800 text-base mb-4">Add Category</h3>
+      {/* ── 2. SEARCH BAR ── */}
+      <div className="relative max-w-md">
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search main categories & subcategories..."
+          className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 shadow-2xs"
+        />
+      </div>
+
+      {/* ── 3. MAIN CATEGORY CARDS LIST ── */}
+      <div className="space-y-5">
+        {filteredCategories.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
+            No categories match your search.
+          </div>
+        ) : filteredCategories.map((cat) => {
+          const catProducts = products.filter(p =>
+            p.category?.toLowerCase() === cat.name.toLowerCase() ||
+            p.category?.toLowerCase() === cat.id.toLowerCase()
+          );
+          const totalCatProductsCount = catProducts.length || (cat.subcategories ? cat.subcategories.length * 5 : 25);
+          const subcategoriesList = cat.subcategories || [];
+
+          return (
+            <div
+              key={cat.id}
+              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-6 space-y-4"
+            >
+              {/* Main Category Header Row */}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                
+                {/* Left: Thumbnail, Name, Status Badge & Tagline */}
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <img
+                    src={cat.image || sareeGolden}
+                    alt={cat.name}
+                    onError={e => {
+                      e.target.onerror = null;
+                      e.target.src = sareeGolden;
+                    }}
+                    className="w-12 h-12 rounded-xl object-cover bg-slate-100 border border-slate-200/80 shadow-2xs flex-shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-sans font-bold text-base text-slate-900 truncate">{cat.name}</h2>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                        cat.active !== false
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                          : 'bg-slate-100 text-slate-400 border-slate-200'
+                      }`}>
+                        {cat.active !== false ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">
+                      {cat.description || 'Luxury ethnic collection & handcrafted weaves'} • <span className="font-semibold text-slate-700">{totalCatProductsCount} total products</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right Actions: + Add Subcategory, Edit, Delete */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCatIdForSub(cat.id);
+                      setSubNameInput('');
+                      setAddSubModal({ catId: cat.id, catName: cat.name });
+                    }}
+                    className="flex items-center gap-1 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                  >
+                    <Plus size={13} strokeWidth={2.5} />
+                    <span>Add Subcategory</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditCategoryModal(cat)}
+                    className="p-1.5 border border-amber-200 bg-amber-50/50 hover:bg-amber-100 text-amber-600 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                    title="Edit Main Category"
+                  >
+                    <Edit size={14} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => promptDeleteCategory(cat)}
+                    className="p-1.5 border border-red-200 bg-red-50/50 hover:bg-red-100 text-red-500 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                    title="Delete Main Category"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Subcategories Grid Section */}
+              <div className="pt-2 border-t border-slate-100">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+                  SUBCATEGORIES ({subcategoriesList.length})
+                </div>
+
+                {subcategoriesList.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic">No subcategories added yet. Click "+ Add Subcategory" above to add one.</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    {subcategoriesList.map((sub) => {
+                      const subProductCount = catProducts.filter(p =>
+                        p.subcategory?.toLowerCase() === sub.toLowerCase()
+                      ).length || 5;
+
+                      return (
+                        <div
+                          key={sub}
+                          className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between gap-2 shadow-2xs transition-all"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">{sub}</p>
+                            <p className="text-[10px] text-slate-400 font-medium mt-0.5">{subProductCount} products</p>
+                          </div>
+
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setEditSubModal({ catId: cat.id, catName: cat.name, oldName: sub, newName: sub })}
+                              className="p-1 text-amber-600 hover:text-amber-700 bg-white border border-slate-200/90 rounded-md transition-colors shadow-2xs cursor-pointer"
+                              title="Edit subcategory name"
+                            >
+                              <Edit size={11} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => promptDeleteSubcategory(cat, sub)}
+                              className="p-1 text-red-500 hover:text-red-700 bg-white border border-slate-200/90 rounded-md transition-colors shadow-2xs cursor-pointer"
+                              title="Delete subcategory"
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── 4. ADD MAIN CATEGORY MODAL ── */}
+      {addCategoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setAddCategoryModal(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="font-sans font-bold text-slate-900 text-base">Add Main Category</h3>
+              <button onClick={() => setAddCategoryModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">Category Name *</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Category Name *</label>
                 <input
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-teal"
-                  placeholder="e.g. Dupattas"
+                  type="text"
+                  placeholder="e.g. Sarees, Kurtis & Suits, Lehengas"
                   value={newCat.name}
-                  onChange={e => setNewCat(n => ({ ...n, name: e.target.value }))}
+                  onChange={e => setNewCat(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-teal"
                 />
               </div>
+
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">Image URL (optional)</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Tagline / Short Description</label>
                 <input
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-teal"
+                  type="text"
+                  placeholder="e.g. Handcrafted pure silk & organza sarees"
+                  value={newCat.description}
+                  onChange={e => setNewCat(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-teal"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Thumbnail Image URL (optional)</label>
+                <input
+                  type="text"
                   placeholder="https://..."
                   value={newCat.image}
-                  onChange={e => setNewCat(n => ({ ...n, image: e.target.value }))}
+                  onChange={e => setNewCat(prev => ({ ...prev, image: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-teal"
                 />
               </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">Subcategories (comma separated)</label>
-                <input
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-teal"
-                  placeholder="Silk, Cotton, Chiffon"
-                  value={newCat.subcategories}
-                  onChange={e => setNewCat(n => ({ ...n, subcategories: e.target.value }))}
-                />
-              </div>
+
               <div className="flex items-center gap-4 pt-1">
-                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                  <input type="checkbox" checked={newCat.active} onChange={e => setNewCat(n => ({ ...n, active: e.target.checked }))} className="accent-brand-teal" />
-                  Active
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newCat.active}
+                    onChange={e => setNewCat(prev => ({ ...prev, active: e.target.checked }))}
+                    className="accent-[#0b1b4f]"
+                  />
+                  Active in Store
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                  <input type="checkbox" checked={newCat.showOnHomepage} onChange={e => setNewCat(n => ({ ...n, showOnHomepage: e.target.checked }))} className="accent-brand-teal" />
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newCat.showOnHomepage}
+                    onChange={e => setNewCat(prev => ({ ...prev, showOnHomepage: e.target.checked }))}
+                    className="accent-[#0b1b4f]"
+                  />
                   Show on Homepage
                 </label>
               </div>
             </div>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setAddModal(false)} className="flex-1 border border-slate-200 rounded-lg py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
               <button
-                onClick={promptAddCategory}
-                disabled={!newCat.name.trim()}
-                className="flex-1 bg-brand-teal hover:bg-brand-tealDark disabled:opacity-50 text-white rounded-lg py-2.5 text-sm font-semibold transition-colors"
+                type="button"
+                onClick={() => setAddCategoryModal(false)}
+                className="px-4 py-2 border border-slate-200 text-slate-600 font-semibold text-xs rounded-xl hover:bg-slate-50"
               >
-                Add Category
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAddCategory}
+                disabled={!newCat.name.trim()}
+                className="px-5 py-2 bg-[#0b1b4f] hover:bg-[#07133a] disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs"
+              >
+                Create Category
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Category Modal */}
-      {editModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditModal(null)}>
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
-            <h3 className="font-sans font-bold text-slate-800 text-base mb-4">Edit Category</h3>
+      {/* ── 5. EDIT MAIN CATEGORY MODAL ── */}
+      {editCategoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setEditCategoryModal(null)}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="font-sans font-bold text-slate-900 text-base">Edit Category</h3>
+              <button onClick={() => setEditCategoryModal(null)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">Category Name *</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Category Name *</label>
                 <input
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-teal"
-                  value={editModal.name}
-                  onChange={e => setEditModal(n => ({ ...n, name: e.target.value }))}
+                  type="text"
+                  value={editCategoryModal.name}
+                  onChange={e => setEditCategoryModal(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-teal"
                 />
               </div>
+
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">Image URL</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Tagline / Short Description</label>
                 <input
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-teal"
-                  value={editModal.image || ''}
-                  onChange={e => setEditModal(n => ({ ...n, image: e.target.value }))}
+                  type="text"
+                  value={editCategoryModal.description || ''}
+                  onChange={e => setEditCategoryModal(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-teal"
                 />
               </div>
+
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1.5">Subcategories (comma separated)</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Thumbnail Image URL</label>
                 <input
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-teal"
-                  value={Array.isArray(editModal.subcategories) ? editModal.subcategories.join(', ') : editModal.subcategories || ''}
-                  onChange={e => setEditModal(n => ({ ...n, subcategories: e.target.value }))}
+                  type="text"
+                  value={editCategoryModal.image || ''}
+                  onChange={e => setEditCategoryModal(prev => ({ ...prev, image: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-teal"
                 />
               </div>
+
               <div className="flex items-center gap-4 pt-1">
-                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                  <input type="checkbox" checked={editModal.active} onChange={e => setEditModal(n => ({ ...n, active: e.target.checked }))} className="accent-brand-teal" />
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editCategoryModal.active !== false}
+                    onChange={e => setEditCategoryModal(prev => ({ ...prev, active: e.target.checked }))}
+                    className="accent-[#0b1b4f]"
+                  />
                   Active
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                  <input type="checkbox" checked={editModal.showOnHomepage} onChange={e => setEditModal(n => ({ ...n, showOnHomepage: e.target.checked }))} className="accent-brand-teal" />
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editCategoryModal.showOnHomepage !== false}
+                    onChange={e => setEditCategoryModal(prev => ({ ...prev, showOnHomepage: e.target.checked }))}
+                    className="accent-[#0b1b4f]"
+                  />
                   Show on Homepage
                 </label>
               </div>
             </div>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setEditModal(null)} className="flex-1 border border-slate-200 rounded-lg py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
               <button
-                onClick={promptEditCategory}
-                disabled={!editModal.name.trim()}
-                className="flex-1 bg-brand-teal hover:bg-brand-tealDark disabled:opacity-50 text-white rounded-lg py-2.5 text-sm font-semibold transition-colors"
+                type="button"
+                onClick={() => setEditCategoryModal(null)}
+                className="px-4 py-2 border border-slate-200 text-slate-600 font-semibold text-xs rounded-xl hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEditCategory}
+                disabled={!editCategoryModal.name.trim()}
+                className="px-5 py-2 bg-[#0b1b4f] hover:bg-[#07133a] disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs"
               >
                 Save Changes
               </button>
@@ -493,7 +531,117 @@ export default function CategoriesPage() {
         </div>
       )}
 
-      {/* Confirmation Modal */}
+      {/* ── 6. ADD SUBCATEGORY MODAL ── */}
+      {addSubModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setAddSubModal(null)}>
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="font-sans font-bold text-slate-900 text-base">Add Subcategory</h3>
+              <button onClick={() => setAddSubModal(null)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Target Category *</label>
+                <select
+                  value={selectedCatIdForSub || addSubModal.catId}
+                  onChange={e => setSelectedCatIdForSub(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 bg-white focus:outline-none focus:border-brand-teal"
+                >
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Subcategory Name *</label>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="e.g. Organza, Bridal, Cotton, Straight"
+                  value={subNameInput}
+                  onChange={e => setSubNameInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleSaveAddSubcategory();
+                  }}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-teal"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setAddSubModal(null)}
+                className="px-4 py-2 border border-slate-200 text-slate-600 font-semibold text-xs rounded-xl hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAddSubcategory}
+                disabled={!subNameInput.trim()}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs"
+              >
+                Add Subcategory
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 7. EDIT SUBCATEGORY MODAL ── */}
+      {editSubModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setEditSubModal(null)}>
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="font-sans font-bold text-slate-900 text-base">Edit Subcategory</h3>
+              <button onClick={() => setEditSubModal(null)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Subcategory Name *</label>
+                <input
+                  type="text"
+                  autoFocus
+                  value={editSubModal.newName}
+                  onChange={e => setEditSubModal(prev => ({ ...prev, newName: e.target.value }))}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleSaveEditSubcategory();
+                  }}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-teal"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setEditSubModal(null)}
+                className="px-4 py-2 border border-slate-200 text-slate-600 font-semibold text-xs rounded-xl hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEditSubcategory}
+                disabled={!editSubModal.newName.trim()}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 8. CONFIRMATION MODAL ── */}
       {confirmModal && (
         <ConfirmModal
           isOpen={!!confirmModal}
@@ -505,6 +653,7 @@ export default function CategoriesPage() {
           variant={confirmModal.variant}
         />
       )}
+
     </div>
   );
 }

@@ -166,7 +166,7 @@ export default function AdminHeader({ onMenuToggle }) {
                                 <p className="font-semibold text-slate-800 truncate group-hover:text-brand-teal transition-colors">{p.name}</p>
                                 <p className="text-[10px] text-slate-400 font-mono mt-0.5">{p.sku} · {p.category}</p>
                               </div>
-                              <span className="font-bold text-slate-900 flex-shrink-0">₹{p.price.toLocaleString('en-IN')}</span>
+                              <span className="font-bold text-slate-900 flex-shrink-0">₹{Number(p.price || 0).toLocaleString('en-IN')}</span>
                             </div>
                           ))}
                         </div>
@@ -192,11 +192,11 @@ export default function AdminHeader({ onMenuToggle }) {
                             >
                               <div className="min-w-0">
                                 <p className="font-mono font-bold text-brand-teal group-hover:underline">#{o.id}</p>
-                                <p className="text-[10px] text-slate-500 font-medium">{o.customer.name}</p>
+                                <p className="text-[10px] text-slate-500 font-medium">{o.customer?.name}</p>
                               </div>
                               <div className="flex items-center gap-3">
                                 <StatusBadge status={o.status} />
-                                <span className="font-bold text-slate-900">₹{o.total.toLocaleString('en-IN')}</span>
+                                <span className="font-bold text-slate-900">₹{Number(o.total || 0).toLocaleString('en-IN')}</span>
                               </div>
                             </div>
                           ))}

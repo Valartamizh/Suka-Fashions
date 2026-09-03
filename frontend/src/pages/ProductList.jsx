@@ -4,9 +4,11 @@ import { Filter, X, SlidersHorizontal, Sparkles, Check } from 'lucide-react';
 import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { useFilterCatalog } from '../context/FilterContext';
+import { useProducts } from '../context/ProductContext';
 
 export default function ProductList() {
   const { filters } = useFilterCatalog();
+  const { activeProducts } = useProducts();
   const { categoryName } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,14 +60,14 @@ export default function ProductList() {
   }, [categoryName, searchParams]);
 
   // Filter Pipeline
-  let displayProducts = [...products];
+  let displayProducts = [...(activeProducts || [])];
 
   // 1. Category Filter
   if (selectedCategory && selectedCategory !== 'all') {
     if (selectedCategory.toLowerCase() === 'sale') {
-      displayProducts = displayProducts.filter(p => p.oldPrice || p.discount);
+      displayProducts = displayProducts.filter(p => p.mrp > p.price || p.oldPrice || p.discount);
     } else if (selectedCategory.toLowerCase() !== 'occasion') {
-      displayProducts = displayProducts.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
+      displayProducts = displayProducts.filter(p => p.category?.toLowerCase() === selectedCategory.toLowerCase());
     }
   }
 
@@ -73,9 +75,10 @@ export default function ProductList() {
   if (selectedFabric && selectedFabric !== 'all') {
     const f = selectedFabric.toLowerCase();
     displayProducts = displayProducts.filter(p => 
+      (p.attributes?.fabric && p.attributes.fabric.toLowerCase().includes(f)) ||
       (p.fabric && p.fabric.toLowerCase().includes(f)) ||
       p.name.toLowerCase().includes(f) ||
-      p.description.toLowerCase().includes(f)
+      p.description?.toLowerCase().includes(f)
     );
   }
 
@@ -83,9 +86,9 @@ export default function ProductList() {
   if (selectedSub && selectedSub !== 'all') {
     const s = selectedSub.toLowerCase();
     displayProducts = displayProducts.filter(p => 
+      p.subcategory?.toLowerCase().includes(s) ||
       p.name.toLowerCase().includes(s) ||
-      p.description.toLowerCase().includes(s) ||
-      (p.fabric && p.fabric.toLowerCase().includes(s))
+      p.description?.toLowerCase().includes(s)
     );
   }
 
@@ -93,31 +96,40 @@ export default function ProductList() {
   if (selectedOccasion && selectedOccasion !== 'all') {
     const o = selectedOccasion.toLowerCase();
     displayProducts = displayProducts.filter(p => 
+      (p.attributes?.occasion && p.attributes.occasion.toLowerCase().includes(o)) ||
       (p.occasion && p.occasion.toLowerCase().includes(o)) ||
       p.name.toLowerCase().includes(o) ||
-      p.description.toLowerCase().includes(o)
+      p.description?.toLowerCase().includes(o)
     );
   }
 
   // 5. Color Filter
   if (selectedColor && selectedColor !== 'all') {
     const targetColorObj = COLOR_FILTER_OPTIONS.find(c => c.id === selectedColor);
-    if (targetColorObj && targetColorObj.hex) {
-      const targetHex = targetColorObj.hex.toUpperCase();
+    if (targetColorObj) {
+      const targetHex = targetColorObj.hex ? targetColorObj.hex.toUpperCase() : null;
+      const targetName = (targetColorObj.name || targetColorObj.id).toLowerCase();
       displayProducts = displayProducts.filter(p => {
-        if (!p.colors || p.colors.length === 0) return false;
-        return p.colors.some(c => c.toUpperCase() === targetHex) ||
-               p.name.toLowerCase().includes(targetColorObj.id) ||
-               p.description.toLowerCase().includes(targetColorObj.id);
+        if (p.colors && p.colors.length > 0) {
+          return p.colors.some(c => 
+            (targetHex && c.hex?.toUpperCase() === targetHex) ||
+            c.name?.toLowerCase().includes(targetName)
+          );
+        }
+        return p.name.toLowerCase().includes(targetName) || p.description?.toLowerCase().includes(targetName);
       });
     }
   }
 
   // 6. Size Filter
   if (selectedSize && selectedSize !== 'all') {
-    displayProducts = displayProducts.filter(p => 
-      p.sizes && p.sizes.some(s => s.toLowerCase() === selectedSize.toLowerCase())
-    );
+    const sLow = selectedSize.toLowerCase();
+    displayProducts = displayProducts.filter(p => {
+      if (p.colors && p.colors.length > 0) {
+        return p.colors.some(c => c.variants?.some(v => v.size?.toLowerCase() === sLow && v.stock > 0));
+      }
+      return p.sizes && p.sizes.some(s => s.toLowerCase() === sLow);
+    });
   }
 
   // 7. Pattern / Work Type Filter
