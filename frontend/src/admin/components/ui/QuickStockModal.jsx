@@ -1,7 +1,7 @@
 // QuickStockModal.jsx — In-place & Bulk Stock Management Modal
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  X, Plus, Minus, Package, Check, Zap, Search, CheckCircle2
+  X, Plus, Minus, Package, Check, Zap, Search, CheckCircle2, RotateCcw
 } from 'lucide-react';
 
 export default function QuickStockModal({
@@ -12,6 +12,7 @@ export default function QuickStockModal({
 }) {
   // Flat variant rows: [{ colorId, colorName, colorHex, size, stock, threshold, sku }]
   const [rows, setRows] = useState([]);
+  const [history, setHistory] = useState([]);
   const [bulkVal, setBulkVal] = useState(25);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -82,14 +83,28 @@ export default function QuickStockModal({
     }
 
     setRows(initialRows);
+    setHistory([]);
     setSearchQuery('');
     setBulkVal(25);
   }, [product, isOpen]);
 
   if (!isOpen || !product) return null;
 
+  // History & Undo helpers
+  const saveHistory = () => {
+    setHistory(prev => [...prev, JSON.parse(JSON.stringify(rows))].slice(-15));
+  };
+
+  const handleUndo = () => {
+    if (history.length === 0) return;
+    const lastState = history[history.length - 1];
+    setHistory(prev => prev.slice(0, -1));
+    setRows(lastState);
+  };
+
   // Stepper handlers
   const handleStepStock = (index, delta) => {
+    saveHistory();
     setRows(prev => {
       const next = [...prev];
       if (next[index]) {
@@ -103,6 +118,7 @@ export default function QuickStockModal({
   };
 
   const handleSetStock = (index, value) => {
+    saveHistory();
     const num = value === '' ? '' : Math.max(0, parseInt(value, 10) || 0);
     setRows(prev => {
       const next = [...prev];
@@ -117,6 +133,7 @@ export default function QuickStockModal({
   };
 
   const handleSetThreshold = (index, value) => {
+    saveHistory();
     const num = value === '' ? '' : Math.max(0, parseInt(value, 10) || 0);
     setRows(prev => {
       const next = [...prev];
@@ -134,6 +151,7 @@ export default function QuickStockModal({
   const handleBulkSetAll = (val) => {
     const parsed = parseInt(val, 10);
     if (isNaN(parsed) || parsed < 0) return;
+    saveHistory();
     setRows(prev => prev.map(r => ({ ...r, stock: parsed })));
   };
 
@@ -280,15 +298,37 @@ export default function QuickStockModal({
 
           </div>
 
-          {/* ── SEARCH BAR ── */}
-          <div className="relative">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search dimension / size, variant color..."
-              className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 shadow-2xs"
-            />
+          {/* ── SEARCH BAR & UNDO ROW ── */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search dimension / size, variant color..."
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 shadow-2xs"
+              />
+            </div>
+
+            {/* Undo Button */}
+            <button
+              type="button"
+              onClick={handleUndo}
+              disabled={history.length === 0}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs flex-shrink-0 ${
+                history.length > 0
+                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/20 active:scale-95'
+                  : 'bg-white text-slate-300 border-slate-200 opacity-50 cursor-not-allowed'
+              }`}
+              title={
+                history.length > 0
+                  ? `Undo last stock change (${history.length} step${history.length > 1 ? 's' : ''} available)`
+                  : 'No recent stock edits to undo'
+              }
+            >
+              <RotateCcw size={13} className={history.length > 0 ? "text-amber-600" : "text-slate-300"} />
+              <span>Undo</span>
+            </button>
           </div>
 
           {/* ── VARIANTS / STOCK MATRIX TABLE ── */}

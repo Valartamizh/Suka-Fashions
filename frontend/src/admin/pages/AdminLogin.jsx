@@ -11,7 +11,7 @@ export default function AdminLogin() {
 
   const [email, setEmail] = useState('aditi@sukafashions.com');
   const [password, setPassword] = useState('admin123');
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

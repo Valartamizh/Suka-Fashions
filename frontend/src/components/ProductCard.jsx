@@ -50,15 +50,25 @@ export default function ProductCard({ product }) {
       {/* ── Image area ─────────────────────────────────── */}
       <div className="relative w-full aspect-[3/4] bg-brand-cream/40 overflow-hidden flex-shrink-0">
 
-        {/* NEW / BESTSELLER badge */}
-        {product.isNew && (
+        {/* NEW / BESTSELLER / FEATURED / TRENDING badge */}
+        {(product.badge === 'new' || (product.isNew && !product.badge)) && (
           <span className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-brand-teal text-white text-[8.5px] sm:text-[9px] font-sans font-semibold tracking-[0.18em] uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 z-10 rounded-sm shadow-xs">
             NEW
           </span>
         )}
-        {!product.isNew && product.isBestSeller && (
+        {(product.badge === 'bestSeller' || (!product.isNew && product.isBestSeller && !product.badge)) && (
           <span className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-amber-600 text-white text-[8.5px] sm:text-[9px] font-sans font-semibold tracking-[0.18em] uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 z-10 rounded-sm shadow-xs">
             BESTSELLER
+          </span>
+        )}
+        {(product.badge === 'featured' || (!product.isNew && !product.isBestSeller && (product.featured || product.isFeatured) && !product.badge)) && (
+          <span className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-purple-600 text-white text-[8.5px] sm:text-[9px] font-sans font-semibold tracking-[0.18em] uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 z-10 rounded-sm shadow-xs">
+            FEATURED
+          </span>
+        )}
+        {(product.badge === 'trending' || (!product.isNew && !product.isBestSeller && !product.featured && product.isTrending && !product.badge)) && (
+          <span className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-rose-600 text-white text-[8.5px] sm:text-[9px] font-sans font-semibold tracking-[0.18em] uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 z-10 rounded-sm shadow-xs">
+            TRENDING
           </span>
         )}
 

@@ -251,8 +251,8 @@ export const initialDefaultSections = [
     active: true,
     updated: '2026-08-20',
     content: {
-      eyebrow: 'Testimonials',
-      title: 'Loved By Thousands',
+      eyebrow: 'Client Feedback',
+      title: 'Reviews',
       subtitle: 'Stories of elegance and joy shared by our valued patrons across the globe.',
       items: [
         {

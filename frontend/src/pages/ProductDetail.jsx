@@ -843,7 +843,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5 mb-5">
             <button
               type="button"
               onClick={handleAddToCart}
@@ -867,6 +867,49 @@ export default function ProductDetail() {
             >
               Buy on WhatsApp
             </button>
+          </div>
+
+          {/* Delivery Features (Mobile) */}
+          <div className="flex flex-col gap-2 p-3 bg-brand-powderLight/60 border border-brand-powder/60 rounded-md mb-4">
+            <div className="flex items-center gap-2.5">
+              <Truck size={14} className="text-brand-teal flex-shrink-0" />
+              <span className="font-sans text-[11px] text-brand-navy/80 tracking-wide">
+                {product.shippingInfo || 'Free Shipping within India on orders above ₹1999'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <RefreshCw size={14} className="text-brand-teal flex-shrink-0" />
+              <span className="font-sans text-[11px] text-brand-navy/80 tracking-wide">
+                {product.returnInfo || '7 Days easy returns and exchanges'}
+              </span>
+            </div>
+          </div>
+
+          {/* Accordions (Mobile) */}
+          <div className="border-t border-brand-powder/60 divide-y divide-brand-powder/40">
+            {[
+              { id: 'details', title: 'Product Description', content: product.description || 'Elevate your celebratory ensemble with this handcrafted creation.' },
+              { id: 'fabric', title: 'Material & Care', content: product.materialCare || (product.fabric ? `Fabric: ${product.fabric}. ${product.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}` : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.') },
+              { id: 'shipping', title: 'Shipping & Returns', content: product.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.' },
+            ].map((acc) => (
+              <div key={acc.id} className="py-0.5">
+                <button 
+                  type="button"
+                  onClick={() => toggleAccordion(acc.id)}
+                  className="w-full flex items-center justify-between py-3 text-left group cursor-pointer"
+                >
+                  <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-brand-navy group-hover:text-brand-teal transition-colors">
+                    {acc.title}
+                  </span>
+                  <ChevronDown size={14} className={`text-brand-navy/40 transition-transform duration-300 ${openAccordion === acc.id ? 'rotate-180 text-brand-teal' : ''}`} />
+                </button>
+                <div className={`overflow-hidden transition-all duration-300 ${openAccordion === acc.id ? 'max-h-60 pb-3 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <p className="font-sans text-xs text-brand-navy/70 leading-relaxed font-light whitespace-pre-line">
+                    {acc.content}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -1174,33 +1217,37 @@ export default function ProductDetail() {
               <div className="flex flex-col gap-2.5 p-3.5 bg-brand-powderLight/50 border border-brand-powder/60 rounded-sm mb-5">
                 <div className="flex items-center gap-3">
                   <Truck size={15} className="text-brand-teal" />
-                  <span className="font-sans text-[11px] text-brand-navy/70 tracking-wide">Free Shipping within India on orders above ₹1999</span>
+                  <span className="font-sans text-[11px] text-brand-navy/70 tracking-wide">
+                    {product.shippingInfo || 'Free Shipping within India on orders above ₹1999'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <RefreshCw size={15} className="text-brand-teal" />
-                  <span className="font-sans text-[11px] text-brand-navy/70 tracking-wide">7 Days easy returns and exchanges</span>
+                  <span className="font-sans text-[11px] text-brand-navy/70 tracking-wide">
+                    {product.returnInfo || '7 Days easy returns and exchanges'}
+                  </span>
                 </div>
               </div>
 
               {/* Accordions */}
               <div className="border-t border-brand-powder/60">
                 {[
-                  { id: 'details', title: 'Product Description', content: product.description },
-                  { id: 'fabric', title: 'Material & Care', content: `Fabric: ${product.fabric || 'Premium Blend'}. Dry clean only. Do not bleach. Iron on low heat.` },
-                  { id: 'shipping', title: 'Shipping & Returns', content: 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.' },
+                  { id: 'details', title: 'Product Description', content: product.description || 'Elevate your celebratory ensemble with this handcrafted creation.' },
+                  { id: 'fabric', title: 'Material & Care', content: product.materialCare || (product.fabric ? `Fabric: ${product.fabric}. ${product.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}` : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.') },
+                  { id: 'shipping', title: 'Shipping & Returns', content: product.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.' },
                 ].map((acc) => (
                   <div key={acc.id} className="border-b border-brand-powder/60">
                     <button 
                       onClick={() => toggleAccordion(acc.id)}
-                      className="w-full flex items-center justify-between py-3.5 text-left group"
+                      className="w-full flex items-center justify-between py-3.5 text-left group cursor-pointer"
                     >
                       <span className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-brand-navy group-hover:text-brand-teal transition-colors">
                         {acc.title}
                       </span>
                       <ChevronDown size={14} className={`text-brand-navy/40 transition-transform duration-300 ${openAccordion === acc.id ? 'rotate-180 text-brand-teal' : ''}`} />
                     </button>
-                    <div className={`overflow-hidden transition-all duration-300 ${openAccordion === acc.id ? 'max-h-40 pb-3.5 opacity-100' : 'max-h-0 opacity-0'}`}>
-                      <p className="font-sans text-xs text-brand-navy/70 leading-relaxed font-light">
+                    <div className={`overflow-hidden transition-all duration-300 ${openAccordion === acc.id ? 'max-h-60 pb-3.5 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      <p className="font-sans text-xs text-brand-navy/70 leading-relaxed font-light whitespace-pre-line">
                         {acc.content}
                       </p>
                     </div>
@@ -1410,7 +1457,7 @@ export default function ProductDetail() {
           <div className="flex items-center justify-between z-10 text-white" onClick={e => e.stopPropagation()}>
             <div className="text-left">
               <h3 className="font-serif text-lg text-white font-light">{product.name}</h3>
-              <p className="font-sans text-xs text-white/70">Photo {previewIndex + 1} of {galleryImages.length}</p>
+              <p className="font-sans text-xs text-white/70">Photo {previewIndex + 1} of {activeGalleryImages.length}</p>
             </div>
             <button
               onClick={() => setPreviewOpen(false)}
@@ -1423,10 +1470,10 @@ export default function ProductDetail() {
 
           {/* Main Large Image View with Left / Right Arrows */}
           <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-            {galleryImages.length > 1 && (
+            {activeGalleryImages.length > 1 && (
               <button
                 onClick={prevPreview}
-                className="absolute left-2 sm:left-6 z-20 w-12 h-12 rounded-full bg-black/40 hover:bg-brand-teal text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-lg"
+                className="absolute left-2 sm:left-6 z-20 w-12 h-12 rounded-full bg-black/40 hover:bg-brand-teal text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-lg cursor-pointer"
                 aria-label="Previous photo"
               >
                 <ChevronLeft size={24} />
@@ -1435,16 +1482,16 @@ export default function ProductDetail() {
 
             <div className="max-w-4xl max-h-[80vh] w-full h-full flex items-center justify-center">
               <img
-                src={galleryImages[previewIndex]}
+                src={activeGalleryImages[previewIndex] || displayImage}
                 alt={`${product.name} preview angle ${previewIndex + 1}`}
                 className="max-w-full max-h-full object-contain rounded-sm shadow-2xl transition-all duration-300"
               />
             </div>
 
-            {galleryImages.length > 1 && (
+            {activeGalleryImages.length > 1 && (
               <button
                 onClick={nextPreview}
-                className="absolute right-2 sm:right-6 z-20 w-12 h-12 rounded-full bg-black/40 hover:bg-brand-teal text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-lg"
+                className="absolute right-2 sm:right-6 z-20 w-12 h-12 rounded-full bg-black/40 hover:bg-brand-teal text-white flex items-center justify-center backdrop-blur-xs transition-colors shadow-lg cursor-pointer"
                 aria-label="Next photo"
               >
                 <ChevronRight size={24} />
@@ -1498,7 +1545,7 @@ export default function ProductDetail() {
                   {/* Product Info */}
                   <div className="flex items-center gap-3.5">
                     <img
-                      src={selectedColor === 0 ? product.image : (product.imageHover || product.image)}
+                      src={displayImage || product.image}
                       alt={product.name}
                       className="w-16 h-20 sm:w-18 sm:h-22 object-cover object-top rounded-xs border border-brand-powder bg-white flex-shrink-0"
                     />

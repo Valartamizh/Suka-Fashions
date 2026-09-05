@@ -59,7 +59,6 @@ export const getPrimaryImageForColor = (product, colorIdOrIndex) => {
   return product.image || product.images?.[0] || '';
 };
 
-// Helper: Normalize product object to ensure all consumer pages receive consistent data
 export const normalizeProduct = (p) => {
   if (!p) return null;
   const primaryImg = getPrimaryImageForColor(p);
@@ -71,6 +70,10 @@ export const normalizeProduct = (p) => {
   const allImages = (p.colors || []).flatMap(c => (c.images || []).map(img => img.url || img));
   if (allImages.length === 0 && primaryImg) allImages.push(primaryImg);
 
+  const defaultMaterialCare = p.materialCare || (p.attributes?.fabric || p.fabric
+    ? `Fabric: ${p.attributes?.fabric || p.fabric}. ${p.attributes?.careInstructions || p.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}`
+    : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.');
+
   return {
     ...p,
     price: startPrice || p.price || 0,
@@ -80,6 +83,10 @@ export const normalizeProduct = (p) => {
     images: allImages.length > 0 ? allImages : (p.images || [primaryImg]),
     colorsList,
     totalStock,
+    shippingInfo: p.shippingInfo || 'Free Shipping within India on orders above ₹1999',
+    returnInfo: p.returnInfo || '7 Days easy returns and exchanges',
+    materialCare: defaultMaterialCare,
+    shippingReturns: p.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.',
   };
 };
 
@@ -95,8 +102,18 @@ class ProductService {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(initialProducts));
       } else {
         const parsed = JSON.parse(stored);
-        if (!Array.isArray(parsed) || parsed.length === 0 || !parsed[0].colors) {
+        if (!Array.isArray(parsed) || parsed.length === 0 || !parsed[0]?.colors) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(initialProducts));
+        } else if (parsed.length < initialProducts.length) {
+          // Merge missing initial products so catalog has full set
+          const existingIds = new Set(parsed.map(p => p.id));
+          const missing = initialProducts.filter(p => !existingIds.has(p.id));
+          if (missing.length > 0) {
+            const updated = [...parsed, ...missing];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          } else {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(initialProducts));
+          }
         }
       }
     } catch (e) {

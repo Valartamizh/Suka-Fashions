@@ -98,8 +98,8 @@ export default function Testimonials() {
   const { getSectionContent } = useContent();
   const content = getSectionContent('testimonials');
 
-  const eyebrow = content?.eyebrow || 'TESTIMONIALS';
-  const title = content?.title || 'LOVED BY THOUSANDS';
+  const eyebrow = content?.eyebrow && content.eyebrow !== 'TESTIMONIALS' && content.eyebrow !== 'Testimonials' ? content.eyebrow : 'CLIENT FEEDBACK';
+  const title = content?.title && content.title !== 'LOVED BY THOUSANDS' && content.title !== 'Loved By Thousands' ? content.title : 'REVIEWS';
 
   const testimonials = useMemo(() => {
     if (content?.items && Array.isArray(content.items) && content.items.length > 0) {

@@ -7,7 +7,8 @@ import {
   ChevronDown, Plus, X, Upload, Save, Eye, Send, ImagePlus,
   Sparkles, Check, RefreshCw, Layers, ShieldCheck, Tag, ShoppingBag,
   Percent, Info, ArrowRight, ArrowLeft, CheckCircle2, Sliders, AlertCircle,
-  HelpCircle, Palette, Box, Trash2, Copy, Star, CheckCircle, ExternalLink
+  HelpCircle, Palette, Box, Trash2, Copy, Star, CheckCircle, ExternalLink,
+  Truck, RotateCcw
 } from 'lucide-react';
 import AdminPageHeader from '../../components/ui/AdminPageHeader';
 import { useProducts } from '../../../context/ProductContext';
@@ -80,7 +81,7 @@ const WIZARD_STEPS = [
   { id: 1, title: 'Basic Details', icon: Info, desc: 'Name, category & description' },
   { id: 2, title: 'Color Variants & Images', icon: ImagePlus, desc: 'Per-color galleries & primary covers' },
   { id: 3, title: 'Sizes, Pricing & Stock', icon: Box, desc: 'Price & stock per color variant' },
-  { id: 4, title: 'Attributes & Badges', icon: Sliders, desc: 'Fabric, occasion & flags' },
+  { id: 4, title: 'Attributes, Care & Delivery', icon: Sliders, desc: 'Fabric, perks & accordions' },
   { id: 5, title: 'Review & Publish', icon: CheckCircle2, desc: 'Complete product review' },
 ];
 
@@ -125,12 +126,13 @@ export default function AddProductPage() {
   const [createdProductId, setCreatedProductId] = useState('');
   const [previewTab, setPreviewTab] = useState('card'); // 'card' | 'page'
   const [previewColorIdx, setPreviewColorIdx] = useState(0);
+  const [previewOpenAccordion, setPreviewOpenAccordion] = useState('details');
   const [imageUrlInput, setImageUrlInput] = useState('');
 
   // Initial unique ID
   const initialNewId = useMemo(() => `PRD-${Math.floor(1000 + Math.random() * 9000)}`, []);
 
-  // Form State
+  // Form State (Starts completely empty from scratch for Add Product)
   const [form, setForm] = useState({
     id: initialNewId,
     name: '',
@@ -141,48 +143,55 @@ export default function AddProductPage() {
     category: 'Sarees',
     subcategory: 'Organza Sarees',
     brand: 'Suka Fashions',
-    sku: 'SUK-SAR-001',
+    sku: '',
     status: 'ACTIVE',
-    fabric: 'Pure Organza',
-    occasion: 'Festive / Wedding',
-    work: 'Hand Embroidered Zari',
-    pattern: 'Floral Motifs',
-    fit: 'Graceful Drape',
-    sleeve: 'Unstitched Blouse Piece Included',
-    careInstructions: 'Dry clean only',
+    fabric: '',
+    occasion: '',
+    work: '',
+    pattern: '',
+    fit: '',
+    sleeve: '',
+    careInstructions: '',
     countryOfOrigin: 'India',
-    badge: 'new',
-    isNew: true,
+    shippingInfo: '',
+    returnInfo: '',
+    materialCare: '',
+    shippingReturns: '',
+    badge: '',
+    isNew: false,
     isBestSeller: false,
-    featured: true,
+    featured: false,
     isTrending: false,
     allowCOD: true,
     returnable: true,
   });
 
-  // Color Variants State: Each color contains its own images and size variants
+  // Color Variants State: Starts empty from scratch
   const [colors, setColors] = useState([
     {
-      id: 'CLR-TEAL',
-      name: 'Teal',
+      id: 'CLR-1',
+      name: '',
       hex: '#006B70',
-      images: [
-        { id: 'IMG-1', url: sareeGolden, isPrimary: true, alt: 'Teal front view' },
-        { id: 'IMG-2', url: sareeBeigeMaroon, isPrimary: false, alt: 'Teal pallu detail' },
-      ],
+      images: [],
       variants: [
-        { size: 'Free Size', sellingPrice: '3499', mrp: '4999', stock: '10', sku: 'SUK-SAR-001-TEAL-FS' },
+        { size: 'Free Size', sellingPrice: '', mrp: '', stock: '0', sku: '' },
       ],
     },
   ]);
 
   const [customBadges, setCustomBadges] = useState([]);
+  const [globalDiscount, setGlobalDiscount] = useState('30');
+  const [colorHistoryMap, setColorHistoryMap] = useState({});
 
   // Load existing product if editing or duplicating
   useEffect(() => {
     if (targetId) {
       const existing = (getProductById && getProductById(targetId)) || products.find(p => p.id === targetId || p.slug === targetId);
       if (existing) {
+        const defaultMaterialCare = existing.materialCare || (existing.fabric || existing.attributes?.fabric
+          ? `Fabric: ${existing.fabric || existing.attributes?.fabric}. ${existing.careInstructions || existing.attributes?.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}`
+          : 'Fabric: Pure Organza. Dry clean only. Do not bleach. Iron on low heat.');
+
         setForm({
           id: duplicateId ? `PRD-${Math.floor(1000 + Math.random() * 9000)}` : existing.id,
           name: duplicateId ? `${existing.name} (Copy)` : existing.name,
@@ -203,6 +212,10 @@ export default function AddProductPage() {
           sleeve: existing.attributes?.sleeve || existing.sleeve || '',
           careInstructions: existing.attributes?.careInstructions || existing.careInstructions || 'Dry clean only',
           countryOfOrigin: existing.attributes?.countryOfOrigin || 'India',
+          shippingInfo: existing.shippingInfo || 'Free Shipping within India on orders above ₹1999',
+          returnInfo: existing.returnInfo || '7 Days easy returns and exchanges',
+          materialCare: defaultMaterialCare,
+          shippingReturns: existing.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.',
           badge: existing.isNew ? 'new' : existing.isBestSeller ? 'bestSeller' : existing.featured ? 'featured' : 'standard',
           isNew: existing.isNew ?? true,
           isBestSeller: existing.isBestSeller ?? false,
@@ -237,6 +250,53 @@ export default function AddProductPage() {
           })));
         }
       }
+    } else {
+      // Clean reset when starting Add Product from scratch
+      setForm({
+        id: `PRD-${Math.floor(1000 + Math.random() * 9000)}`,
+        name: '',
+        tagline: '',
+        slug: '',
+        description: '',
+        shortDescription: '',
+        category: 'Sarees',
+        subcategory: 'Organza Sarees',
+        brand: 'Suka Fashions',
+        sku: '',
+        status: 'ACTIVE',
+        fabric: '',
+        occasion: '',
+        work: '',
+        pattern: '',
+        fit: '',
+        sleeve: '',
+        careInstructions: '',
+        countryOfOrigin: 'India',
+        shippingInfo: '',
+        returnInfo: '',
+        materialCare: '',
+        shippingReturns: '',
+        badge: '',
+        isNew: false,
+        isBestSeller: false,
+        featured: false,
+        isTrending: false,
+        allowCOD: true,
+        returnable: true,
+      });
+
+      setColors([
+        {
+          id: 'CLR-1',
+          name: '',
+          hex: '#006B70',
+          images: [],
+          variants: [
+            { size: 'Free Size', sellingPrice: '', mrp: '', stock: '0', sku: '' },
+          ],
+        },
+      ]);
+      setColorHistoryMap({});
     }
   }, [targetId, duplicateId, products, getProductById]);
 
@@ -326,8 +386,49 @@ export default function AddProductPage() {
     });
   };
 
+  // Size / Stock Matrix History & Undo
+  const saveColorHistory = (specificColorIdx = null) => {
+    setColorHistoryMap(prev => {
+      const nextMap = { ...prev };
+      if (specificColorIdx !== null) {
+        const currentVariants = colors[specificColorIdx]?.variants || [];
+        const historyList = nextMap[specificColorIdx] || [];
+        nextMap[specificColorIdx] = [...historyList, JSON.parse(JSON.stringify(currentVariants))].slice(-10);
+      } else {
+        colors.forEach((c, idx) => {
+          const historyList = nextMap[idx] || [];
+          nextMap[idx] = [...historyList, JSON.parse(JSON.stringify(c.variants))].slice(-10);
+        });
+      }
+      return nextMap;
+    });
+  };
+
+  const undoColorVariants = (colorIdx) => {
+    setColorHistoryMap(prev => {
+      const historyList = prev[colorIdx] || [];
+      if (historyList.length === 0) return prev;
+      const lastState = historyList[historyList.length - 1];
+      const newHistoryList = historyList.slice(0, -1);
+
+      setColors(currColors => currColors.map((c, idx) => {
+        if (idx !== colorIdx) return c;
+        return {
+          ...c,
+          variants: JSON.parse(JSON.stringify(lastState)),
+        };
+      }));
+
+      return {
+        ...prev,
+        [colorIdx]: newHistoryList,
+      };
+    });
+  };
+
   // Size / Stock Matrix per Color
   const addSizeToColor = (colorIdx, sizeName = '') => {
+    saveColorHistory(colorIdx);
     setColors(prev => prev.map((c, idx) => {
       if (idx !== colorIdx) return c;
       const prevVariant = c.variants[c.variants.length - 1];
@@ -348,6 +449,7 @@ export default function AddProductPage() {
   };
 
   const removeSizeFromColor = (colorIdx, sizeIdx) => {
+    saveColorHistory(colorIdx);
     setColors(prev => prev.map((c, idx) => {
       if (idx !== colorIdx) return c;
       if (c.variants.length <= 1) return c;
@@ -359,6 +461,7 @@ export default function AddProductPage() {
   };
 
   const updateColorVariantField = (colorIdx, sizeIdx, key, val) => {
+    saveColorHistory(colorIdx);
     setColors(prev => prev.map((c, idx) => {
       if (idx !== colorIdx) return c;
       return {
@@ -368,7 +471,76 @@ export default function AddProductPage() {
     }));
   };
 
+  const calculateDiscount = (sellingPrice, mrp) => {
+    const s = Number(sellingPrice) || 0;
+    const m = Number(mrp) || 0;
+    if (m > s && m > 0) {
+      return Math.round(((m - s) / m) * 100);
+    }
+    return 0;
+  };
+
+  const updateVariantDiscount = (colorIdx, sizeIdx, discountPercent) => {
+    saveColorHistory(colorIdx);
+    setColors(prev => prev.map((c, idx) => {
+      if (idx !== colorIdx) return c;
+      return {
+        ...c,
+        variants: c.variants.map((v, i) => {
+          if (i !== sizeIdx) return v;
+          const mrpVal = Number(v.mrp) || Number(v.sellingPrice) || 0;
+          const disc = Math.max(0, Math.min(99, Number(discountPercent) || 0));
+          const calculatedSelling = mrpVal > 0 ? Math.round(mrpVal * (1 - disc / 100)) : v.sellingPrice;
+          return {
+            ...v,
+            sellingPrice: calculatedSelling.toString(),
+          };
+        }),
+      };
+    }));
+  };
+
+  const applyDiscountToAllVariants = (discountPercent, specificColorIdx = null) => {
+    saveColorHistory(specificColorIdx);
+    const disc = Math.max(0, Math.min(99, Number(discountPercent) || 0));
+    setColors(prev => prev.map((c, idx) => {
+      if (specificColorIdx !== null && idx !== specificColorIdx) return c;
+      return {
+        ...c,
+        variants: c.variants.map(v => {
+          const mrpVal = Number(v.mrp) || (Number(v.sellingPrice) ? Math.round(Number(v.sellingPrice) * 1.4) : 0);
+          const calculatedSelling = mrpVal > 0 ? Math.round(mrpVal * (1 - disc / 100)) : v.sellingPrice;
+          return {
+            ...v,
+            mrp: mrpVal.toString(),
+            sellingPrice: calculatedSelling.toString(),
+          };
+        }),
+      };
+    }));
+  };
+
+  const applyMarkupToAllMrp = (markupPercent = 40, specificColorIdx = null) => {
+    saveColorHistory(specificColorIdx);
+    const markup = Math.max(0, Number(markupPercent) || 0);
+    setColors(prev => prev.map((c, idx) => {
+      if (specificColorIdx !== null && idx !== specificColorIdx) return c;
+      return {
+        ...c,
+        variants: c.variants.map(v => {
+          const sellVal = Number(v.sellingPrice) || 0;
+          const calculatedMrp = sellVal > 0 ? Math.round(sellVal * (1 + markup / 100)) : v.mrp;
+          return {
+            ...v,
+            mrp: calculatedMrp.toString(),
+          };
+        }),
+      };
+    }));
+  };
+
   const applyPriceToAllSizes = (colorIdx, sellingPrice, mrp) => {
+    saveColorHistory(colorIdx);
     setColors(prev => prev.map((c, idx) => {
       if (idx !== colorIdx) return c;
       return {
@@ -380,6 +552,7 @@ export default function AddProductPage() {
 
   const copyPricingAndSizesFromPrevious = (colorIdx) => {
     if (colorIdx <= 0) return;
+    saveColorHistory(colorIdx);
     const prevColor = colors[colorIdx - 1];
     setColors(prev => prev.map((c, idx) => {
       if (idx !== colorIdx) return c;
@@ -394,6 +567,7 @@ export default function AddProductPage() {
   };
 
   const bulkSetStockForColor = (colorIdx, stockQty) => {
+    saveColorHistory(colorIdx);
     setColors(prev => prev.map((c, idx) => {
       if (idx !== colorIdx) return c;
       return {
@@ -417,10 +591,10 @@ export default function AddProductPage() {
 
   // Live Preview Calculations
   const activePreviewColor = colors[previewColorIdx] || colors[0] || {};
-  const activePreviewPrimaryImage = activePreviewColor.images?.find(img => img.isPrimary)?.url || activePreviewColor.images?.[0]?.url || sareeGolden;
-  const previewStartingPrice = activePreviewColor.variants?.[0]?.sellingPrice || '3499';
-  const previewMrp = activePreviewColor.variants?.[0]?.mrp || '4999';
-  const previewDiscount = parseFloat(previewMrp) > parseFloat(previewStartingPrice)
+  const activePreviewPrimaryImage = activePreviewColor.images?.find(img => img.isPrimary)?.url || activePreviewColor.images?.[0]?.url || null;
+  const previewStartingPrice = activePreviewColor.variants?.[0]?.sellingPrice || '';
+  const previewMrp = activePreviewColor.variants?.[0]?.mrp || '';
+  const previewDiscount = parseFloat(previewMrp) > parseFloat(previewStartingPrice) && parseFloat(previewStartingPrice) > 0
     ? Math.round(((parseFloat(previewMrp) - parseFloat(previewStartingPrice)) / parseFloat(previewMrp)) * 100)
     : 0;
 
@@ -915,12 +1089,12 @@ export default function AddProductPage() {
           {/* STEP 3: SIZES, PRICING & STOCK MATRIX */}
           {(viewMode === 'single' || currentStep === 3) && (
             <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <span className="p-1.5 bg-brand-powder text-brand-teal rounded-lg"><Box size={16} /></span>
                   <div>
                     <h2 className="font-sans font-bold text-slate-800 text-sm">3. Size Variants, Pricing & Stock Matrix</h2>
-                    <p className="text-[11px] text-slate-400">Manage individual selling price, MRP, and stock units for each color variant.</p>
+                    <p className="text-[11px] text-slate-400">Manage individual selling price, MRP, discounts, and stock units for each color variant.</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -929,43 +1103,142 @@ export default function AddProductPage() {
                 </div>
               </div>
 
+              {/* ── LIGHT THEME DISCOUNT & PRICING ENGINE ── */}
+              <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+                {/* Header Row: Title & Large Target Discount Input */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center shadow-2xs flex-shrink-0">
+                      <Percent size={18} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-sans text-sm sm:text-base font-bold text-slate-900">
+                          Discount & Pricing Engine
+                        </h3>
+                        <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                          Auto-Calculate
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Set your target discount percentage to automatically calculate selling prices across all sizes & colors.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Large Target Discount Input in Header */}
+                  <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-2xl px-4 py-2 shadow-2xs flex-shrink-0">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Discount %</span>
+                      <span className="text-[10px] text-slate-400">All Sizes Target</span>
+                    </div>
+                    <div className="flex items-center bg-white border border-slate-300 focus-within:border-brand-teal focus-within:ring-2 focus-within:ring-brand-teal/20 rounded-xl px-3 py-1.5 transition-all shadow-xs">
+                      <input
+                        type="number"
+                        min="0"
+                        max="99"
+                        value={globalDiscount}
+                        onChange={e => setGlobalDiscount(e.target.value)}
+                        placeholder="20"
+                        className="w-14 text-xl font-black text-slate-900 focus:outline-none text-center font-mono"
+                      />
+                      <span className="text-sm font-black text-emerald-600 ml-1">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interactive Controls Row: Presets & One-Click Apply */}
+                <div className="flex flex-wrap items-center justify-between gap-3.5 pt-0.5">
+                  
+                  {/* Left: Quick Percentage Chips */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">
+                      Quick Presets:
+                    </span>
+                    {['10', '15', '20', '25', '30', '40', '50'].map(pct => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => {
+                          setGlobalDiscount(pct);
+                          applyDiscountToAllVariants(pct);
+                        }}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                          globalDiscount === pct
+                            ? 'bg-[#0b1b4f] text-white border-[#0b1b4f] shadow-xs scale-105 ring-2 ring-[#0b1b4f]/15'
+                            : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 shadow-2xs'
+                        }`}
+                      >
+                        {pct}% OFF
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Right: Apply Button */}
+                  <button
+                    type="button"
+                    onClick={() => applyDiscountToAllVariants(globalDiscount)}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-[#0b1b4f] hover:bg-[#07133a] active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer ml-auto"
+                  >
+                    <Sparkles size={14} />
+                    <span>Apply {globalDiscount || 0}% Discount to All Sizes</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Color-by-Color Size Matrix Tables */}
               <div className="space-y-6">
-                {colors.map((color, colorIdx) => (
-                  <div key={color.id || colorIdx} className="bg-slate-50/60 border border-slate-200 rounded-2xl p-5 space-y-4">
-                    {/* Matrix Header for this Color */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-4 h-4 rounded-full border border-slate-300 shadow-2xs" style={{ backgroundColor: color.hex }} />
-                        <span className="font-bold text-sm text-slate-800">{color.name}</span>
-                        <span className="text-xs text-slate-400 font-mono">({color.variants.length} sizes)</span>
-                      </div>
+                {colors.map((color, colorIdx) => {
+                  const colorTotalStock = color.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+                  return (
+                    <div key={color.id || colorIdx} className="bg-slate-50/60 border border-slate-200 rounded-2xl p-5 space-y-4">
+                      {/* Matrix Header for this Color */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-4 h-4 rounded-full border border-slate-300 shadow-2xs" style={{ backgroundColor: color.hex }} />
+                          <span className="font-bold text-sm text-slate-800">{color.name}</span>
+                          <span className="text-xs text-slate-400 font-mono">({color.variants.length} sizes)</span>
+                        </div>
 
-                      {/* Convenience Quick Action Buttons */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {colorIdx > 0 && (
+                        {/* Right: Color Total Stock, Undo & Optional Copy */}
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          {/* Undo Button */}
                           <button
                             type="button"
-                            onClick={() => copyPricingAndSizesFromPrevious(colorIdx)}
-                            className="px-2.5 py-1 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 hover:border-brand-teal rounded-lg transition-all flex items-center gap-1 cursor-pointer"
-                            title="Copy pricing & sizes from previous color"
+                            onClick={() => undoColorVariants(colorIdx)}
+                            disabled={!colorHistoryMap[colorIdx] || colorHistoryMap[colorIdx].length === 0}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                              colorHistoryMap[colorIdx]?.length > 0
+                                ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/20 active:scale-95'
+                                : 'bg-white text-slate-300 border-slate-200 opacity-50 cursor-not-allowed'
+                            }`}
+                            title={
+                              colorHistoryMap[colorIdx]?.length > 0
+                                ? `Undo last change (${colorHistoryMap[colorIdx].length} step${colorHistoryMap[colorIdx].length > 1 ? 's' : ''} available)`
+                                : 'No changes to undo for this color'
+                            }
                           >
-                            <Copy size={11} /> Copy from Previous Color
+                            <RotateCcw size={12} className={colorHistoryMap[colorIdx]?.length > 0 ? "text-amber-600" : "text-slate-300"} />
+                            <span>Undo</span>
                           </button>
-                        )}
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const first = color.variants[0];
-                            if (first) applyPriceToAllSizes(colorIdx, first.sellingPrice, first.mrp);
-                          }}
-                          className="px-2.5 py-1 text-[10px] font-bold text-brand-teal bg-white border border-slate-200 hover:border-brand-teal rounded-lg transition-all flex items-center gap-1 cursor-pointer"
-                        >
-                          Apply Price to All Sizes
-                        </button>
+                          {colorIdx > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => copyPricingAndSizesFromPrevious(colorIdx)}
+                              className="px-2.5 py-1 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 hover:border-brand-teal rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                              title="Copy pricing & sizes from previous color"
+                            >
+                              <Copy size={11} /> Copy from Previous Color
+                            </button>
+                          )}
+
+                          <div className="flex items-center gap-1.5 bg-white border border-slate-200/90 px-3 py-1.5 rounded-xl shadow-2xs">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Stock:</span>
+                            <span className="font-mono text-xs font-bold text-brand-teal">{colorTotalStock} Units</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
                     {/* Variant Table */}
                     <div className="overflow-x-auto">
@@ -997,8 +1270,8 @@ export default function AddProductPage() {
                                   type="number"
                                   value={variant.sellingPrice}
                                   onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'sellingPrice', e.target.value)}
-                                  placeholder="3499"
-                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-brand-teal focus:border-brand-teal focus:outline-none font-mono"
+                                  placeholder="2799"
+                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-brand-teal focus:outline-none font-mono"
                                 />
                               </td>
                               <td className="py-2 pr-3">
@@ -1006,7 +1279,7 @@ export default function AddProductPage() {
                                   type="number"
                                   value={variant.mrp}
                                   onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'mrp', e.target.value)}
-                                  placeholder="4999"
+                                  placeholder="3999"
                                   className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-500 focus:border-brand-teal focus:outline-none font-mono"
                                 />
                               </td>
@@ -1060,18 +1333,19 @@ export default function AddProductPage() {
                       ))}
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
           )}
 
-          {/* STEP 4: ATTRIBUTES & BADGES */}
+          {/* STEP 4: ATTRIBUTES, CARE & DELIVERY */}
           {(viewMode === 'single' || currentStep === 4) && (
             <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <span className="p-1.5 bg-brand-powder text-brand-teal rounded-lg"><Sliders size={16} /></span>
-                  <h2 className="font-sans font-bold text-slate-800 text-sm">4. Material Attributes & Badges</h2>
+                  <h2 className="font-sans font-bold text-slate-800 text-sm">4. Material Attributes, Storefront Accordions & Perks</h2>
                 </div>
               </div>
 
@@ -1108,7 +1382,13 @@ export default function AddProductPage() {
               {/* Material & Occasion Attributes */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <FormField label="Fabric Material">
-                  <select className={selectClass} value={form.fabric} onChange={e => set('fabric', e.target.value)}>
+                  <select className={selectClass} value={form.fabric} onChange={e => {
+                    const newFabric = e.target.value;
+                    set('fabric', newFabric);
+                    if (!form.materialCare || form.materialCare.startsWith('Fabric:')) {
+                      set('materialCare', `Fabric: ${newFabric}. ${form.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}`);
+                    }
+                  }}>
                     {FABRICS.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </FormField>
@@ -1128,6 +1408,149 @@ export default function AddProductPage() {
                     onChange={e => set('work', e.target.value)}
                   />
                 </FormField>
+              </div>
+
+              {/* STOREFRONT DELIVERY & ASSURANCE PERKS */}
+              <div className="border-t border-slate-100 pt-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 bg-brand-powder text-brand-teal rounded-lg"><Truck size={15} /></span>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Storefront Delivery & Returns Perks</h3>
+                      <p className="text-[11px] text-slate-400">Displayed in the highlighted assurance badge above the product page accordions.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Perk 1: Shipping Perk */}
+                  <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <Truck size={14} className="text-brand-teal" />
+                        <span>Shipping Offer Text</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => set('shippingInfo', 'Free Shipping within India on orders above ₹1999')}
+                        className="text-[10.5px] font-semibold text-brand-teal hover:underline cursor-pointer"
+                      >
+                        Restore Default
+                      </button>
+                    </div>
+                    <div className="relative flex items-center">
+                      <input
+                        type="text"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/10 transition-all"
+                        placeholder="e.g. Free Shipping within India on orders above ₹1999"
+                        value={form.shippingInfo}
+                        onChange={e => set('shippingInfo', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Perk 2: Return Policy Perk */}
+                  <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <RefreshCw size={14} className="text-brand-teal" />
+                        <span>Return Policy Perk Text</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => set('returnInfo', '7 Days easy returns and exchanges')}
+                        className="text-[10.5px] font-semibold text-brand-teal hover:underline cursor-pointer"
+                      >
+                        Restore Default
+                      </button>
+                    </div>
+                    <div className="relative flex items-center">
+                      <input
+                        type="text"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/10 transition-all"
+                        placeholder="e.g. 7 Days easy returns and exchanges"
+                        value={form.returnInfo}
+                        onChange={e => set('returnInfo', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* STOREFRONT ACCORDIONS (Product Description, Material & Care, Shipping & Returns) */}
+              <div className="border-t border-slate-100 pt-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 bg-brand-powder text-brand-teal rounded-lg"><Sliders size={15} /></span>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Storefront Accordion Sections (PDP)</h3>
+                    <p className="text-[11px] text-slate-400">Collapsible detail sections displayed on customer product pages.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Accordion 1: Product Description */}
+                  <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4.5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800">
+                        1. Product Description Accordion
+                      </label>
+                      <span className="text-[10px] text-slate-400">Primary product story & highlights</span>
+                    </div>
+                    <textarea
+                      rows={3}
+                      className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/10 transition-all resize-none leading-relaxed"
+                      placeholder="Detailed product story, craftsmanship, styling advice, and package inclusions..."
+                      value={form.description}
+                      onChange={e => set('description', e.target.value)}
+                    />
+                  </div>
+
+                  {/* Accordion 2: Material & Care */}
+                  <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4.5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800">
+                        2. Material & Care Accordion
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => set('materialCare', `Fabric: ${form.fabric || 'Pure Organza'}. ${form.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}`)}
+                        className="text-[10.5px] font-semibold text-brand-teal hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles size={12} /> Auto-fill from Fabric
+                      </button>
+                    </div>
+                    <textarea
+                      rows={2}
+                      className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/10 transition-all resize-none leading-relaxed"
+                      placeholder="e.g. Fabric: Pure Organza. Dry clean only. Do not bleach. Iron on low heat."
+                      value={form.materialCare}
+                      onChange={e => set('materialCare', e.target.value)}
+                    />
+                  </div>
+
+                  {/* Accordion 3: Shipping & Returns */}
+                  <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4.5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800">
+                        3. Shipping & Returns Accordion
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => set('shippingReturns', 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.')}
+                        className="text-[10.5px] font-semibold text-brand-teal hover:underline cursor-pointer"
+                      >
+                        Reset Template
+                      </button>
+                    </div>
+                    <textarea
+                      rows={2}
+                      className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/10 transition-all resize-none leading-relaxed"
+                      placeholder="e.g. Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy."
+                      value={form.shippingReturns}
+                      onChange={e => set('shippingReturns', e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -1156,8 +1579,14 @@ export default function AddProductPage() {
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Starting Price & Discount</span>
                   <div className="flex items-baseline gap-2 mt-0.5">
-                    <span className="font-mono text-base font-bold text-brand-navy">₹{parseInt(previewStartingPrice).toLocaleString('en-IN')}</span>
-                    <span className="font-mono text-xs text-slate-400 line-through">₹{parseInt(previewMrp).toLocaleString('en-IN')}</span>
+                    <span className="font-mono text-base font-bold text-brand-navy">
+                      {previewStartingPrice ? `₹${parseInt(previewStartingPrice).toLocaleString('en-IN')}` : '₹—'}
+                    </span>
+                    {parseFloat(previewMrp) > parseFloat(previewStartingPrice) && parseFloat(previewStartingPrice) > 0 && (
+                      <span className="font-mono text-xs text-slate-400 line-through">
+                        ₹{parseInt(previewMrp).toLocaleString('en-IN')}
+                      </span>
+                    )}
                   </div>
                   {previewDiscount > 0 && <span className="text-[10px] font-bold text-emerald-700">{previewDiscount}% OFF</span>}
                 </div>
@@ -1173,25 +1602,49 @@ export default function AddProductPage() {
               <div className="space-y-3">
                 <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">Color Galleries & Stock Breakdown</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {colors.map((c, i) => (
-                    <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-3 items-center">
-                      <div className="w-14 aspect-[3/4] bg-white rounded-lg overflow-hidden border border-slate-200 flex-shrink-0">
-                        <img
-                          src={c.images.find(img => img.isPrimary)?.url || c.images[0]?.url || sareeGolden}
-                          alt={c.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: c.hex }} />
-                          <span className="font-bold text-xs text-slate-800 truncate">{c.name}</span>
+                  {colors.map((c, i) => {
+                    const primaryImgUrl = c.images.find(img => img.isPrimary)?.url || c.images[0]?.url || null;
+                    return (
+                      <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-3 items-center">
+                        <div className="w-14 aspect-[3/4] bg-white rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 flex items-center justify-center">
+                          {primaryImgUrl ? (
+                            <img
+                              src={primaryImgUrl}
+                              alt={c.name || 'Variant'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ImagePlus size={16} className="text-slate-300" />
+                          )}
                         </div>
-                        <p className="text-[11px] text-slate-500 mt-1">{c.images.length} photos • {c.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)} units</p>
-                        <p className="text-[10px] text-brand-teal font-mono font-semibold">Sizes: {c.variants.map(v => v.size).join(', ')}</p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: c.hex }} />
+                            <span className="font-bold text-xs text-slate-800 truncate">{c.name || `Color ${i + 1}`}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-1">{c.images.length} photos • {c.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)} units</p>
+                          <p className="text-[10px] text-brand-teal font-mono font-semibold">Sizes: {c.variants.map(v => v.size || 'Free Size').join(', ')}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Storefront Policy Summary Card */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+                <p className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Storefront Accordions & Perks Summary</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Perks</span>
+                    <p className="text-slate-700 font-medium">🚚 {form.shippingInfo}</p>
+                    <p className="text-slate-700 font-medium">🔄 {form.returnInfo}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Accordions</span>
+                    <p className="text-slate-700 truncate"><strong>Material & Care:</strong> {form.materialCare}</p>
+                    <p className="text-slate-700 truncate"><strong>Shipping & Returns:</strong> {form.shippingReturns}</p>
+                  </div>
                 </div>
               </div>
 
@@ -1296,21 +1749,41 @@ export default function AddProductPage() {
                 <div className="bg-white border border-brand-powder/60 rounded-xl overflow-hidden shadow-md max-w-xs mx-auto group text-left">
                   {/* Image Box */}
                   <div className="relative aspect-[3/4] bg-slate-100 overflow-hidden">
-                    <img
-                      src={activePreviewPrimaryImage}
-                      alt="Preview"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    {activePreviewPrimaryImage ? (
+                      <img
+                        src={activePreviewPrimaryImage}
+                        alt="Preview"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 p-4 text-center">
+                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center mb-1.5 text-slate-300">
+                          <ImagePlus size={18} />
+                        </div>
+                        <p className="text-[10.5px] font-bold text-slate-500">No Image Uploaded</p>
+                        <p className="text-[9px] text-slate-400">Add photos in Step 2</p>
+                      </div>
+                    )}
 
-                    {/* Badge */}
-                    {form.isNew && (
+                    {/* Merchandising Badges */}
+                    {(form.badge === 'new' || (form.isNew && !form.badge)) && (
                       <span className="absolute top-2 left-2 bg-brand-teal text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-xs">
-                        NEW
+                        NEW ARRIVAL
                       </span>
                     )}
-                    {!form.isNew && form.isBestSeller && (
+                    {(form.badge === 'bestSeller' || (!form.isNew && form.isBestSeller && !form.badge)) && (
                       <span className="absolute top-2 left-2 bg-amber-600 text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-xs">
                         BESTSELLER
+                      </span>
+                    )}
+                    {(form.badge === 'featured' || (!form.isNew && !form.isBestSeller && (form.featured || form.isFeatured) && !form.badge)) && (
+                      <span className="absolute top-2 left-2 bg-purple-600 text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-xs">
+                        FEATURED
+                      </span>
+                    )}
+                    {(form.badge === 'trending' || (!form.isNew && !form.isBestSeller && !form.featured && form.isTrending && !form.badge)) && (
+                      <span className="absolute top-2 left-2 bg-rose-600 text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-xs">
+                        TRENDING
                       </span>
                     )}
 
@@ -1338,7 +1811,7 @@ export default function AddProductPage() {
                     )}
 
                     {/* Color dots */}
-                    {colors.length > 0 && (
+                    {colors.length > 0 && colors.some(c => c.name) && (
                       <div className="flex items-center gap-1.5 pt-1">
                         {colors.map((c, i) => (
                           <span
@@ -1347,7 +1820,7 @@ export default function AddProductPage() {
                               previewColorIdx === i ? 'ring-1 ring-brand-teal scale-110' : 'border-slate-300'
                             }`}
                             style={{ backgroundColor: c.hex }}
-                            title={c.name}
+                            title={c.name || `Color ${i + 1}`}
                           />
                         ))}
                       </div>
@@ -1355,9 +1828,9 @@ export default function AddProductPage() {
 
                     <div className="flex items-baseline gap-2 pt-1.5">
                       <span className="font-sans text-sm font-bold text-brand-navy font-mono">
-                        ₹{parseInt(previewStartingPrice).toLocaleString('en-IN')}
+                        {previewStartingPrice ? `₹${parseInt(previewStartingPrice).toLocaleString('en-IN')}` : '₹—'}
                       </span>
-                      {parseFloat(previewMrp) > parseFloat(previewStartingPrice) && (
+                      {parseFloat(previewMrp) > parseFloat(previewStartingPrice) && parseFloat(previewStartingPrice) > 0 && (
                         <span className="font-sans text-xs text-brand-navy/40 line-through font-mono">
                           ₹{parseInt(previewMrp).toLocaleString('en-IN')}
                         </span>
@@ -1366,14 +1839,32 @@ export default function AddProductPage() {
                   </div>
                 </div>
               ) : (
-                /* DETAIL PAGE PREVIEW MODE */
+                /* DETAIL PAGE PREVIEW MODE (Matches live storefront PDP exactly) */
                 <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 text-xs text-left">
                   <div className="flex gap-3">
-                    <div className="w-20 h-24 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-                      <img src={activePreviewPrimaryImage} className="w-full h-full object-cover" />
+                    <div className="w-20 h-24 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                      {activePreviewPrimaryImage ? (
+                        <img src={activePreviewPrimaryImage} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImagePlus size={18} className="text-slate-300" />
+                      )}
                     </div>
                     <div className="space-y-1 min-w-0 flex-1">
-                      <p className="text-[9px] font-bold text-brand-teal uppercase tracking-wider">{form.category}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-[9px] font-bold text-brand-teal uppercase tracking-wider">{form.category}</p>
+                        {(form.badge === 'new' || (form.isNew && !form.badge)) && (
+                          <span className="bg-brand-teal text-white text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded">NEW ARRIVAL</span>
+                        )}
+                        {(form.badge === 'bestSeller' || (!form.isNew && form.isBestSeller && !form.badge)) && (
+                          <span className="bg-amber-600 text-white text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded">BESTSELLER</span>
+                        )}
+                        {(form.badge === 'featured' || (!form.isNew && !form.isBestSeller && (form.featured || form.isFeatured) && !form.badge)) && (
+                          <span className="bg-purple-600 text-white text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded">FEATURED</span>
+                        )}
+                        {(form.badge === 'trending' || (!form.isNew && !form.isBestSeller && !form.featured && form.isTrending && !form.badge)) && (
+                          <span className="bg-rose-600 text-white text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded">TRENDING</span>
+                        )}
+                      </div>
                       <h4 className="font-bold text-slate-800 leading-tight truncate">{form.name || 'Product Title'}</h4>
                       <p className="text-[10px] text-slate-500 italic truncate">{form.tagline || form.description?.slice(0, 50)}</p>
                       <div className="flex items-center gap-2 pt-1 font-mono">
@@ -1399,10 +1890,70 @@ export default function AddProductPage() {
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-100 pt-2 space-y-1 text-[11px]">
-                    <p><span className="font-bold text-slate-700">Fabric:</span> {form.fabric || '—'}</p>
-                    <p><span className="font-bold text-slate-700">Occasion:</span> {form.occasion || '—'}</p>
-                    <p><span className="font-bold text-slate-700">Total Stock:</span> {totalCatalogStock} Units</p>
+                  {/* Live Delivery Perks Preview Box */}
+                  <div className="p-2.5 bg-brand-powderLight/60 border border-brand-powder rounded-lg space-y-1.5">
+                    <div className="flex items-center gap-2 text-[10.5px] text-brand-navy/80">
+                      <Truck size={13} className="text-brand-teal flex-shrink-0" />
+                      <span className="truncate">{form.shippingInfo || 'Free Shipping within India on orders above ₹1999'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10.5px] text-brand-navy/80">
+                      <RefreshCw size={13} className="text-brand-teal flex-shrink-0" />
+                      <span className="truncate">{form.returnInfo || '7 Days easy returns and exchanges'}</span>
+                    </div>
+                  </div>
+
+                  {/* Live Interactive Accordions Preview */}
+                  <div className="border-t border-slate-200 pt-1 divide-y divide-slate-100">
+                    {/* Accordion 1 */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewOpenAccordion(previewOpenAccordion === 'details' ? null : 'details')}
+                        className="w-full flex items-center justify-between py-2 text-[10px] font-bold uppercase tracking-wider text-slate-700 hover:text-brand-teal transition-colors"
+                      >
+                        <span>Product Description</span>
+                        <ChevronDown size={12} className={`transition-transform duration-200 ${previewOpenAccordion === 'details' ? 'rotate-180 text-brand-teal' : ''}`} />
+                      </button>
+                      {previewOpenAccordion === 'details' && (
+                        <p className="text-[10.5px] text-slate-600 pb-2 leading-relaxed">
+                          {form.description || 'Elevate your celebratory ensemble with this handcrafted creation.'}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Accordion 2 */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewOpenAccordion(previewOpenAccordion === 'fabric' ? null : 'fabric')}
+                        className="w-full flex items-center justify-between py-2 text-[10px] font-bold uppercase tracking-wider text-slate-700 hover:text-brand-teal transition-colors"
+                      >
+                        <span>Material & Care</span>
+                        <ChevronDown size={12} className={`transition-transform duration-200 ${previewOpenAccordion === 'fabric' ? 'rotate-180 text-brand-teal' : ''}`} />
+                      </button>
+                      {previewOpenAccordion === 'fabric' && (
+                        <p className="text-[10.5px] text-slate-600 pb-2 leading-relaxed">
+                          {form.materialCare || `Fabric: ${form.fabric || 'Pure Organza'}. Dry clean only. Do not bleach. Iron on low heat.`}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Accordion 3 */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewOpenAccordion(previewOpenAccordion === 'shipping' ? null : 'shipping')}
+                        className="w-full flex items-center justify-between py-2 text-[10px] font-bold uppercase tracking-wider text-slate-700 hover:text-brand-teal transition-colors"
+                      >
+                        <span>Shipping & Returns</span>
+                        <ChevronDown size={12} className={`transition-transform duration-200 ${previewOpenAccordion === 'shipping' ? 'rotate-180 text-brand-teal' : ''}`} />
+                      </button>
+                      {previewOpenAccordion === 'shipping' && (
+                        <p className="text-[10.5px] text-slate-600 pb-2 leading-relaxed">
+                          {form.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.'}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

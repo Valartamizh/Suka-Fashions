@@ -6,7 +6,8 @@ import {
   Star, Heart, ShoppingBag, MessageSquare, Truck, RefreshCw, ShieldCheck,
   Check, CheckCircle2, Tag, Layers, Info, Sparkles, ZoomIn, X,
   ChevronLeft, ChevronRight, ChevronDown, IndianRupee, Eye, TrendingUp,
-  BarChart3, Share2, Boxes, Image as ImageIcon, AlertCircle, Award
+  BarChart3, Share2, Boxes, Image as ImageIcon, AlertCircle, Award,
+  SlidersHorizontal, Sliders
 } from 'lucide-react';
 import StatusBadge from '../../components/ui/StatusBadge';
 import sareeGolden from '../../../assets/saree_golden.jpg';
@@ -42,6 +43,40 @@ export default function ProductStoreView({
   const [isEditingPerks, setIsEditingPerks] = useState(false);
   const [draftPerks, setDraftPerks] = useState(perks);
   const [savedPerksToast, setSavedPerksToast] = useState(false);
+
+  // Editable Storefront Accordions & Perks
+  const [openStoreAccordion, setOpenStoreAccordion] = useState('details');
+  const [isEditingAccordions, setIsEditingAccordions] = useState(false);
+  const [draftAccordions, setDraftAccordions] = useState({
+    shippingInfo: product?.shippingInfo || 'Free Shipping within India on orders above ₹1999',
+    returnInfo: product?.returnInfo || '7 Days easy returns and exchanges',
+    description: product?.description || '',
+    materialCare: product?.materialCare || (product?.attributes?.fabric ? `Fabric: ${product.attributes.fabric}. ${product?.attributes?.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}` : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.'),
+    shippingReturns: product?.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.',
+  });
+  const [savedAccordionsToast, setSavedAccordionsToast] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      setDraftAccordions({
+        shippingInfo: product.shippingInfo || 'Free Shipping within India on orders above ₹1999',
+        returnInfo: product.returnInfo || '7 Days easy returns and exchanges',
+        description: product.description || '',
+        materialCare: product.materialCare || (product.attributes?.fabric ? `Fabric: ${product.attributes.fabric}. ${product.attributes?.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}` : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.'),
+        shippingReturns: product.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.',
+      });
+    }
+  }, [product]);
+
+  const handleSaveAccordions = () => {
+    setIsEditingAccordions(false);
+    setSavedAccordionsToast(true);
+    setTimeout(() => setSavedAccordionsToast(false), 2500);
+    onUpdateProduct?.({
+      ...product,
+      ...draftAccordions,
+    });
+  };
 
   useEffect(() => {
     if (product?.trustBadges) {
@@ -597,99 +632,11 @@ export default function ProductStoreView({
                 </p>
               </div>
 
-              {/* Storefront Trust Badges & Highlights (Editable) */}
-              <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    <Award size={13} className="text-brand-teal" />
-                    <span>Storefront Assurances & Highlights</span>
-                  </div>
-                  {!isEditingPerks ? (
-                    <button
-                      onClick={() => {
-                        setDraftPerks([...perks]);
-                        setIsEditingPerks(true);
-                      }}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-brand-teal hover:text-brand-tealDark bg-white hover:bg-brand-powder/60 px-2.5 py-1 rounded-lg border border-slate-200 transition-colors shadow-2xs cursor-pointer"
-                      title="Edit store assurance texts"
-                    >
-                      <Edit size={12} />
-                      <span>Edit</span>
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={handleResetPerks}
-                        className="text-[10px] font-semibold text-slate-500 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-200 transition-colors cursor-pointer"
-                      >
-                        Reset Defaults
-                      </button>
-                      <button
-                        onClick={handleCancelPerks}
-                        className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 bg-white transition-colors cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleSavePerks}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-teal hover:bg-brand-tealDark px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                      >
-                        <Check size={13} />
-                        <span>Save</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {savedPerksToast && (
-                  <div className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
-                    <CheckCircle2 size={13} />
-                    <span>Assurance highlights updated successfully!</span>
-                  </div>
-                )}
-
-                {!isEditingPerks ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    {perks.map((p) => {
-                      const Icon = getPerkIcon(p.icon);
-                      return (
-                        <div key={p.id} className="flex items-center gap-2.5 text-xs font-medium text-slate-800">
-                          <Icon size={16} className="text-brand-teal flex-shrink-0" />
-                          <span className="truncate">{p.text}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                    {draftPerks.map((dp, idx) => {
-                      const Icon = getPerkIcon(dp.icon);
-                      return (
-                        <div key={dp.id} className="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-xl border border-brand-teal/40 shadow-2xs focus-within:ring-2 focus-within:ring-brand-powder">
-                          <Icon size={15} className="text-brand-teal flex-shrink-0" />
-                          <input
-                            type="text"
-                            value={dp.text}
-                            onChange={(e) => {
-                              const next = [...draftPerks];
-                              next[idx] = { ...next[idx], text: e.target.value };
-                              setDraftPerks(next);
-                            }}
-                            className="text-xs font-medium text-slate-800 bg-transparent outline-none w-full"
-                            placeholder="Badge text..."
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
             </div>
 
           </div>
 
-          {/* ── LOWER SECTION: SPECIFICATIONS, STORY, INVENTORY & SEO TABS ── */}
+          {/* ── LOWER SECTION: SPECIFICATIONS, STORY, INVENTORY & STOREFRONT POLICY TABS ── */}
           <div className="mt-12 pt-8 border-t border-slate-200">
             
             {/* Tab Navigation */}
@@ -698,6 +645,7 @@ export default function ProductStoreView({
                 { id: 'details', label: 'Product Description & Story', icon: Info },
                 { id: 'specs', label: 'Attributes & Specifications', icon: Tag },
                 { id: 'inventory', label: 'SKU & Variant Stock', icon: Layers },
+                { id: 'storefront', label: 'Storefront Policy & Accordions', icon: SlidersHorizontal },
               ].map((tab) => {
                 const IconComponent = tab.icon;
                 return (
@@ -816,7 +764,7 @@ export default function ProductStoreView({
                               <td className="px-4 py-3">
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                   itemStock > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
-                                }`}>
+                                }}`}>
                                   {itemStock > 0 ? 'In Stock' : 'Out of Stock'}
                                 </span>
                               </td>
@@ -835,6 +783,252 @@ export default function ProductStoreView({
                   >
                     <PackagePlus size={14} /> Adjust Stock Quantities
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab Content 4: Storefront Assurances, Policies & Accordions */}
+            {activeTab === 'storefront' && (
+              <div className="pt-6 text-left animate-in fade-in duration-150 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Left: Storefront Trust Badges & Highlights (Editable) */}
+                  <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                      <div className="flex items-center gap-2">
+                        <Award size={16} className="text-brand-teal" />
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                            Storefront Assurances & Highlights
+                          </h4>
+                          <p className="text-[11px] text-slate-400">Assurance perks displayed across live PDP pages.</p>
+                        </div>
+                      </div>
+                      {!isEditingPerks ? (
+                        <button
+                          onClick={() => {
+                            setDraftPerks([...perks]);
+                            setIsEditingPerks(true);
+                          }}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-brand-teal hover:text-brand-tealDark bg-white hover:bg-brand-powder/60 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors shadow-2xs cursor-pointer"
+                          title="Edit store assurance texts"
+                        >
+                          <Edit size={12} />
+                          <span>Edit</span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={handleResetPerks}
+                            className="text-[10px] font-semibold text-slate-500 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-200 transition-colors cursor-pointer"
+                          >
+                            Reset Defaults
+                          </button>
+                          <button
+                            onClick={handleCancelPerks}
+                            className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 bg-white transition-colors cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSavePerks}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-teal hover:bg-brand-tealDark px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                          >
+                            <Check size={13} />
+                            <span>Save</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {savedPerksToast && (
+                      <div className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
+                        <CheckCircle2 size={13} />
+                        <span>Assurance highlights updated successfully!</span>
+                      </div>
+                    )}
+
+                    {!isEditingPerks ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        {perks.map((p) => {
+                          const Icon = getPerkIcon(p.icon);
+                          return (
+                            <div key={p.id} className="flex items-center gap-2.5 p-3 bg-white rounded-xl border border-slate-200 text-xs font-medium text-slate-800">
+                              <Icon size={16} className="text-brand-teal flex-shrink-0" />
+                              <span className="truncate">{p.text}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        {draftPerks.map((dp, idx) => {
+                          const Icon = getPerkIcon(dp.icon);
+                          return (
+                            <div key={dp.id} className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-brand-teal/40 shadow-2xs focus-within:ring-2 focus-within:ring-brand-powder">
+                              <Icon size={15} className="text-brand-teal flex-shrink-0" />
+                              <input
+                                type="text"
+                                value={dp.text}
+                                onChange={(e) => {
+                                  const next = [...draftPerks];
+                                  next[idx] = { ...next[idx], text: e.target.value };
+                                  setDraftPerks(next);
+                                }}
+                                className="text-xs font-medium text-slate-800 bg-transparent outline-none w-full"
+                                placeholder="Badge text..."
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right: STOREFRONT ACCORDIONS (Live PDP Accordion & Direct Editor) */}
+                  <div className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        <SlidersHorizontal size={16} className="text-brand-teal" />
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                            Storefront Policy & Information Accordions
+                          </h4>
+                          <p className="text-[11px] text-slate-400">Collapsible detail accordions for customer product page.</p>
+                        </div>
+                      </div>
+                      {!isEditingAccordions ? (
+                        <button
+                          onClick={() => setIsEditingAccordions(true)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-brand-teal hover:text-brand-tealDark bg-brand-powder/40 hover:bg-brand-powder px-3 py-1.5 rounded-lg border border-brand-teal/20 transition-colors shadow-2xs cursor-pointer"
+                          title="Edit accordion texts"
+                        >
+                          <Edit size={12} />
+                          <span>Edit Accordions</span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setIsEditingAccordions(false)}
+                            className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 bg-white transition-colors cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveAccordions}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-teal hover:bg-brand-tealDark px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                          >
+                            <Check size={13} />
+                            <span>Save</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {savedAccordionsToast && (
+                      <div className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
+                        <CheckCircle2 size={13} />
+                        <span>Product accordions & policies saved and synchronized!</span>
+                      </div>
+                    )}
+
+                    {!isEditingAccordions ? (
+                      /* Interactive Accordion View */
+                      <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden">
+                        {/* Accordion 1: Product Description */}
+                        <div className="p-3.5">
+                          <button
+                            type="button"
+                            onClick={() => setOpenStoreAccordion(openStoreAccordion === 'details' ? null : 'details')}
+                            className="w-full flex items-center justify-between text-left group cursor-pointer"
+                          >
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-brand-teal transition-colors">
+                              Product Description
+                            </span>
+                            <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${openStoreAccordion === 'details' ? 'rotate-180 text-brand-teal' : ''}`} />
+                          </button>
+                          {openStoreAccordion === 'details' && (
+                            <p className="text-xs text-slate-600 pt-2 leading-relaxed whitespace-pre-line">
+                              {product.description || 'Elevate your celebratory ensemble with this handcrafted creation.'}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Accordion 2: Material & Care */}
+                        <div className="p-3.5">
+                          <button
+                            type="button"
+                            onClick={() => setOpenStoreAccordion(openStoreAccordion === 'fabric' ? null : 'fabric')}
+                            className="w-full flex items-center justify-between text-left group cursor-pointer"
+                          >
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-brand-teal transition-colors">
+                              Material & Care
+                            </span>
+                            <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${openStoreAccordion === 'fabric' ? 'rotate-180 text-brand-teal' : ''}`} />
+                          </button>
+                          {openStoreAccordion === 'fabric' && (
+                            <p className="text-xs text-slate-600 pt-2 leading-relaxed whitespace-pre-line">
+                              {product.materialCare || (product.attributes?.fabric ? `Fabric: ${product.attributes.fabric}. ${product.attributes?.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}` : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.')}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Accordion 3: Shipping & Returns */}
+                        <div className="p-3.5">
+                          <button
+                            type="button"
+                            onClick={() => setOpenStoreAccordion(openStoreAccordion === 'shipping' ? null : 'shipping')}
+                            className="w-full flex items-center justify-between text-left group cursor-pointer"
+                          >
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-brand-teal transition-colors">
+                              Shipping & Returns
+                            </span>
+                            <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${openStoreAccordion === 'shipping' ? 'rotate-180 text-brand-teal' : ''}`} />
+                          </button>
+                          {openStoreAccordion === 'shipping' && (
+                            <p className="text-xs text-slate-600 pt-2 leading-relaxed whitespace-pre-line">
+                              {product.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.'}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Direct Edit Form */
+                      <div className="space-y-3 pt-1">
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-700 block mb-1">Product Description Accordion</label>
+                          <textarea
+                            rows={2}
+                            value={draftAccordions.description}
+                            onChange={(e) => setDraftAccordions({ ...draftAccordions, description: e.target.value })}
+                            className="w-full text-xs p-2.5 border border-brand-teal/40 rounded-xl outline-none focus:ring-2 focus:ring-brand-powder"
+                            placeholder="Detailed narrative description..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-700 block mb-1">Material & Care Accordion</label>
+                          <textarea
+                            rows={2}
+                            value={draftAccordions.materialCare}
+                            onChange={(e) => setDraftAccordions({ ...draftAccordions, materialCare: e.target.value })}
+                            className="w-full text-xs p-2.5 border border-brand-teal/40 rounded-xl outline-none focus:ring-2 focus:ring-brand-powder"
+                            placeholder="Fabric details and washing guidelines..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-slate-700 block mb-1">Shipping & Returns Accordion</label>
+                          <textarea
+                            rows={2}
+                            value={draftAccordions.shippingReturns}
+                            onChange={(e) => setDraftAccordions({ ...draftAccordions, shippingReturns: e.target.value })}
+                            className="w-full text-xs p-2.5 border border-brand-teal/40 rounded-xl outline-none focus:ring-2 focus:ring-brand-powder"
+                            placeholder="Dispatch timeframe and return policy terms..."
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

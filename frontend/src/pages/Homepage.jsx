@@ -6,7 +6,6 @@ import BestSellers        from '../components/BestSellers';
 import FourPillars        from '../components/FourPillars';
 import TrendingNow        from '../components/TrendingNow';
 import PromoBanner        from '../components/PromoBanner';
-import CuratedCollections from '../components/CuratedCollections';
 import OccasionSection    from '../components/OccasionSection';
 import Testimonials       from '../components/Testimonials';
 import InstagramGallery   from '../components/InstagramGallery';
@@ -30,7 +29,6 @@ export default function Homepage() {
       {isSectionActive('promo-banners') && <PromoBanner />}
       {isSectionActive('trending') && <TrendingNow />}
       {isSectionActive('occasion') && <OccasionSection />}
-      {isSectionActive('collections') && <CuratedCollections />}
       {isSectionActive('testimonials') && <Testimonials />}
       {isSectionActive('instagram') && <InstagramGallery />}
     </div>
