@@ -6,6 +6,7 @@ import { products } from '../data/products';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useOrders } from '../context/OrderContext';
+import { useSettings } from '../context/SettingsContext';
 
 const STEPS = [
   { id: 1, name: 'Address' },
@@ -134,9 +135,13 @@ export default function Checkout() {
     }
   }, [selectedAddressId, addresses]);
 
+  const { settings } = useSettings();
+  const freeMin = Number(settings?.shipping?.freeShippingMin ?? 1999);
+  const stdCharge = Number(settings?.shipping?.standardCharge ?? 99);
+
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = 0;
-  const total = subtotal;
+  const shipping = subtotal > freeMin ? 0 : stdCharge;
+  const total = subtotal + shipping;
 
   const [checkoutErrors, setCheckoutErrors] = useState({});
 

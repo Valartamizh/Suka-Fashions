@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, User, Heart, ShoppingBag, ChevronDown, LogOut, ArrowLeft } from 'lucide-react';
 import logo from '../assets/logo.jpg';
@@ -6,6 +6,8 @@ import SearchOverlay from './SearchOverlay';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
+import { useCategories } from '../context/CategoryContext';
+import { useSettings } from '../context/SettingsContext';
 import { products } from '../data/products';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -14,79 +16,6 @@ import sareeGolden from '../assets/saree_golden.jpg';
 import kurtiPurplePrinted from '../assets/kurti_purple_printed.jpg';
 import lehengaRed from '../assets/lehenga_red.jpg';
 import dressNavy from '../assets/dress_navy.jpg';
-
-const navItems = [
-  { name: 'New Arrivals', path: '/products?sort=newest' },
-  {
-    name: 'Sarees',
-    path: '/category/sarees',
-    dropdown: [
-      { label: 'Silk Sarees',       path: '/products?category=sarees&fabric=Silk' },
-      { label: 'Organza Sarees',    path: '/products?category=sarees&fabric=Organza' },
-      { label: 'Georgette Sarees',  path: '/products?category=sarees&fabric=Georgette' },
-      { label: 'Cotton Sarees',     path: '/products?category=sarees&fabric=Cotton' },
-      { label: 'Banarasi Sarees',   path: '/products?category=sarees&fabric=Banarasi' },
-      { label: 'Party Wear Sarees', path: '/products?category=sarees&occasion=Party' },
-      { label: 'Wedding Sarees',    path: '/products?category=sarees&occasion=Wedding' },
-    ],
-    megaImage: sareeGolden,
-    megaTitle: 'The Saree Edit',
-    megaLink: '/category/sarees'
-  },
-  {
-    name: 'Kurtis',
-    path: '/category/kurtis',
-    dropdown: [
-      { label: 'Cotton Kurti Sets',  path: '/products?category=kurtis&fabric=Cotton' },
-      { label: 'Anarkali Kurtis',    path: '/products?category=kurtis&sub=Anarkali' },
-      { label: 'Printed Kurtis',     path: '/products?category=kurtis&sub=Printed' },
-      { label: 'Silk Kurta Sets',    path: '/products?category=kurtis&fabric=Silk' },
-      { label: 'Office Wear Kurtis', path: '/products?category=kurtis&occasion=Office' },
-    ],
-    megaImage: kurtiPurplePrinted,
-    megaTitle: 'Everyday Elegance',
-    megaLink: '/category/kurtis'
-  },
-  {
-    name: 'Lehengas',
-    path: '/category/lehengas',
-    dropdown: [
-      { label: 'Bridal Lehengas',   path: '/products?category=lehengas&occasion=Wedding' },
-      { label: 'Organza Lehengas',  path: '/products?category=lehengas&fabric=Organza' },
-      { label: 'Haldi Lehengas',     path: '/products?category=lehengas&occasion=Haldi' },
-      { label: 'Net Lehengas',       path: '/products?category=lehengas&fabric=Net' },
-      { label: 'Sequin Lehengas',    path: '/products?category=lehengas&sub=Sequin' },
-    ],
-    megaImage: lehengaRed,
-    megaTitle: 'Heritage Lehengas',
-    megaLink: '/category/lehengas'
-  },
-  {
-    name: 'Dresses',
-    path: '/category/dresses',
-    dropdown: [
-      { label: 'Anarkali Dresses', path: '/products?category=dresses&sub=Anarkali' },
-      { label: 'Maxi Dresses',     path: '/products?category=dresses&sub=Maxi' },
-      { label: 'Evening Gowns',    path: '/products?category=dresses&sub=Gown' },
-      { label: 'Tunic Dresses',    path: '/products?category=dresses&sub=Tunic' },
-    ],
-    megaImage: dressNavy,
-    megaTitle: 'Contemporary Silhouettes',
-    megaLink: '/category/dresses'
-  },
-  {
-    name: 'Occasion',
-    path: '/category/occasion',
-    dropdown: [
-      { label: 'Wedding',         path: '/products?occasion=Wedding' },
-      { label: 'Festive',         path: '/products?occasion=Festive' },
-      { label: 'Party',           path: '/products?occasion=Party' },
-      { label: 'Casual',          path: '/products?occasion=Casual' },
-      { label: 'Office',          path: '/products?occasion=Office' },
-      { label: 'Haldi / Mehendi',  path: '/products?occasion=Haldi' },
-    ],
-  },
-];
 
 export default function Navbar() {
   const [scrolled, setScrolled]               = useState(false);
@@ -109,6 +38,112 @@ export default function Navbar() {
   const { user, isLoggedIn, logout } = useAuth();
   const { wishlistCount } = useWishlist();
   const { cartCount } = useCart();
+  const { categories } = useCategories();
+  const { settings } = useSettings();
+
+  // Curated Clean Desktop Navigation Items (Main Core Categories + Dynamic Subcategories + More Dropdown)
+  const navItems = useMemo(() => {
+    const getCat = (key) => (categories || []).find(c =>
+      c.id === key || c.name.toLowerCase() === key.toLowerCase()
+    );
+
+    const sareeCat = getCat('sarees');
+    const kurtiCat = getCat('kurtis');
+    const lehengaCat = getCat('lehengas');
+    const dressCat = getCat('dresses');
+
+    // Filter out core 4 categories to group any additional categories into a clean "More" dropdown
+    const coreKeys = ['sarees', 'kurtis', 'lehengas', 'dresses'];
+    const otherActiveCats = (categories || []).filter(c =>
+      c.active !== false && !coreKeys.includes(c.id) && !coreKeys.some(k => c.name.toLowerCase().startsWith(k))
+    );
+
+    const items = [
+      { name: 'New Arrivals', path: '/products?sort=newest' },
+      {
+        name: 'Sarees',
+        path: sareeCat?.link || '/category/sarees',
+        dropdown: (sareeCat?.subcategories && sareeCat.subcategories.length > 0
+          ? sareeCat.subcategories
+          : ['Silk', 'Organza', 'Georgette', 'Cotton', 'Banarasi', 'Wedding', 'Festive']
+        ).map(sub => ({
+          label: sub.toLowerCase().includes('saree') ? sub : `${sub} Sarees`,
+          path: `/products?category=sarees&sub=${encodeURIComponent(sub)}`
+        })),
+        megaImage: sareeCat?.image || sareeGolden,
+        megaTitle: 'The Saree Edit',
+        megaLink: sareeCat?.link || '/category/sarees'
+      },
+      {
+        name: 'Kurtis',
+        path: kurtiCat?.link || '/category/kurtis',
+        dropdown: (kurtiCat?.subcategories && kurtiCat.subcategories.length > 0
+          ? kurtiCat.subcategories
+          : ['Cotton Kurti Sets', 'Anarkali', 'Printed', 'Silk Kurta Sets', 'Office Wear']
+        ).map(sub => ({
+          label: sub.toLowerCase().includes('kurti') || sub.toLowerCase().includes('set') || sub.toLowerCase().includes('suit') ? sub : `${sub} Kurtis`,
+          path: `/products?category=kurtis&sub=${encodeURIComponent(sub)}`
+        })),
+        megaImage: kurtiCat?.image || kurtiPurplePrinted,
+        megaTitle: 'Everyday Elegance',
+        megaLink: kurtiCat?.link || '/category/kurtis'
+      },
+      {
+        name: 'Lehengas',
+        path: lehengaCat?.link || '/category/lehengas',
+        dropdown: (lehengaCat?.subcategories && lehengaCat.subcategories.length > 0
+          ? lehengaCat.subcategories
+          : ['Bridal', 'Party', 'Organza', 'Haldi', 'Net', 'Sequin']
+        ).map(sub => ({
+          label: sub.toLowerCase().includes('lehenga') ? sub : `${sub} Lehengas`,
+          path: `/products?category=lehengas&sub=${encodeURIComponent(sub)}`
+        })),
+        megaImage: lehengaCat?.image || lehengaRed,
+        megaTitle: 'Heritage Lehengas',
+        megaLink: lehengaCat?.link || '/category/lehengas'
+      },
+      {
+        name: 'Dresses',
+        path: dressCat?.link || '/category/dresses',
+        dropdown: (dressCat?.subcategories && dressCat.subcategories.length > 0
+          ? dressCat.subcategories
+          : ['Anarkali Dresses', 'Maxi Dresses', 'Evening Gowns', 'Tunic Dresses']
+        ).map(sub => ({
+          label: sub.toLowerCase().includes('dress') || sub.toLowerCase().includes('gown') ? sub : `${sub} Dresses`,
+          path: `/products?category=dresses&sub=${encodeURIComponent(sub)}`
+        })),
+        megaImage: dressCat?.image || dressNavy,
+        megaTitle: 'Contemporary Silhouettes',
+        megaLink: dressCat?.link || '/category/dresses'
+      },
+      {
+        name: 'Occasion',
+        path: '/category/occasion',
+        dropdown: [
+          { label: 'Wedding',         path: '/products?occasion=Wedding' },
+          { label: 'Festive',         path: '/products?occasion=Festive' },
+          { label: 'Party',           path: '/products?occasion=Party' },
+          { label: 'Casual',          path: '/products?occasion=Casual' },
+          { label: 'Office',          path: '/products?occasion=Office' },
+          { label: 'Haldi / Mehendi',  path: '/products?occasion=Haldi' },
+        ],
+      }
+    ];
+
+    // If extra categories exist (e.g. Co-ords, Dupattas, Festive Wear, custom), group them cleanly under "More"
+    if (otherActiveCats.length > 0) {
+      items.push({
+        name: 'More',
+        path: otherActiveCats[0]?.link || `/category/${otherActiveCats[0]?.id}`,
+        dropdown: otherActiveCats.map(c => ({
+          label: c.name,
+          path: c.link || `/category/${c.id || c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+        }))
+      });
+    }
+
+    return items;
+  }, [categories]);
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -238,8 +273,10 @@ export default function Navbar() {
               </button>
 
               <Link to="/" className="flex items-center gap-2">
-                <img src={logo} alt="Suka Fashions Logo" className="w-7 h-7 rounded-full object-cover border border-brand-powder shadow-2xs" />
-                <span className="font-serif text-base font-bold text-brand-navy tracking-wide">Suka</span>
+                <img src={logo} alt="Store Logo" className="w-7 h-7 rounded-full object-cover border border-brand-powder shadow-2xs" />
+                <span className="font-serif text-base font-bold text-brand-navy tracking-wide">
+                  {settings?.store?.storeName || 'Suka Fashions'}
+                </span>
               </Link>
 
               <div className="flex items-center gap-1">
@@ -256,21 +293,21 @@ export default function Navbar() {
           )}
 
           {/* Standard Navigation Bar (Hidden on Mobile Product Pages) */}
-          <div className={`${isProductPage ? 'hidden lg:flex' : 'flex'} items-center justify-between transition-all duration-300 ${scrolled ? 'h-[76px]' : 'h-[94px] lg:h-[102px]'}`}>
+          <div className={`${isProductPage ? 'hidden lg:flex' : 'flex'} items-center justify-between transition-all duration-300 h-14 sm:h-16 lg:h-[94px] ${scrolled ? 'lg:h-[76px]' : ''}`}>
 
             {/* ── Logo ─────────────────────────────────────── */}
-            <Link to="/" className="flex items-center gap-3.5 flex-shrink-0">
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 lg:gap-3.5 flex-shrink-0">
               <img
                 src={logo}
-                alt="Suka Fashions Logo"
-                className={`rounded-full object-cover border border-brand-powder shadow-sm transition-all duration-300 ${scrolled ? 'h-11 w-11' : 'h-12 w-12 sm:h-13 sm:w-13 lg:h-14 lg:w-14'}`}
+                alt="Store Logo"
+                className={`rounded-full object-cover border border-brand-powder shadow-sm transition-all duration-300 h-8 w-8 sm:h-9 sm:w-9 ${scrolled ? 'lg:h-11 lg:w-11' : 'lg:h-14 lg:w-14'}`}
               />
               <div className="flex flex-col leading-none">
-                <span className={`font-serif font-bold tracking-wider text-brand-navy transition-all duration-300 ${scrolled ? 'text-xl lg:text-2xl' : 'text-2xl lg:text-3xl'}`}>
-                  Suka
+                <span className={`font-serif font-bold tracking-tight sm:tracking-wider text-brand-navy transition-all duration-300 text-lg sm:text-xl ${scrolled ? 'lg:text-2xl' : 'lg:text-3xl'}`}>
+                  {settings?.store?.storeName || 'Suka Fashions'}
                 </span>
-                <span className="font-sans text-[8px] sm:text-[9.5px] tracking-[0.3em] text-brand-teal font-semibold uppercase mt-0.5">
-                  FASHIONS
+                <span className="font-sans text-[7px] sm:text-[8px] lg:text-[9.5px] tracking-[0.25em] sm:tracking-[0.3em] text-brand-teal font-semibold uppercase mt-0.5">
+                  OFFICIAL STORE
                 </span>
               </div>
             </Link>
@@ -505,10 +542,10 @@ export default function Navbar() {
               {/* Mobile Quick Search Button */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-2 md:hidden text-brand-navy hover:text-brand-teal transition-colors rounded-full hover:bg-brand-powderLight"
+                className="p-1.5 md:hidden text-brand-navy hover:text-brand-teal transition-colors rounded-full hover:bg-brand-powderLight"
                 aria-label="Search catalog"
               >
-                <Search size={20} strokeWidth={1.7} />
+                <Search size={18} strokeWidth={1.8} />
               </button>
 
               {/* Account Dropdown */}
@@ -583,10 +620,10 @@ export default function Navbar() {
               {/* Mobile Hamburger */}
               <button
                 onClick={() => setMobileOpen(true)}
-                className="p-2 lg:hidden text-brand-navy hover:text-brand-teal transition-colors rounded-lg"
+                className="p-1.5 lg:hidden text-brand-navy hover:text-brand-teal transition-colors rounded-lg"
                 aria-label="Open navigation menu"
               >
-                <Menu size={24} strokeWidth={1.8} />
+                <Menu size={22} strokeWidth={1.8} />
               </button>
 
             </div>

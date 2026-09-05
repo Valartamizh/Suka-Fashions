@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, Mail, Clock, MapPin, Send, CheckCircle2, MessageSquare } from 'lucide-react';
+import { useSettings } from '../context/SettingsContext';
 
 const InstagramIcon = ({ className = "w-4 h-4 fill-current" }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
@@ -8,6 +9,7 @@ const InstagramIcon = ({ className = "w-4 h-4 fill-current" }) => (
 );
 
 export default function Contact() {
+  const { settings } = useSettings();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,6 +20,10 @@ export default function Contact() {
 
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+
+  const supportPhone = settings?.store?.supportPhone || '+91 98765 43210';
+  const supportEmail = settings?.store?.supportEmail || 'care@sukafashions.com';
+  const storeAddress = settings?.store?.address || '42, Commercial Street, Bengaluru, Karnataka 560001';
 
   const validateForm = () => {
     const errs = {};
@@ -91,8 +97,8 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="font-sans text-xs uppercase tracking-wider font-bold text-brand-navy mb-0.5">Call Us Direct</h3>
-                  <p className="font-sans text-sm font-semibold text-brand-teal">+91 98765 43210</p>
-                  <p className="font-sans text-[11px] text-brand-navy/50">Toll Free Support for Orders & Assistance</p>
+                  <a href={`tel:${supportPhone.replace(/\s+/g, '')}`} className="font-sans text-sm font-semibold text-brand-teal hover:underline">{supportPhone}</a>
+                  <p className="font-sans text-[11px] text-brand-navy/50">Direct Support for Orders & Assistance</p>
                 </div>
               </div>
 
@@ -102,7 +108,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="font-sans text-xs uppercase tracking-wider font-bold text-brand-navy mb-0.5">Email Support</h3>
-                  <p className="font-sans text-sm font-semibold text-brand-teal">care@sukafashions.com</p>
+                  <a href={`mailto:${supportEmail}`} className="font-sans text-sm font-semibold text-brand-teal hover:underline">{supportEmail}</a>
                   <p className="font-sans text-[11px] text-brand-navy/50">For order updates & custom bridal queries</p>
                 </div>
               </div>
@@ -138,7 +144,7 @@ export default function Contact() {
                 <div>
                   <h3 className="font-sans text-xs uppercase tracking-wider font-bold text-brand-navy mb-0.5">Flagship Store & HQ</h3>
                   <p className="font-sans text-xs text-brand-navy/70 leading-relaxed">
-                    Suka Fashions Atelier, 45 Handloom Heritage Avenue, Jubilee Hills, Hyderabad, Telangana 500033
+                    {storeAddress}
                   </p>
                 </div>
               </div>

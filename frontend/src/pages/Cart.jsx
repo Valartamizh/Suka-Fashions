@@ -5,6 +5,7 @@ import { products } from '../data/products';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useSettings } from '../context/SettingsContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function Cart() {
@@ -51,8 +52,12 @@ export default function Cart() {
     });
   };
 
+  const { settings } = useSettings();
+  const freeMin = Number(settings?.shipping?.freeShippingMin ?? 1999);
+  const stdCharge = Number(settings?.shipping?.standardCharge ?? 99);
+
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = subtotal > 1999 ? 0 : 150;
+  const shipping = subtotal > freeMin ? 0 : stdCharge;
   const total = subtotal + shipping;
 
   if (cartItems.length === 0) {
@@ -77,19 +82,19 @@ export default function Cart() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-6 sm:pt-8 pb-12 lg:pb-16">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-16 pt-4 sm:pt-8 pb-6 sm:pb-12 lg:pb-16">
 
-      <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-6 lg:mb-8">
+      <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-3.5 sm:mb-6 lg:mb-8">
         Shopping Bag <span className="font-sans text-base sm:text-xl text-brand-navy/40 ml-2">({cartItems.length})</span>
       </h1>
 
-      <div className="flex flex-col lg:flex-row gap-10 lg:gap-16">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 lg:gap-16">
 
         {/* Left: Cart Items */}
         <div className="lg:w-[60%] xl:w-[65%]">
 
           {/* Free Shipping Progress */}
-          <div className="bg-brand-powderLight border border-brand-powder/60 p-4 rounded-sm mb-6">
+          <div className="bg-brand-powderLight border border-brand-powder/60 p-3 sm:p-4 rounded-sm mb-3 sm:mb-6">
             {subtotal >= 1999 ? (
               <p className="font-sans text-[11px] text-brand-teal tracking-wide font-medium flex items-center gap-2">
                 <Truck size={14} /> Congratulations! You've unlocked free shipping.
@@ -111,7 +116,7 @@ export default function Cart() {
 
           <div className="border-t border-brand-powder/60">
             {cartItems.map((item) => (
-              <div key={item.cartId} className="flex gap-4 sm:gap-6 py-6 border-b border-brand-powder/60 relative">
+              <div key={item.cartId} className="flex gap-4 sm:gap-6 py-4 sm:py-6 border-b border-brand-powder/60 relative">
 
                 {/* Product Image */}
                 <Link to={`/product/${item.slug}`} className="w-24 sm:w-32 flex-shrink-0 aspect-[3/4] bg-brand-cream border border-brand-powder/40 rounded-sm overflow-hidden group">
@@ -163,7 +168,7 @@ export default function Cart() {
                 </div>
 
                 {/* Actions */}
-                <div className="absolute top-6 right-0 flex flex-col gap-3">
+                <div className="absolute top-4 sm:top-6 right-0 flex flex-col gap-3">
                   <button
                     onClick={() => requestRemoveItem(item)}
                     className="text-brand-navy/40 hover:text-red-500 transition-colors p-1 cursor-pointer"
@@ -189,12 +194,12 @@ export default function Cart() {
 
         {/* Right: Order Summary */}
         <div className="lg:w-[40%] xl:w-[35%]">
-          <div className="bg-brand-cream/30 border border-brand-powder/50 rounded-sm p-6 sm:p-8 sticky top-28">
-            <h2 className="font-sans text-xs uppercase tracking-[0.2em] font-bold text-brand-navy mb-6 pb-4 border-b border-brand-powder/60">
+          <div className="bg-brand-cream/30 border border-brand-powder/50 rounded-sm p-4 sm:p-6 lg:p-8 sticky top-28">
+            <h2 className="font-sans text-xs uppercase tracking-[0.2em] font-bold text-brand-navy mb-3.5 pb-2.5 sm:mb-6 sm:pb-4 border-b border-brand-powder/60">
               Order Summary
             </h2>
 
-            <div className="space-y-4 mb-6 pb-6 border-b border-brand-powder/60">
+            <div className="space-y-2.5 sm:space-y-4 mb-3.5 pb-3 sm:mb-6 sm:pb-6 border-b border-brand-powder/60">
               <div className="flex justify-between font-sans text-sm text-brand-navy/70">
                 <span>Subtotal</span>
                 <span>₹{subtotal.toLocaleString('en-IN')}</span>
@@ -205,7 +210,7 @@ export default function Cart() {
               </div>
             </div>
 
-            <div className="flex justify-between font-sans text-lg font-bold text-brand-navy mb-8">
+            <div className="flex justify-between font-sans text-base sm:text-lg font-bold text-brand-navy mb-4 sm:mb-8">
               <span>Total</span>
               <span>₹{total.toLocaleString('en-IN')}</span>
             </div>
@@ -218,7 +223,7 @@ export default function Cart() {
                   navigate('/login');
                 }
               }}
-              className="w-full flex items-center justify-center gap-2 bg-brand-navy text-white py-4 font-sans text-[10px] uppercase tracking-[0.2em] font-semibold hover:bg-brand-teal transition-colors rounded-sm shadow-md mb-4"
+              className="w-full flex items-center justify-center gap-2 bg-brand-navy text-white py-3.5 sm:py-4 font-sans text-[10px] uppercase tracking-[0.2em] font-semibold hover:bg-brand-teal transition-colors rounded-sm shadow-md mb-3 sm:mb-4"
             >
               Proceed to Checkout <ArrowRight size={14} />
             </Link>

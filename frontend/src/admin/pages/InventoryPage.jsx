@@ -205,9 +205,10 @@ export default function InventoryPage() {
 
       {tab === 'Inventory' && (
         <>
-          {/* Inventory table */}
+          {/* Inventory container */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+            {/* Desktop & Tablet Table */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/50">
@@ -272,6 +273,67 @@ export default function InventoryPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Inventory Card View (< sm screens) */}
+            <div className="block sm:hidden divide-y divide-slate-100">
+              {paginated.length === 0 ? (
+                <div className="p-8 text-center text-sm text-slate-400">
+                  No inventory items match your search.
+                </div>
+              ) : paginated.map(item => {
+                const status = getStockStatus(item.available, item.minimumStock);
+                return (
+                  <div key={item.id} className="p-4 hover:bg-slate-50 transition-colors space-y-3">
+                    <div className="flex items-start gap-3">
+                      {item.image && (
+                        <img src={item.image} alt={item.productName} className="w-12 h-14 object-cover rounded-lg border border-slate-200 shadow-2xs flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-[10px] font-mono text-slate-400">{item.sku}</span>
+                          <StatusBadge status={status} />
+                        </div>
+                        <h4 className="font-bold text-slate-900 text-xs truncate mt-0.5">{item.productName}</h4>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className="w-2.5 h-2.5 rounded-full border border-slate-300" style={{ backgroundColor: item.colorHex || '#006B70' }} />
+                          <span className="text-[11px] text-slate-600 font-semibold">{item.colorName}</span>
+                          <span className="text-slate-300">·</span>
+                          <span className="text-[11px] font-bold text-slate-800">Size: {item.size}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs bg-slate-50/70 p-2.5 rounded-xl">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-semibold uppercase">Available</span>
+                        <span className={`font-black text-sm font-mono ${
+                          item.available === 0 ? 'text-red-600' :
+                          item.available <= item.minimumStock ? 'text-amber-600' :
+                          'text-slate-900'
+                        }`}>
+                          {item.available} Units
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-semibold uppercase">Min. Stock</span>
+                        <span className="font-bold text-slate-600 font-mono text-xs">{item.minimumStock} Units</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const matchedProd = products.find(p => p.id === item.productId);
+                          if (matchedProd) setManageProduct(matchedProd);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 font-bold rounded-lg text-xs"
+                      >
+                        <Layers size={12} />
+                        <span>Manage</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} totalItems={filtered.length} pageSize={PAGE_SIZE} />
           </div>
         </>

@@ -145,6 +145,49 @@ export const adminOrders = [
       { status: 'cancelled', time: '2026-08-12 18:05', note: 'Payment failed at gateway. Order auto-cancelled.' },
     ],
   },
+  {
+    id: 'SUK1022',
+    customer: { id: 'CUS000511', name: 'Sunita Rao', phone: '+91 88765 43210', email: 'sunita.rao@gmail.com' },
+    address: { line1: '24, Indiranagar 100ft Road', city: 'Bangalore', state: 'Karnataka', pincode: '560038' },
+    items: [
+      { productId: 'navy-embroidered-dress', name: 'Navy Blue Embroidered Party Dress', variant: 'Navy / S', qty: 1, price: 3199, image: dressNavy },
+    ],
+    subtotal: 3199,
+    discount: 0,
+    shipping: 0,
+    tax: 160,
+    total: 3359,
+    paymentMethod: 'UPI',
+    paymentStatus: 'paid',
+    status: 'confirmed',
+    date: '2026-08-10',
+    timeline: [
+      { status: 'pending', time: '2026-08-10 11:20', note: 'Order placed' },
+      { status: 'confirmed', time: '2026-08-10 11:30', note: 'Payment confirmed via UPI' },
+    ],
+  },
+  {
+    id: 'SUK1021',
+    customer: { id: 'CUS000374', name: 'Kavitha Menon', phone: '+91 96543 21098', email: 'kavitha.m@outlook.com' },
+    address: { line1: '12, Marine Drive Promenade', city: 'Kochi', state: 'Kerala', pincode: '682011' },
+    items: [
+      { productId: 'gold-zari-kanchipuram', name: 'Royal Gold Zari Kanchipuram Saree', variant: 'Gold / Free Size', qty: 1, price: 5999, image: sareeGolden },
+    ],
+    subtotal: 5999,
+    discount: 300,
+    shipping: 0,
+    tax: 285,
+    total: 5984,
+    paymentMethod: 'Net Banking',
+    paymentStatus: 'paid',
+    status: 'delivered',
+    date: '2026-08-08',
+    timeline: [
+      { status: 'pending', time: '2026-08-08 14:00', note: 'Order placed' },
+      { status: 'confirmed', time: '2026-08-08 14:15', note: 'Payment confirmed' },
+      { status: 'delivered', time: '2026-08-11 15:45', note: 'Package delivered to customer' },
+    ],
+  },
 ];
 
 export const salesData = {

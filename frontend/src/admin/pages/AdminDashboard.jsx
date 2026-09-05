@@ -9,10 +9,11 @@ import {
 } from 'recharts';
 import StatCard from '../components/ui/StatCard';
 import StatusBadge from '../components/ui/StatusBadge';
-import { adminOrders, salesData } from '../data/adminOrders';
+import { salesData } from '../data/adminOrders';
 import { adminProducts } from '../data/adminProducts';
 import { adminInventory, getStockStatus } from '../data/adminInventory';
 import { useCustomers } from '../../context/CustomerContext';
+import { useOrders } from '../../context/OrderContext';
 
 const DATE_RANGES = ['Today', '7 Days', '30 Days', 'This Month'];
 
@@ -220,6 +221,7 @@ const PERIOD_OPTIONS = [
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { customers } = useCustomers();
+  const { adminOrders } = useOrders();
   const [graphMode, setGraphMode] = useState('both'); // 'revenue' | 'sales' | 'both'
   const [chartRange, setChartRange] = useState('7days'); // 'today' | '7days' | '30days' | '12months' | 'overall'
 
@@ -243,19 +245,19 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-sans text-xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <h1 className="font-sans text-xl sm:text-2xl font-bold text-slate-800">Dashboard</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
             Showing performance metrics for <span className="font-semibold text-brand-teal">{periodLabel}</span>.
           </p>
         </div>
         
         {/* Dynamic Period Filter: Today, 7 Days, 30 Days, Overall */}
-        <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-2xs">
+        <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-2xs overflow-x-auto no-scrollbar max-w-full">
           {PERIOD_OPTIONS.map(r => (
             <button
               key={r.key}
               onClick={() => setChartRange(r.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                 chartRange === r.key
                   ? 'bg-brand-teal text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
@@ -268,7 +270,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
         <StatCard
           title="Total Revenue"
           value={currentMetrics.revenue}
@@ -311,9 +313,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Middle row: Sales & Revenue Graph + Order Status */}
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Graph Card */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-5">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <div className="flex items-center gap-2.5">
@@ -329,11 +331,11 @@ export default function AdminDashboard() {
             </div>
 
             {/* Graph Switcher Tabs (Sales Graph vs Revenue Graph vs Both) */}
-            <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/70">
+            <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/70 overflow-x-auto no-scrollbar max-w-full">
               <button
                 type="button"
                 onClick={() => setGraphMode('revenue')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                   graphMode === 'revenue'
                     ? 'bg-white text-teal-800 shadow-xs border border-slate-200/60'
                     : 'text-slate-500 hover:text-slate-800'
@@ -346,7 +348,7 @@ export default function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => setGraphMode('sales')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                   graphMode === 'sales'
                     ? 'bg-white text-indigo-800 shadow-xs border border-slate-200/60'
                     : 'text-slate-500 hover:text-slate-800'
@@ -359,7 +361,7 @@ export default function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => setGraphMode('both')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                   graphMode === 'both'
                     ? 'bg-white text-slate-800 shadow-xs border border-slate-200/60'
                     : 'text-slate-500 hover:text-slate-800'
@@ -386,8 +388,16 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          <ResponsiveContainer width="100%" height={210}>
-            <AreaChart data={activeChartData} margin={{ top: 8, right: 10, left: -15, bottom: 0 }}>
+          <ResponsiveContainer width="100%" height={230}>
+            <AreaChart
+              data={activeChartData}
+              margin={{
+                top: 8,
+                right: graphMode === 'both' ? 4 : 4,
+                left: -14,
+                bottom: 0,
+              }}
+            >
               <defs>
                 {/* Revenue Gradient (Teal/Emerald) */}
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -401,12 +411,19 @@ export default function AdminDashboard() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 10, fill: '#94a3b8' }}
+                axisLine={false}
+                tickLine={false}
+                padding={{ left: 6, right: 6 }}
+              />
               
               {/* Left Y Axis for Revenue */}
               {(graphMode === 'revenue' || graphMode === 'both') && (
                 <YAxis
                   yAxisId="revenue"
+                  width={38}
                   tick={{ fontSize: 10, fill: '#006B70' }}
                   axisLine={false}
                   tickLine={false}
@@ -418,6 +435,7 @@ export default function AdminDashboard() {
               {graphMode === 'sales' && (
                 <YAxis
                   yAxisId="sales"
+                  width={28}
                   tick={{ fontSize: 10, fill: '#6366F1' }}
                   axisLine={false}
                   tickLine={false}
@@ -429,6 +447,7 @@ export default function AdminDashboard() {
                 <YAxis
                   yAxisId="sales"
                   orientation="right"
+                  width={24}
                   tick={{ fontSize: 10, fill: '#6366F1' }}
                   axisLine={false}
                   tickLine={false}
@@ -499,7 +518,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Order Status Overview (Dynamically proportioned) */}
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-sans font-bold text-slate-800 text-sm">Order Overview</h3>
             <span className="text-[11px] font-semibold text-brand-teal bg-brand-powderLight px-2 py-0.5 rounded-full">
@@ -541,16 +560,18 @@ export default function AdminDashboard() {
       </div>
 
       {/* Bottom row: Recent Orders + Top Products */}
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100">
             <h3 className="font-sans font-bold text-slate-800 text-sm">Recent Orders</h3>
             <Link to="/admin/orders" className="text-xs font-semibold text-brand-teal hover:underline flex items-center gap-1">
               View all <ChevronRight size={12} />
             </Link>
           </div>
-          <div className="overflow-x-auto">
+
+          {/* Desktop Table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
@@ -583,11 +604,35 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Orders Card View */}
+          <div className="block sm:hidden divide-y divide-slate-100">
+            {adminOrders.slice(0, 5).map(order => (
+              <div
+                key={order.id}
+                onClick={() => navigate(`/admin/orders/${order.id}`)}
+                className="p-3.5 hover:bg-slate-50 transition-colors cursor-pointer space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-bold text-brand-teal text-xs">#{order.id}</span>
+                  <StatusBadge status={order.status} />
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800 truncate">{order.customer.name}</span>
+                  <span className="font-bold text-slate-900 font-mono">₹{order.total.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <span>{order.date}</span>
+                  <StatusBadge status={order.paymentStatus} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Top Products */}
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100">
             <h3 className="font-sans font-bold text-slate-800 text-sm">Top Selling</h3>
             <Link to="/admin/products" className="text-xs font-semibold text-brand-teal hover:underline flex items-center gap-1">
               All <ChevronRight size={12} />
@@ -598,7 +643,7 @@ export default function AdminDashboard() {
               <div
                 key={p.id}
                 onClick={() => navigate(`/product/${p.slug || p.id}`)}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100/70 cursor-pointer transition-colors group"
+                className="flex items-center gap-3 px-3.5 sm:px-4 py-3 hover:bg-slate-100/70 cursor-pointer transition-colors group"
               >
                 <span className="font-bold text-slate-300 text-xs w-4 text-center">{i + 1}</span>
                 <img
@@ -621,9 +666,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Inventory Overview + Low Stock Alerts */}
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Inventory Summary */}
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
           <h3 className="font-sans font-bold text-slate-800 text-sm mb-4">Inventory Overview</h3>
           <div className="space-y-3">
             {[
@@ -652,15 +697,17 @@ export default function AdminDashboard() {
         </div>
 
         {/* Low Stock Alerts */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-amber-100 shadow-sm border-l-4 border-l-amber-400">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-amber-100 shadow-sm border-l-4 border-l-amber-400 overflow-hidden">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
               <AlertTriangle size={15} className="text-amber-500" />
               <h3 className="font-sans font-bold text-slate-800 text-sm">Low Stock Alerts</h3>
             </div>
             <Link to="/admin/inventory" className="text-xs font-semibold text-brand-teal hover:underline">View all</Link>
           </div>
-          <div className="overflow-x-auto">
+
+          {/* Desktop Low Stock Table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-slate-50">
@@ -695,6 +742,31 @@ export default function AdminDashboard() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Low Stock Card View */}
+          <div className="block sm:hidden divide-y divide-amber-100/60">
+            {lowStockItems.map(item => {
+              const status = getStockStatus(item.available, item.minimumStock);
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => navigate('/admin/inventory')}
+                  className="p-3.5 hover:bg-amber-50/40 transition-colors cursor-pointer space-y-1.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-800 text-xs truncate max-w-[180px]">{item.productName}</span>
+                    <StatusBadge status={status} />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-mono text-[10px] text-slate-400">{item.sku} · {item.variant}</span>
+                    <span className={`font-bold ${item.available === 0 ? 'text-red-600' : 'text-amber-600'}`}>
+                      Stock: {item.available} (Min: {item.minimumStock})
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

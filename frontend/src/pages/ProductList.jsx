@@ -1,24 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Filter, X, SlidersHorizontal, Sparkles, Check } from 'lucide-react';
 import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { useFilterCatalog } from '../context/FilterContext';
 import { useProducts } from '../context/ProductContext';
+import { useCategories } from '../context/CategoryContext';
 
 export default function ProductList() {
   const { filters } = useFilterCatalog();
   const { activeProducts } = useProducts();
+  const { categories } = useCategories();
   const { categoryName } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Dynamic filter facet options from admin Filter Catalog
+  // Dynamic filter facet options from admin Filter Catalog & active products
   const SORT_OPTIONS = (filters.sortOptions || []).filter(o => o.active);
   const PRICE_RANGES = (filters.priceRanges || []).filter(p => p.active);
   const TAG_OPTIONS = [{ id: 'all', label: 'All Collection' }, ...(filters.highlights || []).filter(h => h.active)];
   const SIZE_OPTIONS = ['all', ...(filters.sizes || []).filter(s => s.active).map(s => s.name)];
-  const COLOR_FILTER_OPTIONS = [{ id: 'all', name: 'All Colors', hex: null }, ...(filters.colors || []).filter(c => c.active)];
+  
+  const COLOR_FILTER_OPTIONS = useMemo(() => {
+    const list = [{ id: 'all', name: 'All Colors', hex: null }];
+    const seenKeys = new Set();
+
+    // 1. Existing active colors from Filter Catalog
+    (filters.colors || []).filter(c => c.active).forEach(c => {
+      const key = (c.name || '').toLowerCase().trim();
+      if (key && !seenKeys.has(key)) {
+        seenKeys.add(key);
+        list.push(c);
+      }
+    });
+
+    // 2. Discover any newly added colors from products
+    (activeProducts || []).forEach(p => {
+      if (p.colors && Array.isArray(p.colors)) {
+        p.colors.forEach(c => {
+          const cName = typeof c === 'string' ? c : (c.name || '');
+          const cHex = typeof c === 'object' ? (c.hex || '#006B70') : '#006B70';
+          const key = cName.toLowerCase().trim();
+          if (key && !seenKeys.has(key)) {
+            seenKeys.add(key);
+            list.push({
+              id: key.replace(/[^a-z0-9]+/g, '-'),
+              name: cName,
+              hex: cHex,
+              active: true
+            });
+          }
+        });
+      }
+    });
+
+    return list;
+  }, [filters.colors, activeProducts]);
+
   const FABRIC_OPTIONS = ['all', ...(filters.fabrics || []).filter(f => f.active).map(f => f.name)];
   const OCCASION_OPTIONS = ['all', ...(filters.occasions || []).filter(o => o.active).map(o => o.name)];
   const PATTERN_OPTIONS = ['all', ...(filters.crafts || []).filter(c => c.active).map(c => c.name)];
@@ -59,6 +97,24 @@ export default function ProductList() {
     setPriceRange(searchParams.get('price') || 'all');
   }, [categoryName, searchParams]);
 
+  // Active Category Object for lookup & subcategories
+  const activeCategoryObj = useMemo(() => {
+    if (!selectedCategory || selectedCategory === 'all') return null;
+    return (categories || []).find(c =>
+      c.id.toLowerCase() === selectedCategory.toLowerCase() ||
+      c.name.toLowerCase() === selectedCategory.toLowerCase() ||
+      c.id.toLowerCase().replace(/[^a-z0-9]+/g, '-') === selectedCategory.toLowerCase()
+    );
+  }, [categories, selectedCategory]);
+
+  const categoriesList = useMemo(() => {
+    const list = [{ id: 'all', name: 'All Products' }];
+    (categories || []).filter(c => c.active !== false).forEach(c => {
+      list.push({ id: c.id, name: c.name, subcategories: c.subcategories || [] });
+    });
+    return list;
+  }, [categories]);
+
   // Filter Pipeline
   let displayProducts = [...(activeProducts || [])];
 
@@ -67,7 +123,12 @@ export default function ProductList() {
     if (selectedCategory.toLowerCase() === 'sale') {
       displayProducts = displayProducts.filter(p => p.mrp > p.price || p.oldPrice || p.discount);
     } else if (selectedCategory.toLowerCase() !== 'occasion') {
-      displayProducts = displayProducts.filter(p => p.category?.toLowerCase() === selectedCategory.toLowerCase());
+      const matchCatId = activeCategoryObj?.id?.toLowerCase() || selectedCategory.toLowerCase();
+      const matchCatName = activeCategoryObj?.name?.toLowerCase() || selectedCategory.toLowerCase();
+      displayProducts = displayProducts.filter(p => {
+        const cat = (p.category || '').toLowerCase();
+        return cat === matchCatId || cat === matchCatName || cat.replace(/[^a-z0-9]+/g, '-') === matchCatId;
+      });
     }
   }
 
@@ -86,9 +147,10 @@ export default function ProductList() {
   if (selectedSub && selectedSub !== 'all') {
     const s = selectedSub.toLowerCase();
     displayProducts = displayProducts.filter(p => 
-      p.subcategory?.toLowerCase().includes(s) ||
-      p.name.toLowerCase().includes(s) ||
-      p.description?.toLowerCase().includes(s)
+      (p.subcategory && p.subcategory.toLowerCase() === s) ||
+      (p.subcategory && p.subcategory.toLowerCase().includes(s)) ||
+      (p.name && p.name.toLowerCase().includes(s)) ||
+      (p.description && p.description.toLowerCase().includes(s))
     );
   }
 
@@ -185,8 +247,6 @@ export default function ProductList() {
     displayProducts.sort((a, b) => b.price - a.price);
   }
 
-  const categoriesList = ['all', 'sarees', 'kurtis', 'lehengas', 'dresses'];
-
   const currentFabrics = FABRIC_OPTIONS;
 
   const updateParam = (key, value) => {
@@ -202,6 +262,10 @@ export default function ProductList() {
   const handleCategoryChange = (cat) => {
     setSelectedCategory(cat);
     const newParams = new URLSearchParams(searchParams);
+    // Reset subcategory on main category change unless 'all'
+    newParams.delete('sub');
+    setSelectedSub('all');
+
     if (cat === 'all') {
       newParams.delete('category');
       if (categoryName) {
@@ -286,8 +350,15 @@ export default function ProductList() {
           <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
             {selectedCategory !== 'all' && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-brand-powder text-brand-navy text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
-                Category: <strong className="capitalize">{selectedCategory}</strong>
+                Category: <strong className="capitalize">{activeCategoryObj?.name || selectedCategory}</strong>
                 <button type="button" onClick={() => updateParam('category', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove category filter"><X size={11} strokeWidth={2} /></button>
+              </span>
+            )}
+
+            {selectedSub !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-powderLight border border-brand-teal/40 text-brand-teal text-[10px] sm:text-xs rounded-full font-medium shadow-2xs">
+                Subcategory: <strong className="capitalize">{selectedSub}</strong>
+                <button type="button" onClick={() => updateParam('sub', 'all')} className="hover:text-red-500 transition-colors p-0.5 cursor-pointer" aria-label="Remove subcategory filter"><X size={11} strokeWidth={2} /></button>
               </span>
             )}
 
@@ -397,25 +468,85 @@ export default function ProductList() {
               Category
             </h3>
             <div className="flex flex-col gap-2">
-              {categoriesList.map(cat => (
+              {categoriesList.map(cat => {
+                const isSelected = selectedCategory.toLowerCase() === cat.id.toLowerCase() ||
+                  (activeCategoryObj && activeCategoryObj.id.toLowerCase() === cat.id.toLowerCase());
+                
+                const catProductCount = cat.id === 'all'
+                  ? (activeProducts || []).length
+                  : (activeProducts || []).filter(p => {
+                      const pc = (p.category || '').toLowerCase();
+                      return pc === cat.id.toLowerCase() || pc === cat.name.toLowerCase() || pc.replace(/[^a-z0-9]+/g, '-') === cat.id.toLowerCase();
+                    }).length;
+
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleCategoryChange(cat.id)}
+                    className={`w-full font-sans text-xs tracking-wider capitalize transition-colors flex items-center justify-between py-1 px-2 rounded-xs cursor-pointer text-left ${
+                      isSelected
+                        ? 'text-brand-teal font-bold bg-brand-powderLight'
+                        : 'text-brand-navy/70 hover:text-brand-teal hover:bg-brand-powderLight/40'
+                    }`}
+                  >
+                    <span>{cat.name}</span>
+                    <span className="text-[10px] text-brand-navy/40 font-normal">
+                      ({catProductCount})
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Subcategories (if selected category has subcategories) */}
+          {activeCategoryObj && activeCategoryObj.subcategories?.length > 0 && (
+            <div className="border-t border-brand-powder/50 pt-4">
+              <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-semibold text-brand-navy mb-2.5">
+                Subcategories
+              </h3>
+              <div className="flex flex-col gap-1.5">
                 <button
-                  key={cat}
                   type="button"
-                  onClick={() => handleCategoryChange(cat)}
+                  onClick={() => updateParam('sub', 'all')}
                   className={`w-full font-sans text-xs tracking-wider capitalize transition-colors flex items-center justify-between py-1 px-2 rounded-xs cursor-pointer text-left ${
-                    selectedCategory.toLowerCase() === cat.toLowerCase()
+                    selectedSub === 'all'
                       ? 'text-brand-teal font-bold bg-brand-powderLight'
                       : 'text-brand-navy/70 hover:text-brand-teal hover:bg-brand-powderLight/40'
                   }`}
                 >
-                  <span>{cat === 'all' ? 'All Products' : cat}</span>
-                  <span className="text-[10px] text-brand-navy/40 font-normal">
-                    ({cat === 'all' ? products.length : products.filter(p => p.category.toLowerCase() === cat).length})
-                  </span>
+                  <span>All Subcategories</span>
                 </button>
-              ))}
+                {activeCategoryObj.subcategories.map(sub => {
+                  const subCount = (activeProducts || []).filter(p => {
+                    const pc = (p.category || '').toLowerCase();
+                    const matchCat = pc === activeCategoryObj.id.toLowerCase() || pc === activeCategoryObj.name.toLowerCase() || pc.replace(/[^a-z0-9]+/g, '-') === activeCategoryObj.id.toLowerCase();
+                    const matchSub = (p.subcategory || '').toLowerCase() === sub.toLowerCase() || (p.name || '').toLowerCase().includes(sub.toLowerCase());
+                    return matchCat && matchSub;
+                  }).length;
+
+                  return (
+                    <button
+                      key={sub}
+                      type="button"
+                      onClick={() => updateParam('sub', sub)}
+                      className={`w-full font-sans text-xs tracking-wider capitalize transition-colors flex items-center justify-between py-1 px-2 rounded-xs cursor-pointer text-left ${
+                        selectedSub.toLowerCase() === sub.toLowerCase()
+                          ? 'text-brand-teal font-bold bg-brand-powderLight'
+                          : 'text-brand-navy/70 hover:text-brand-teal hover:bg-brand-powderLight/40'
+                      }`}
+                    >
+                      <span>{sub}</span>
+                      <span className="text-[10px] text-brand-navy/40 font-normal">
+                        ({subCount})
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 2. Price */}
           <div className="border-t border-brand-powder/50 pt-5">
@@ -506,7 +637,7 @@ export default function ProductList() {
             <div className="grid grid-cols-5 gap-2.5">
               {COLOR_FILTER_OPTIONS.map(c => {
                 if (c.id === 'all') return null;
-                const isWhite = c.hex.toUpperCase() === '#FFFFFF';
+                const isWhite = c.hex ? c.hex.toUpperCase() === '#FFFFFF' : false;
                 const isSelected = selectedColor === c.id;
                 return (
                   <button
@@ -521,7 +652,7 @@ export default function ProductList() {
                       className={`w-8 h-8 rounded-full shadow-2xs flex items-center justify-center ${
                         isWhite ? 'border-2 border-slate-300 bg-white' : 'border border-black/10'
                       }`}
-                      style={{ backgroundColor: c.hex }}
+                      style={{ backgroundColor: c.hex || '#006B70' }}
                     >
                       {isSelected && <Check size={12} className={isWhite ? 'text-black' : 'text-white'} strokeWidth={3} />}
                     </span>
@@ -661,21 +792,58 @@ export default function ProductList() {
           <div className="border-t border-brand-powder/50 pt-5">
             <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-semibold text-brand-navy mb-3">Category</h3>
             <div className="flex flex-col gap-2">
-              {categoriesList.map(cat => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => {
-                    handleCategoryChange(cat);
-                    setFilterDrawerOpen(false);
-                  }}
-                  className={`w-full font-sans text-xs tracking-wider capitalize text-left cursor-pointer ${selectedCategory.toLowerCase() === cat.toLowerCase() ? 'text-brand-teal font-bold' : 'text-brand-navy/70'}`}
-                >
-                  {cat === 'all' ? 'All Products' : cat}
-                </button>
-              ))}
+              {categoriesList.map(cat => {
+                const isSelected = selectedCategory.toLowerCase() === cat.id.toLowerCase() ||
+                  (activeCategoryObj && activeCategoryObj.id.toLowerCase() === cat.id.toLowerCase());
+
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      handleCategoryChange(cat.id);
+                      setFilterDrawerOpen(false);
+                    }}
+                    className={`w-full font-sans text-xs tracking-wider capitalize text-left cursor-pointer py-1 ${isSelected ? 'text-brand-teal font-bold' : 'text-brand-navy/70'}`}
+                  >
+                    {cat.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
+
+          {/* Mobile Subcategories */}
+          {activeCategoryObj && activeCategoryObj.subcategories?.length > 0 && (
+            <div className="border-t border-brand-powder/50 pt-4">
+              <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-semibold text-brand-navy mb-2.5">Subcategories</h3>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateParam('sub', 'all');
+                    setFilterDrawerOpen(false);
+                  }}
+                  className={`w-full font-sans text-xs tracking-wider capitalize text-left cursor-pointer py-1 ${selectedSub === 'all' ? 'text-brand-teal font-bold' : 'text-brand-navy/70'}`}
+                >
+                  All Subcategories
+                </button>
+                {activeCategoryObj.subcategories.map(sub => (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => {
+                      updateParam('sub', sub);
+                      setFilterDrawerOpen(false);
+                    }}
+                    className={`w-full font-sans text-xs tracking-wider capitalize text-left cursor-pointer py-1 ${selectedSub.toLowerCase() === sub.toLowerCase() ? 'text-brand-teal font-bold' : 'text-brand-navy/70'}`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 2. Mobile Price */}
           <div className="border-t border-brand-powder/50 pt-5">
@@ -746,7 +914,7 @@ export default function ProductList() {
             <div className="grid grid-cols-5 gap-2.5">
               {COLOR_FILTER_OPTIONS.map(c => {
                 if (c.id === 'all') return null;
-                const isWhite = c.hex.toUpperCase() === '#FFFFFF';
+                const isWhite = c.hex ? c.hex.toUpperCase() === '#FFFFFF' : false;
                 const isSelected = selectedColor === c.id;
                 return (
                   <button
@@ -761,7 +929,7 @@ export default function ProductList() {
                       className={`w-8 h-8 rounded-full shadow-2xs flex items-center justify-center ${
                         isWhite ? 'border-2 border-slate-300 bg-white' : 'border border-black/10'
                       }`}
-                      style={{ backgroundColor: c.hex }}
+                      style={{ backgroundColor: c.hex || '#006B70' }}
                     >
                       {isSelected && <Check size={12} className={isWhite ? 'text-black' : 'text-white'} strokeWidth={3} />}
                     </span>

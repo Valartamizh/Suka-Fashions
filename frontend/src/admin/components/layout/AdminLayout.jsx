@@ -27,7 +27,7 @@ export default function AdminLayout() {
         />
 
         {/* Page Content */}
-        <main className="flex-1 p-6 lg:p-8 overflow-x-hidden min-w-0">
+        <main className="flex-1 p-3.5 sm:p-5 md:p-6 lg:p-7 xl:p-8 overflow-x-hidden min-w-0 max-w-[1800px] w-full mx-auto">
           <Outlet />
         </main>
       </div>

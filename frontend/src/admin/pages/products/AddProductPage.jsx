@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import AdminPageHeader from '../../components/ui/AdminPageHeader';
 import { useProducts } from '../../../context/ProductContext';
+import { useCategories } from '../../../context/CategoryContext';
+import { useFilterCatalog } from '../../../context/FilterContext';
 
 // Assets for Sample Library selector
 import sareeGolden from '../../../assets/saree_golden.jpg';
@@ -50,8 +52,8 @@ const SAMPLE_IMAGES = [
   { name: 'Silk Dupatta', url: dupattaSilk },
 ];
 
-const CATEGORIES = ['Sarees', 'Lehengas', 'Kurtis', 'Dresses', 'Co-ords', 'Dupattas', 'Festive Wear'];
-const SUBCATEGORIES = {
+const CATEGORIES_FALLBACK = ['Sarees', 'Lehengas', 'Kurtis', 'Dresses', 'Co-ords', 'Dupattas', 'Festive Wear'];
+const SUBCATEGORIES_FALLBACK = {
   Sarees: ['Organza Sarees', 'Silk Sarees', 'Cotton Sarees', 'Georgette Sarees', 'Wedding Sarees', 'Festive Sarees'],
   Lehengas: ['Bridal Lehengas', 'Party Lehengas', 'Festive Lehengas', 'Designer Lehengas'],
   Kurtis: ['Anarkali Suits', 'Straight Suits', 'Party Wear Kurtis', 'Kurta Sets', 'Palazzo Sets'],
@@ -118,6 +120,29 @@ export default function AddProductPage() {
   const isEditMode = Boolean(id);
 
   const { products, addProduct, editProduct, getProductById } = useProducts();
+  const { categories: dynamicCategories } = useCategories();
+  const { ensureColorExists } = useFilterCatalog();
+
+  // Dynamic Categories and Subcategory map
+  const categoryOptions = useMemo(() => {
+    if (dynamicCategories && dynamicCategories.length > 0) {
+      return dynamicCategories.map(c => c.name);
+    }
+    return CATEGORIES_FALLBACK;
+  }, [dynamicCategories]);
+
+  const subcategoryMap = useMemo(() => {
+    const map = {};
+    if (dynamicCategories && dynamicCategories.length > 0) {
+      dynamicCategories.forEach(c => {
+        map[c.name] = c.subcategories || [];
+        map[c.id] = c.subcategories || [];
+      });
+    } else {
+      return SUBCATEGORIES_FALLBACK;
+    }
+    return map;
+  }, [dynamicCategories]);
 
   const [viewMode, setViewMode] = useState('wizard'); // 'wizard' | 'single'
   const [currentStep, setCurrentStep] = useState(1);
@@ -140,8 +165,8 @@ export default function AddProductPage() {
     slug: '',
     description: '',
     shortDescription: '',
-    category: 'Sarees',
-    subcategory: 'Organza Sarees',
+    category: categoryOptions[0] || 'Sarees',
+    subcategory: subcategoryMap[categoryOptions[0]]?.[0] || '',
     brand: 'Suka Fashions',
     sku: '',
     status: 'ACTIVE',
@@ -426,22 +451,29 @@ export default function AddProductPage() {
     });
   };
 
+  const [previewSize, setPreviewSize] = useState('');
+
   // Size / Stock Matrix per Color
   const addSizeToColor = (colorIdx, sizeName = '') => {
     saveColorHistory(colorIdx);
     setColors(prev => prev.map((c, idx) => {
       if (idx !== colorIdx) return c;
       const prevVariant = c.variants[c.variants.length - 1];
+      const prevMrp = prevVariant?.mrp ? Number(prevVariant.mrp) : 4999;
+      const activeDisc = globalDiscount !== '' && !isNaN(parseFloat(globalDiscount))
+        ? parseFloat(globalDiscount)
+        : (prevVariant ? calculateDiscount(prevVariant.sellingPrice, prevVariant.mrp) : 30);
+      const calculatedSelling = Math.round(prevMrp * (1 - Math.max(0, Math.min(99, activeDisc)) / 100));
       return {
         ...c,
         variants: [
           ...c.variants,
           {
             size: sizeName || '',
-            sellingPrice: prevVariant?.sellingPrice || '3499',
-            mrp: prevVariant?.mrp || '4999',
+            sellingPrice: calculatedSelling.toString(),
+            mrp: prevMrp.toString(),
             stock: '10',
-            sku: `${form.sku || 'SUK'}-${c.name.toUpperCase()}-${sizeName || 'SZ'}`,
+            sku: `${form.sku || 'SUK'}-${c.name ? c.name.toUpperCase() : 'CLR'}-${sizeName || 'SZ'}`,
           },
         ],
       };
@@ -460,17 +492,6 @@ export default function AddProductPage() {
     }));
   };
 
-  const updateColorVariantField = (colorIdx, sizeIdx, key, val) => {
-    saveColorHistory(colorIdx);
-    setColors(prev => prev.map((c, idx) => {
-      if (idx !== colorIdx) return c;
-      return {
-        ...c,
-        variants: c.variants.map((v, i) => i === sizeIdx ? { ...v, [key]: val } : v),
-      };
-    }));
-  };
-
   const calculateDiscount = (sellingPrice, mrp) => {
     const s = Number(sellingPrice) || 0;
     const m = Number(mrp) || 0;
@@ -478,6 +499,35 @@ export default function AddProductPage() {
       return Math.round(((m - s) / m) * 100);
     }
     return 0;
+  };
+
+  const updateColorVariantField = (colorIdx, sizeIdx, key, val) => {
+    saveColorHistory(colorIdx);
+    setColors(prev => prev.map((c, idx) => {
+      if (idx !== colorIdx) return c;
+      return {
+        ...c,
+        variants: c.variants.map((v, i) => {
+          if (i !== sizeIdx) return v;
+          if (key === 'mrp') {
+            const numMrp = parseFloat(val);
+            if (!isNaN(numMrp) && numMrp > 0) {
+              const activeDisc = globalDiscount !== '' && !isNaN(parseFloat(globalDiscount))
+                ? parseFloat(globalDiscount)
+                : (parseFloat(v.mrp) > parseFloat(v.sellingPrice) ? calculateDiscount(v.sellingPrice, v.mrp) : 0);
+              const calculatedSelling = Math.round(numMrp * (1 - Math.max(0, Math.min(99, activeDisc)) / 100));
+              return {
+                ...v,
+                mrp: val,
+                sellingPrice: calculatedSelling.toString(),
+              };
+            }
+            return { ...v, mrp: val };
+          }
+          return { ...v, [key]: val };
+        }),
+      };
+    }));
   };
 
   const updateVariantDiscount = (colorIdx, sizeIdx, discountPercent) => {
@@ -560,7 +610,7 @@ export default function AddProductPage() {
         ...c,
         variants: prevColor.variants.map(v => ({
           ...v,
-          sku: `${form.sku || 'SUK'}-${c.name.toUpperCase()}-${v.size}`,
+          sku: `${form.sku || 'SUK'}-${c.name ? c.name.toUpperCase() : 'CLR'}-${v.size}`,
         })),
       };
     }));
@@ -592,11 +642,19 @@ export default function AddProductPage() {
   // Live Preview Calculations
   const activePreviewColor = colors[previewColorIdx] || colors[0] || {};
   const activePreviewPrimaryImage = activePreviewColor.images?.find(img => img.isPrimary)?.url || activePreviewColor.images?.[0]?.url || null;
-  const previewStartingPrice = activePreviewColor.variants?.[0]?.sellingPrice || '';
-  const previewMrp = activePreviewColor.variants?.[0]?.mrp || '';
-  const previewDiscount = parseFloat(previewMrp) > parseFloat(previewStartingPrice) && parseFloat(previewStartingPrice) > 0
-    ? Math.round(((parseFloat(previewMrp) - parseFloat(previewStartingPrice)) / parseFloat(previewMrp)) * 100)
-    : 0;
+  const activePreviewVariants = activePreviewColor.variants || [];
+  const previewCurrentVariant = activePreviewVariants.find(v => v.size === previewSize) || activePreviewVariants[0] || {};
+  const previewStartingPrice = previewCurrentVariant.sellingPrice || '';
+  const previewMrp = previewCurrentVariant.mrp || '';
+  const previewDiscount = calculateDiscount(previewStartingPrice, previewMrp);
+
+  // Range calculations for Card Preview
+  const previewSellingPrices = activePreviewVariants.map(v => Number(v.sellingPrice) || 0).filter(p => p > 0);
+  const minPreviewPrice = previewSellingPrices.length > 0 ? Math.min(...previewSellingPrices) : 0;
+  const maxPreviewPrice = previewSellingPrices.length > 0 ? Math.max(...previewSellingPrices) : 0;
+  const previewMrps = activePreviewVariants.map(v => Number(v.mrp) || 0).filter(m => m > 0);
+  const minPreviewMrp = previewMrps.length > 0 ? Math.min(...previewMrps) : 0;
+  const maxPreviewMrp = previewMrps.length > 0 ? Math.max(...previewMrps) : 0;
 
   const totalCatalogStock = useMemo(() => {
     return colors.reduce((total, c) => total + c.variants.reduce((cTotal, v) => cTotal + (Number(v.stock) || 0), 0), 0);
@@ -630,13 +688,28 @@ export default function AddProductPage() {
         sellingPrice: Number(v.sellingPrice) || 2999,
         mrp: Number(v.mrp) || 3999,
         stock: Number(v.stock) || 0,
-        sku: v.sku || `${form.sku || 'SUK'}-${c.name}-${v.size || vIdx}`,
+        sku: v.sku || `${form.sku || 'SUK'}-${c.name || 'CLR'}-${v.size || vIdx}`,
       })),
     }));
 
     const primaryColorImg = cleanColors[0]?.images?.find(i => i.isPrimary)?.url || cleanColors[0]?.images?.[0]?.url || sareeGolden;
-    const startPrice = Number(cleanColors[0]?.variants?.[0]?.sellingPrice) || 2999;
-    const startMrp = Number(cleanColors[0]?.variants?.[0]?.mrp) || 3999;
+    
+    // Find min starting price across all variants
+    let startPrice = Infinity;
+    let startMrp = 0;
+    cleanColors.forEach(c => {
+      c.variants?.forEach(v => {
+        const sp = Number(v.sellingPrice) || 0;
+        if (sp > 0 && sp < startPrice) {
+          startPrice = sp;
+          startMrp = Number(v.mrp) || Math.round(sp * 1.4);
+        }
+      });
+    });
+    if (startPrice === Infinity) {
+      startPrice = Number(cleanColors[0]?.variants?.[0]?.sellingPrice) || 2999;
+      startMrp = Number(cleanColors[0]?.variants?.[0]?.mrp) || 3999;
+    }
 
     const payload = {
       ...form,
@@ -646,6 +719,9 @@ export default function AddProductPage() {
       stock: totalCatalogStock,
       image: primaryColorImg,
       colors: cleanColors,
+      rating: isEditMode ? (form.rating || 0) : 0,
+      reviewsCount: isEditMode ? (form.reviewsCount || 0) : 0,
+      reviews: isEditMode ? (form.reviews || []) : [],
       attributes: {
         fabric: form.fabric,
         occasion: form.occasion,
@@ -664,6 +740,14 @@ export default function AddProductPage() {
       } else {
         await addProduct(payload);
       }
+
+      // Automatically register any new product colors into Filter Catalog so they appear in customer filter section
+      cleanColors.forEach(c => {
+        if (c.name && ensureColorExists) {
+          ensureColorExists(c.name, c.hex);
+        }
+      });
+
       setCreatedProductId(slug || form.id);
       setShowSuccessModal(true);
     } catch (err) {
@@ -726,7 +810,7 @@ export default function AddProductPage() {
 
         {/* Wizard Step Tabs */}
         {viewMode === 'wizard' && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-5 pt-4 border-t border-slate-100">
+          <div className="flex overflow-x-auto no-scrollbar sm:grid sm:grid-cols-5 gap-2 mt-5 pt-4 border-t border-slate-100">
             {WIZARD_STEPS.map((step) => {
               const StepIcon = step.icon;
               const isActive = currentStep === step.id;
@@ -736,7 +820,7 @@ export default function AddProductPage() {
                   key={step.id}
                   type="button"
                   onClick={() => setCurrentStep(step.id)}
-                  className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
+                  className={`p-2.5 rounded-xl border text-left transition-all flex items-center gap-2.5 flex-shrink-0 min-w-[150px] sm:min-w-0 ${
                     isActive
                       ? 'border-brand-teal bg-brand-powder/20 shadow-xs'
                       : isPast
@@ -744,7 +828,7 @@ export default function AddProductPage() {
                       : 'border-slate-100 bg-slate-50 hover:bg-white'
                   }`}
                 >
-                  <div className={`p-1.5 rounded-lg ${
+                  <div className={`p-1.5 rounded-lg flex-shrink-0 ${
                     isActive ? 'bg-brand-teal text-white' : isPast ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
                   }`}>
                     {isPast ? <Check size={14} /> : <StepIcon size={14} />}
@@ -811,12 +895,11 @@ export default function AddProductPage() {
                     onChange={e => {
                       const newCat = e.target.value;
                       set('category', newCat);
-                      if (SUBCATEGORIES[newCat] && SUBCATEGORIES[newCat][0]) {
-                        set('subcategory', SUBCATEGORIES[newCat][0]);
-                      }
+                      const subs = subcategoryMap[newCat] || [];
+                      set('subcategory', subs[0] || '');
                     }}
                   >
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {categoryOptions.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </FormField>
 
@@ -826,7 +909,11 @@ export default function AddProductPage() {
                     value={form.subcategory}
                     onChange={e => set('subcategory', e.target.value)}
                   >
-                    {(SUBCATEGORIES[form.category] || []).map(sc => <option key={sc} value={sc}>{sc}</option>)}
+                    <option value="">Select Subcategory</option>
+                    {((subcategoryMap[form.category] || []).length > 0
+                      ? subcategoryMap[form.category]
+                      : (form.subcategory ? [form.subcategory] : [])
+                    ).map(sc => <option key={sc} value={sc}>{sc}</option>)}
                   </select>
                 </FormField>
 
@@ -1240,98 +1327,170 @@ export default function AddProductPage() {
                         </div>
                       </div>
 
-                    {/* Variant Table */}
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead>
-                          <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
-                            <th className="pb-2 w-36">Size</th>
-                            <th className="pb-2 w-32">Selling Price (₹)</th>
-                            <th className="pb-2 w-32">MRP (₹)</th>
-                            <th className="pb-2 w-28">Stock Units</th>
-                            <th className="pb-2">SKU Code</th>
-                            <th className="pb-2 text-right w-12">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {color.variants.map((variant, sizeIdx) => (
-                            <tr key={sizeIdx} className="hover:bg-white/80 transition-colors">
-                              <td className="py-2 pr-3">
+                      {/* Desktop Variant Table */}
+                      <div className="hidden sm:block overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+                              <th className="pb-2 w-36">Size</th>
+                              <th className="pb-2 w-32">Selling Price (₹)</th>
+                              <th className="pb-2 w-32">MRP (₹)</th>
+                              <th className="pb-2 w-28">Stock Units</th>
+                              <th className="pb-2">SKU Code</th>
+                              <th className="pb-2 text-right w-12">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {color.variants.map((variant, sizeIdx) => (
+                              <tr key={sizeIdx} className="hover:bg-white/80 transition-colors">
+                                <td className="py-2 pr-3">
+                                  <input
+                                    type="text"
+                                    value={variant.size}
+                                    onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'size', e.target.value)}
+                                    placeholder="e.g. S, M, Free Size"
+                                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:border-brand-teal focus:outline-none"
+                                  />
+                                </td>
+                                <td className="py-2 pr-3">
+                                  <input
+                                    type="text"
+                                    readOnly
+                                    tabIndex={-1}
+                                    value={variant.sellingPrice ? `₹${variant.sellingPrice}` : '—'}
+                                    title="Auto-calculated from MRP and discount %"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-black text-slate-800 font-mono cursor-not-allowed select-none focus:outline-none"
+                                  />
+                                </td>
+                                <td className="py-2 pr-3">
+                                  <input
+                                    type="number"
+                                    value={variant.mrp}
+                                    onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'mrp', e.target.value)}
+                                    placeholder="3999"
+                                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700 focus:border-brand-teal focus:outline-none font-mono"
+                                  />
+                                </td>
+                                <td className="py-2 pr-3">
+                                  <input
+                                    type="number"
+                                    value={variant.stock}
+                                    onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'stock', e.target.value)}
+                                    placeholder="10"
+                                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:border-brand-teal focus:outline-none font-mono"
+                                  />
+                                </td>
+                                <td className="py-2 pr-3">
+                                  <input
+                                    type="text"
+                                    value={variant.sku}
+                                    onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'sku', e.target.value)}
+                                    placeholder="SKU-001"
+                                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-slate-600 focus:border-brand-teal focus:outline-none"
+                                  />
+                                </td>
+                                <td className="py-2 text-right">
+                                  {color.variants.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => removeSizeFromColor(colorIdx, sizeIdx)}
+                                      className="text-slate-400 hover:text-red-500 p-1 cursor-pointer"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile Size Cards List (Visible on < sm screens) */}
+                      <div className="block sm:hidden space-y-3">
+                        {color.variants.map((variant, sizeIdx) => (
+                          <div key={sizeIdx} className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2.5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">Size:</span>
                                 <input
                                   type="text"
                                   value={variant.size}
                                   onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'size', e.target.value)}
-                                  placeholder="e.g. S, M, Free Size"
-                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:border-brand-teal focus:outline-none"
+                                  placeholder="S, M, L..."
+                                  className="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-900 text-center"
                                 />
-                              </td>
-                              <td className="py-2 pr-3">
-                                <input
-                                  type="number"
-                                  value={variant.sellingPrice}
-                                  onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'sellingPrice', e.target.value)}
-                                  placeholder="2799"
-                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-brand-teal focus:outline-none font-mono"
-                                />
-                              </td>
-                              <td className="py-2 pr-3">
+                              </div>
+                              {color.variants.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeSizeFromColor(colorIdx, sizeIdx)}
+                                  className="text-red-500 p-1 hover:bg-red-50 rounded-lg text-xs font-semibold flex items-center gap-0.5"
+                                >
+                                  <Trash2 size={13} /> Remove
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">MRP (₹)</label>
                                 <input
                                   type="number"
                                   value={variant.mrp}
                                   onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'mrp', e.target.value)}
                                   placeholder="3999"
-                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-500 focus:border-brand-teal focus:outline-none font-mono"
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 font-mono"
                                 />
-                              </td>
-                              <td className="py-2 pr-3">
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Selling Price</label>
+                                <div className="w-full bg-emerald-50/70 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-emerald-800 font-mono">
+                                  {variant.sellingPrice ? `₹${variant.sellingPrice}` : '—'}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Stock Units</label>
                                 <input
                                   type="number"
                                   value={variant.stock}
                                   onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'stock', e.target.value)}
                                   placeholder="10"
-                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:border-brand-teal focus:outline-none font-mono"
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900 font-mono"
                                 />
-                              </td>
-                              <td className="py-2 pr-3">
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">SKU Code</label>
                                 <input
                                   type="text"
                                   value={variant.sku}
                                   onChange={e => updateColorVariantField(colorIdx, sizeIdx, 'sku', e.target.value)}
-                                  placeholder="SKU-001"
-                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-slate-600 focus:border-brand-teal focus:outline-none"
+                                  placeholder="SKU"
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-slate-600"
                                 />
-                              </td>
-                              <td className="py-2 text-right">
-                                {color.variants.length > 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => removeSizeFromColor(colorIdx, sizeIdx)}
-                                    className="text-slate-400 hover:text-red-500 p-1 cursor-pointer"
-                                  >
-                                    <X size={14} />
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
 
-                    {/* Add Size Row */}
-                    <div className="flex items-center gap-2 pt-1 flex-wrap">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Quick Add Size:</span>
-                      {COMMON_SIZES.map((sz) => (
-                        <button
-                          key={sz}
-                          type="button"
-                          onClick={() => addSizeToColor(colorIdx, sz)}
-                          className="px-2 py-1 text-[10px] font-bold bg-white border border-slate-200 hover:border-brand-teal hover:text-brand-teal rounded-md transition-all cursor-pointer"
-                        >
-                          + {sz}
-                        </button>
-                      ))}
-                    </div>
+                      {/* Add Size Row */}
+                      <div className="flex items-center gap-2 pt-1 flex-wrap">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Quick Add Size:</span>
+                        {COMMON_SIZES.map((sz) => (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => addSizeToColor(colorIdx, sz)}
+                            className="px-2.5 py-1 text-[10px] font-bold bg-white border border-slate-200 hover:border-brand-teal hover:text-brand-teal rounded-md transition-all cursor-pointer"
+                          >
+                            + {sz}
+                          </button>
+                        ))}
+                      </div>
                   </div>
                 );
               })}
@@ -1691,9 +1850,9 @@ export default function AddProductPage() {
           )}
         </div>
 
-        {/* Right 1 Column: Sticky Real-time Storefront Preview */}
+        {/* Right 1 Column: Real-time Storefront Preview */}
         <div className="space-y-5">
-          <div className="sticky top-6 space-y-4">
+          <div className="lg:sticky lg:top-6 space-y-4">
             {/* Live Customer Preview Card */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 overflow-hidden">
               <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-3">
@@ -1828,11 +1987,17 @@ export default function AddProductPage() {
 
                     <div className="flex items-baseline gap-2 pt-1.5">
                       <span className="font-sans text-sm font-bold text-brand-navy font-mono">
-                        {previewStartingPrice ? `₹${parseInt(previewStartingPrice).toLocaleString('en-IN')}` : '₹—'}
+                        {minPreviewPrice > 0
+                          ? minPreviewPrice === maxPreviewPrice
+                            ? `₹${minPreviewPrice.toLocaleString('en-IN')}`
+                            : `₹${minPreviewPrice.toLocaleString('en-IN')} - ₹${maxPreviewPrice.toLocaleString('en-IN')}`
+                          : (previewStartingPrice ? `₹${parseInt(previewStartingPrice).toLocaleString('en-IN')}` : '₹—')}
                       </span>
-                      {parseFloat(previewMrp) > parseFloat(previewStartingPrice) && parseFloat(previewStartingPrice) > 0 && (
+                      {maxPreviewMrp > minPreviewPrice && minPreviewPrice > 0 && (
                         <span className="font-sans text-xs text-brand-navy/40 line-through font-mono">
-                          ₹{parseInt(previewMrp).toLocaleString('en-IN')}
+                          {minPreviewMrp === maxPreviewMrp
+                            ? `₹${maxPreviewMrp.toLocaleString('en-IN')}`
+                            : `₹${minPreviewMrp.toLocaleString('en-IN')} - ₹${maxPreviewMrp.toLocaleString('en-IN')}`}
                         </span>
                       )}
                     </div>
@@ -1868,8 +2033,15 @@ export default function AddProductPage() {
                       <h4 className="font-bold text-slate-800 leading-tight truncate">{form.name || 'Product Title'}</h4>
                       <p className="text-[10px] text-slate-500 italic truncate">{form.tagline || form.description?.slice(0, 50)}</p>
                       <div className="flex items-center gap-2 pt-1 font-mono">
-                        <span className="font-bold text-brand-navy">₹{parseInt(previewStartingPrice).toLocaleString('en-IN')}</span>
-                        <span className="text-slate-400 line-through text-[10px]">₹{parseInt(previewMrp).toLocaleString('en-IN')}</span>
+                        <span className="font-bold text-brand-navy">₹{parseInt(previewStartingPrice || minPreviewPrice || 0).toLocaleString('en-IN')}</span>
+                        {parseFloat(previewMrp || maxPreviewMrp) > parseFloat(previewStartingPrice || minPreviewPrice) && (
+                          <span className="text-slate-400 line-through text-[10px]">₹{parseInt(previewMrp || maxPreviewMrp).toLocaleString('en-IN')}</span>
+                        )}
+                        {previewDiscount > 0 && (
+                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
+                            {previewDiscount}% OFF
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1889,6 +2061,39 @@ export default function AddProductPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Size Selector in Live PDP Preview */}
+                  {activePreviewVariants.length > 0 && (
+                    <div className="border-t border-slate-100 pt-2 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-600">
+                          Size: <span className="text-brand-teal font-extrabold">{previewCurrentVariant.size || 'Free Size'}</span>
+                        </span>
+                        <span className="text-[9px] text-slate-400">
+                          {Number(previewCurrentVariant.stock) > 0 ? `${previewCurrentVariant.stock} units` : 'Out of stock'}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {activePreviewVariants.map((v, vIdx) => {
+                          const isSelected = (previewSize ? v.size === previewSize : vIdx === 0);
+                          return (
+                            <button
+                              key={vIdx}
+                              type="button"
+                              onClick={() => setPreviewSize(v.size)}
+                              className={`px-2.5 py-1 text-[10px] font-bold rounded-md border transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-[#1B2559] text-white border-[#1B2559] shadow-xs'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:border-brand-teal'
+                              }`}
+                            >
+                              {v.size || 'Free Size'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Live Delivery Perks Preview Box */}
                   <div className="p-2.5 bg-brand-powderLight/60 border border-brand-powder rounded-lg space-y-1.5">

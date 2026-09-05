@@ -8,14 +8,15 @@ import {
 import StatusBadge from '../components/ui/StatusBadge';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { useCustomers } from '../../context/CustomerContext';
-import { adminOrders } from '../data/adminOrders';
+import { useOrders } from '../../context/OrderContext';
 
-const TABS = ['Profile', 'CRM Notes', 'Orders', 'Cart', 'Wishlist'];
+const TABS = ['Profile', 'Orders', 'Cart', 'Wishlist'];
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { customers, updateCustomer, deleteCustomer, toggleCustomerStatus, addCustomerNote } = useCustomers();
+  const { adminOrders } = useOrders();
 
   const customer = customers.find(c => c.id === id);
   const [tab, setTab] = useState('Profile');
@@ -57,7 +58,7 @@ export default function CustomerDetailPage() {
     );
   }
 
-  const customerOrders = adminOrders.filter(o => o.customer?.id === customer.id);
+  const customerOrders = (adminOrders || []).filter(o => o.customer?.id === customer.id || o.customer?.phone === customer.phone);
 
   const handleOpenEdit = () => {
     setFormData({
@@ -235,7 +236,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200">
+      <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar">
         {TABS.map(t => (
           <button
             key={t}
@@ -247,11 +248,6 @@ export default function CustomerDetailPage() {
             }`}
           >
             {t}
-            {t === 'CRM Notes' && customer.notes && customer.notes.length > 0 && (
-              <span className="px-1.5 py-0.2 bg-brand-powder text-brand-teal rounded-full text-[10px] font-bold">
-                {customer.notes.length}
-              </span>
-            )}
             {t === 'Cart' && customer.cartItems && customer.cartItems.length > 0 && (
               <span className="px-1.5 py-0.2 bg-slate-100 text-slate-500 rounded-full text-[10px] font-bold">
                 {customer.cartItems.length}
@@ -350,61 +346,7 @@ export default function CustomerDetailPage() {
         </div>
       )}
 
-      {/* Tab 2: CRM Notes & Activity */}
-      {tab === 'CRM Notes' && (
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="font-sans font-bold text-slate-800 text-sm flex items-center gap-2">
-              <MessageSquare size={16} className="text-brand-teal" /> Customer CRM Notes & History
-            </h3>
-            <span className="text-[10px] text-slate-400">Internal notes visible only to admins</span>
-          </div>
-
-          {/* Add Note Form */}
-          <form onSubmit={handleAddNote} className="space-y-2">
-            <textarea
-              rows={2}
-              required
-              value={newNoteText}
-              onChange={e => setNewNoteText(e.target.value)}
-              placeholder="Add a new customer interaction note (e.g. VIP client requested bridal fitting for next Friday)..."
-              className="w-full border border-slate-200 rounded-xl p-3 text-xs text-slate-700 outline-none focus:border-brand-teal resize-none"
-            />
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="flex items-center gap-1.5 px-4 py-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold rounded-lg transition-colors shadow-2xs"
-              >
-                <Plus size={13} /> Add Note
-              </button>
-            </div>
-          </form>
-
-          {/* Notes list */}
-          <div className="space-y-3 pt-2">
-            {customer.notes && customer.notes.length > 0 ? (
-              customer.notes.map((note) => (
-                <div key={note.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs text-slate-800 leading-relaxed">{note.text}</p>
-                    <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-2">
-                      <span>By {note.author || 'Admin'}</span>
-                      <span>•</span>
-                      <span>{note.date}</span>
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-slate-400 text-xs">
-                No CRM notes recorded yet. Use the box above to log customer preferences or inquiries.
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Tab 3: Orders */}
+      {/* Tab 2: Orders */}
       {tab === 'Orders' && (
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           {customerOrders.length === 0 ? (

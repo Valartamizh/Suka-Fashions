@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { Phone, Mail, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import logo from '../assets/logo.jpg';
 
+import { useCategories } from '../context/CategoryContext';
+import { useSettings } from '../context/SettingsContext';
+
 /* ─── Social SVG Icons ──────────────────────────────────────────────────────── */
 const InstagramIcon = () => (
   <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
@@ -30,19 +33,8 @@ const WhatsAppIcon = () => (
   </svg>
 );
 
-/* ─── Data ─────────────────────────────────────────────────────────────────── */
-const columns = [
-  {
-    id:    'shop',
-    title: 'Shop',
-    links: [
-      { name: 'New Arrivals',  path: '/products'          },
-      { name: 'Sarees',        path: '/category/sarees'   },
-      { name: 'Kurtis',        path: '/category/kurtis'   },
-      { name: 'Lehengas',      path: '/category/lehengas' },
-      { name: 'Dresses',       path: '/category/dresses'  },
-    ],
-  },
+/* ─── Base Columns ─────────────────────────────────────────────────────────── */
+const helpAndAboutColumns = [
   {
     id:    'help',
     title: 'Help',
@@ -109,7 +101,34 @@ function FooterColumn({ col }) {
 
 /* ─── Main footer ────────────────────────────────────────────────────────────── */
 export default function Footer() {
+  const { categories } = useCategories();
+  const { settings } = useSettings();
   const [customerOpen, setCustomerOpen] = useState(false);
+
+  // Dynamic Shop links
+  const activeShopLinks = [
+    { name: 'New Arrivals', path: '/products?sort=newest' },
+    ...(categories || [])
+      .filter(c => c.active !== false)
+      .slice(0, 6)
+      .map(c => ({
+        name: c.name,
+        path: c.link || `/category/${c.id || c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+      }))
+  ];
+
+  const columns = [
+    {
+      id: 'shop',
+      title: 'Shop',
+      links: activeShopLinks,
+    },
+    ...helpAndAboutColumns,
+  ];
+
+  const storeName = settings?.store?.storeName || 'Suka Fashions';
+  const supportPhone = settings?.store?.supportPhone || '+91 98765 43210';
+  const supportEmail = settings?.store?.supportEmail || 'care@sukafashions.com';
 
   return (
     <footer className="bg-brand-tealDark text-white pt-5 sm:pt-8 lg:pt-10 pb-20 sm:pb-8 lg:pb-5 border-t border-brand-tealLight/10">
@@ -125,12 +144,12 @@ export default function Footer() {
             <div className="flex items-center gap-2.5 mb-2">
               <img
                 src={logo}
-                alt="Suka Fashions Logo"
+                alt="Store Logo"
                 className="h-11 w-11 sm:h-13 sm:w-13 rounded-full object-cover border border-brand-tealLight/30 shadow-md"
               />
               <div className="leading-none text-left">
-                <span className="font-serif text-xl sm:text-2xl font-bold tracking-wider text-white block">Suka</span>
-                <span className="font-sans text-[8.5px] tracking-[0.3em] text-brand-powder font-medium uppercase">FASHIONS</span>
+                <span className="font-serif text-xl sm:text-2xl font-bold tracking-wider text-white block">{storeName}</span>
+                <span className="font-sans text-[8.5px] tracking-[0.3em] text-brand-powder font-medium uppercase">OFFICIAL STORE</span>
               </div>
             </div>
 
@@ -187,15 +206,15 @@ export default function Footer() {
               {[
                 { 
                   Icon: Phone, 
-                  text: '+91 98765 43210', 
+                  text: supportPhone, 
                   label: 'Phone', 
-                  href: 'tel:+919876543210' 
+                  href: `tel:${supportPhone.replace(/\s+/g, '')}` 
                 },
                 { 
                   Icon: Mail,  
-                  text: 'care@sukafashions.com', 
+                  text: supportEmail, 
                   label: 'Email', 
-                  href: 'mailto:care@sukafashions.com' 
+                  href: `mailto:${supportEmail}` 
                 },
                 { 
                   Icon: InstagramIcon, 
@@ -251,7 +270,7 @@ export default function Footer() {
         <div className="pt-3 sm:pt-5 flex justify-center items-center">
           {/* Copyright */}
           <p className="font-sans text-[10px] sm:text-[11px] text-brand-powder/40 font-light text-center">
-            © {new Date().getFullYear()} Suka Fashions. All Rights Reserved. Crafted with care.
+            © {new Date().getFullYear()} {storeName}. All Rights Reserved. Crafted with care.
           </p>
         </div>
 

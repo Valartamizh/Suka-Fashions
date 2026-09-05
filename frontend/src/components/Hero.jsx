@@ -144,7 +144,7 @@ export default function Hero() {
   return (
     <>
       {/* ── MOBILE / TABLET HERO (Background Image with Overlay) (< lg) ── */}
-      <div className="relative lg:hidden w-full h-[460px] sm:h-[500px] overflow-hidden flex items-end">
+      <div className="relative lg:hidden w-full h-[380px] min-[375px]:h-[400px] min-[390px]:h-[425px] min-[430px]:h-[450px] sm:h-[490px] overflow-hidden flex items-end">
         {/* Background Image with smooth transition */}
         <div className="absolute inset-0 z-0">
           <img
@@ -159,40 +159,40 @@ export default function Hero() {
         </div>
 
         {/* Content positioned on top of background image */}
-        <div className="relative z-10 w-full p-5 sm:p-8 text-left text-white" key={slide.id || current} style={{ animation: 'heroFadeIn 0.5s ease-out both' }}>
+        <div className="relative z-10 w-full p-4 min-[390px]:p-5 sm:p-8 text-left text-white" key={slide.id || current} style={{ animation: 'heroFadeIn 0.5s ease-out both' }}>
           {/* Eyebrow */}
-          <span className="inline-block font-sans text-[9px] sm:text-[10px] font-bold tracking-[0.3em] text-amber-300 uppercase mb-1.5 drop-shadow-xs">
+          <span className="inline-block font-sans text-[8.5px] min-[390px]:text-[9px] sm:text-[10px] font-bold tracking-[0.3em] text-amber-300 uppercase mb-1 drop-shadow-xs">
             {slide.eyebrow}
           </span>
 
           {/* Heading */}
-          <h1 className="font-serif text-2xl sm:text-4xl text-white font-normal leading-tight mb-2 drop-shadow-sm">
+          <h1 className="font-serif text-xl min-[375px]:text-2xl sm:text-4xl text-white font-normal leading-tight mb-1.5 drop-shadow-sm">
             {headingLines.join(' ')}
           </h1>
 
           {/* Subtitle */}
-          <p className="font-sans text-[11.5px] sm:text-xs text-white/90 leading-relaxed font-light mb-4 max-w-sm drop-shadow-xs line-clamp-2">
+          <p className="font-sans text-[11px] min-[390px]:text-[11.5px] sm:text-xs text-white/90 leading-relaxed font-light mb-3 min-[390px]:mb-3.5 max-w-sm drop-shadow-xs line-clamp-2">
             {slide.subtitle}
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex items-center gap-2.5 mb-4">
+          <div className="flex items-center gap-2 mb-3 min-[390px]:mb-3.5">
             <Link
               to={slide.ctaLink || '/products'}
-              className="bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase py-2.5 px-5 transition-all shadow-md rounded-sm whitespace-nowrap"
+              className="bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[9.5px] min-[390px]:text-[10px] sm:text-xs font-bold tracking-[0.18em] uppercase py-2.5 px-4 min-[390px]:px-5 transition-all shadow-md rounded-sm whitespace-nowrap"
             >
               {slide.ctaText || 'Shop Collection'}
             </Link>
             <Link
               to={slide.secondaryCtaLink || '/category/sarees'}
-              className="border border-white/40 bg-white/10 backdrop-blur-xs text-white hover:bg-white/20 font-sans text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase py-2.5 px-4 transition-all rounded-sm whitespace-nowrap"
+              className="border border-white/40 bg-white/10 backdrop-blur-xs text-white hover:bg-white/20 font-sans text-[9.5px] min-[390px]:text-[10px] sm:text-xs font-bold tracking-[0.18em] uppercase py-2.5 px-3.5 min-[390px]:px-4 transition-all rounded-sm whitespace-nowrap"
             >
               {slide.secondaryCtaText || 'Explore'}
             </Link>
           </div>
 
           {/* Bottom Bar: Social proof + Dot indicators */}
-          <div className="flex items-center justify-between pt-3 border-t border-white/20">
+          <div className="flex items-center justify-between pt-2.5 min-[390px]:pt-3 border-t border-white/20">
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 {AVATAR_URLS.slice(0, 3).map((src, i) => (

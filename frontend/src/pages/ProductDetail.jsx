@@ -225,6 +225,14 @@ export default function ProductDetail() {
       
       const related = (activeProducts || all).filter(p => p.category === foundProduct.category && p.id !== foundProduct.id).slice(0, 8);
       setRelatedProducts(related);
+
+      if (Array.isArray(foundProduct.reviews)) {
+        setReviewsList(foundProduct.reviews);
+      } else if (foundProduct.reviewsCount > 0) {
+        setReviewsList(MOCK_PRODUCT_REVIEWS);
+      } else {
+        setReviewsList([]);
+      }
     }
     
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1071,14 +1079,22 @@ export default function ProductDetail() {
 
               {/* Rating & Review Count */}
               <div className="flex items-center gap-2 mb-4 pb-4 border-b border-brand-powder/60">
-                <div className="flex items-center text-amber-400">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star key={s} size={14} className={s <= Math.floor(product.rating || 5) ? 'fill-amber-400' : 'text-brand-powder'} strokeWidth={1} />
-                  ))}
-                </div>
-                <span className="font-sans text-xs text-brand-navy/60 font-medium">
-                  {product.rating || 4.8} ({product.reviewsCount || reviewsList.length} reviews)
-                </span>
+                {reviewsList.length > 0 ? (
+                  <>
+                    <div className="flex items-center text-amber-400">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star key={s} size={14} className={s <= Math.floor(product.rating || 5) ? 'fill-amber-400' : 'text-brand-powder'} strokeWidth={1} />
+                      ))}
+                    </div>
+                    <span className="font-sans text-xs text-brand-navy/60 font-medium">
+                      {product.rating ? Number(product.rating).toFixed(1) : '5.0'} ({reviewsList.length} {reviewsList.length === 1 ? 'review' : 'reviews'})
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-sans text-xs text-slate-500 font-medium flex items-center gap-1.5">
+                    <Star size={13} className="text-amber-400 fill-amber-400" /> New Arrival • No reviews yet
+                  </span>
+                )}
               </div>
 
               {/* Color Selection (Desktop) */}
@@ -1100,11 +1116,11 @@ export default function ProductDetail() {
                           className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                             isSelected
                               ? 'ring-2 ring-brand-teal ring-offset-2 scale-105'
-                              : 'ring-1 ring-slate-300 hover:ring-brand-teal'
+                              : 'ring-1 ring-slate-300 hover:ring-brand-teal/50'
                           }`}
                         >
                           <span
-                            className={`w-8 h-8 rounded-full shadow-xs ${
+                            className={`w-7 h-7 rounded-full ${
                               isWhite ? 'border-2 border-slate-300 bg-white' : 'border border-black/10'
                             }`}
                             style={{ backgroundColor: colorObj.hex || '#006B70' }}
@@ -1169,90 +1185,122 @@ export default function ProductDetail() {
 
               {/* Order Success Notification Banner */}
               {orderSuccessNotification && (
-                <div className="mb-6 p-4 bg-emerald-50 border border-emerald-300 rounded-sm flex items-start gap-3 shadow-sm">
-                  <CheckCircle2 size={20} className="text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-xs text-emerald-900 flex-1">
-                    <p className="font-bold text-emerald-950 font-serif text-sm mb-0.5">
-                      Order Invoice Dispatched: {orderSuccessNotification.orderId}
-                    </p>
-                    <p className="mb-1 text-emerald-800">
-                      Order details and delivery address have been sent to WhatsApp!
-                    </p>
-                    <Link to="/account" className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-emerald-900 hover:underline mt-1">
-                      View Order in Account <ArrowRight size={12} />
-                    </Link>
+                <div className="mb-5 p-4 bg-emerald-50 border border-emerald-200 rounded-sm animate-in fade-in duration-300">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 size={18} className="text-emerald-700 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-sans text-xs font-bold text-emerald-900">
+                        Order #{orderSuccessNotification.orderId} Confirmed!
+                      </p>
+                      <p className="font-sans text-[11px] text-emerald-700 mt-0.5">
+                        WhatsApp order request opened. Your order for ₹{orderSuccessNotification.total.toLocaleString('en-IN')} has been logged.
+                      </p>
+                    </div>
                   </div>
-                  <button onClick={() => setOrderSuccessNotification(null)} className="text-emerald-700 hover:text-emerald-950 p-1 cursor-pointer">
-                    <X size={16} />
-                  </button>
                 </div>
               )}
 
-              {/* Add to Cart & Buy Now Buttons (Single Row / Side-by-Side) */}
-              <div className="grid grid-cols-2 gap-3 mb-8">
-                <button
-                  onClick={handleAddToCart}
-                  disabled={product.stock === 0}
-                  className={`w-full flex items-center justify-center gap-2 py-3.5 px-3 rounded-sm transition-all duration-300 font-sans text-[10.5px] sm:text-xs font-bold tracking-[0.16em] uppercase shadow-md ${
-                    product.stock === 0 ? 'bg-brand-powder text-brand-navy/40 cursor-not-allowed' :
-                    addedToCart ? 'bg-emerald-600 text-white shadow-lg' : 'bg-brand-teal hover:bg-brand-tealDark text-white hover:shadow-xl cursor-pointer'
-                  }`}
-                >
-                  {addedToCart ? <Check size={15} strokeWidth={2.5} /> : <ShoppingBag size={15} strokeWidth={2} />}
-                  <span className="truncate">{product.stock === 0 ? 'Sold Out' : (addedToCart ? 'Added' : 'Add to Bag')}</span>
-                </button>
+              {/* Action Buttons: Add to Bag & WhatsApp Order */}
+              <div className="space-y-3 mb-6">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={currentStock === 0}
+                    className={`flex-1 py-3.5 px-6 rounded-sm font-sans text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-300 shadow-md ${
+                      currentStock === 0
+                        ? 'bg-brand-powder text-brand-navy/40 cursor-not-allowed'
+                        : addedToCart
+                        ? 'bg-emerald-700 text-white'
+                        : 'bg-brand-teal hover:bg-brand-tealDark text-white cursor-pointer hover:shadow-lg'
+                    }`}
+                  >
+                    {currentStock === 0 ? 'Out of Stock' : addedToCart ? '✓ Added to Bag' : 'Add to Bag'}
+                  </button>
 
-                {/* Direct Buy Now via WhatsApp Button */}
-                <button
-                  onClick={handleBuyNowWhatsApp}
-                  disabled={product.stock === 0}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 px-3 rounded-sm font-sans text-[10.5px] sm:text-xs uppercase tracking-[0.16em] font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <MessageSquare size={15} className="flex-shrink-0" />
-                  <span className="truncate">Buy on WhatsApp</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={handleBuyNowWhatsApp}
+                    disabled={currentStock === 0}
+                    className="flex-1 py-3.5 px-6 bg-emerald-700 hover:bg-emerald-800 text-white font-sans text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <MessageSquare size={15} /> Buy on WhatsApp
+                  </button>
+                </div>
               </div>
 
-              {/* Delivery Features */}
-              <div className="flex flex-col gap-2.5 p-3.5 bg-brand-powderLight/50 border border-brand-powder/60 rounded-sm mb-5">
-                <div className="flex items-center gap-3">
-                  <Truck size={15} className="text-brand-teal" />
-                  <span className="font-sans text-[11px] text-brand-navy/70 tracking-wide">
-                    {product.shippingInfo || 'Free Shipping within India on orders above ₹1999'}
-                  </span>
+              {/* Assurances */}
+              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-brand-powder/60">
+                <div className="flex items-center gap-2.5 text-xs font-sans text-brand-navy/80">
+                  <Truck size={16} className="text-brand-teal flex-shrink-0" />
+                  <span>{product.shippingInfo || 'Free Shipping in India'}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <RefreshCw size={15} className="text-brand-teal" />
-                  <span className="font-sans text-[11px] text-brand-navy/70 tracking-wide">
-                    {product.returnInfo || '7 Days easy returns and exchanges'}
-                  </span>
+                <div className="flex items-center gap-2.5 text-xs font-sans text-brand-navy/80">
+                  <RefreshCw size={16} className="text-brand-teal flex-shrink-0" />
+                  <span>{product.returnInfo || '7 Days Easy Returns'}</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs font-sans text-brand-navy/80">
+                  <ShieldCheck size={16} className="text-brand-teal flex-shrink-0" />
+                  <span>100% Authentic Handcrafted</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs font-sans text-brand-navy/80">
+                  <CheckCircle2 size={16} className="text-brand-teal flex-shrink-0" />
+                  <span>COD Available</span>
                 </div>
               </div>
 
               {/* Accordions */}
-              <div className="border-t border-brand-powder/60">
-                {[
-                  { id: 'details', title: 'Product Description', content: product.description || 'Elevate your celebratory ensemble with this handcrafted creation.' },
-                  { id: 'fabric', title: 'Material & Care', content: product.materialCare || (product.fabric ? `Fabric: ${product.fabric}. ${product.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}` : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.') },
-                  { id: 'shipping', title: 'Shipping & Returns', content: product.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.' },
-                ].map((acc) => (
-                  <div key={acc.id} className="border-b border-brand-powder/60">
-                    <button 
-                      onClick={() => toggleAccordion(acc.id)}
-                      className="w-full flex items-center justify-between py-3.5 text-left group cursor-pointer"
-                    >
-                      <span className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-brand-navy group-hover:text-brand-teal transition-colors">
-                        {acc.title}
-                      </span>
-                      <ChevronDown size={14} className={`text-brand-navy/40 transition-transform duration-300 ${openAccordion === acc.id ? 'rotate-180 text-brand-teal' : ''}`} />
-                    </button>
-                    <div className={`overflow-hidden transition-all duration-300 ${openAccordion === acc.id ? 'max-h-60 pb-3.5 opacity-100' : 'max-h-0 opacity-0'}`}>
-                      <p className="font-sans text-xs text-brand-navy/70 leading-relaxed font-light whitespace-pre-line">
-                        {acc.content}
-                      </p>
+              <div className="mt-6 border-t border-brand-powder/60 divide-y divide-brand-powder/40">
+                {/* Description */}
+                <div className="py-3">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion('details')}
+                    className="w-full flex items-center justify-between font-sans text-xs font-semibold tracking-[0.18em] uppercase text-brand-navy hover:text-brand-teal transition-colors text-left"
+                  >
+                    <span>Product Description</span>
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${openAccordion === 'details' ? 'rotate-180 text-brand-teal' : ''}`} />
+                  </button>
+                  {openAccordion === 'details' && (
+                    <div className="mt-2.5 font-sans text-xs text-brand-navy/70 leading-relaxed font-light whitespace-pre-line">
+                      {product.description || 'Elevate your celebratory ensemble with this handcrafted creation.'}
                     </div>
-                  </div>
-                ))}
+                  )}
+                </div>
+
+                {/* Fabric & Care */}
+                <div className="py-3">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion('fabric')}
+                    className="w-full flex items-center justify-between font-sans text-xs font-semibold tracking-[0.18em] uppercase text-brand-navy hover:text-brand-teal transition-colors text-left"
+                  >
+                    <span>Material & Care</span>
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${openAccordion === 'fabric' ? 'rotate-180 text-brand-teal' : ''}`} />
+                  </button>
+                  {openAccordion === 'fabric' && (
+                    <div className="mt-2.5 font-sans text-xs text-brand-navy/70 leading-relaxed font-light whitespace-pre-line">
+                      {product.materialCare || (product.fabric ? `Fabric: ${product.fabric}. ${product.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}` : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.')}
+                    </div>
+                  )}
+                </div>
+
+                {/* Shipping & Returns */}
+                <div className="py-3">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion('shipping')}
+                    className="w-full flex items-center justify-between font-sans text-xs font-semibold tracking-[0.18em] uppercase text-brand-navy hover:text-brand-teal transition-colors text-left"
+                  >
+                    <span>Shipping & Returns</span>
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${openAccordion === 'shipping' ? 'rotate-180 text-brand-teal' : ''}`} />
+                  </button>
+                  {openAccordion === 'shipping' && (
+                    <div className="mt-2.5 font-sans text-xs text-brand-navy/70 leading-relaxed font-light whitespace-pre-line">
+                      {product.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.'}
+                    </div>
+                  )}
+                </div>
               </div>
 
             </div>
@@ -1285,107 +1333,142 @@ export default function ProductDetail() {
             </button>
           </div>
 
-          {/* Rating Summary Card */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-6 bg-brand-powderLight/40 border border-brand-powder/60 p-3.5 sm:p-6 rounded-sm mb-3 sm:mb-4">
-            <div className="md:col-span-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-brand-powder/60 pb-3 md:pb-0 md:pr-6 text-center">
-              <span className="font-serif text-4xl sm:text-6xl text-brand-navy font-light mb-1">{product.rating}</span>
-              <div className="flex items-center gap-1 text-amber-400 mb-1">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} size={15} className={s <= Math.floor(product.rating) ? 'fill-amber-400' : 'text-slate-300'} />
-                ))}
-              </div>
-              <p className="font-sans text-[11px] sm:text-xs text-brand-navy/60">
-                Based on {product.reviewsCount || reviewsList.length} customer reviews
-              </p>
-            </div>
-
-            <div className="md:col-span-8 flex flex-col justify-center space-y-1.5 md:pl-4">
-              {[5, 4, 3, 2, 1].map((rating) => {
-                const count = rating === 5 ? 85 : rating === 4 ? 12 : rating === 3 ? 2 : rating === 2 ? 1 : 0;
-                return (
-                  <div key={rating} className="flex items-center gap-3 text-xs font-sans text-brand-navy/70">
-                    <span className="w-12 flex items-center gap-1">{rating} <Star size={11} className="fill-amber-400 text-amber-400" /></span>
-                    <div className="flex-1 bg-brand-powder h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-amber-400 h-full rounded-full"
-                        style={{ width: `${count}%` }}
-                      />
-                    </div>
-                    <span className="w-10 text-right text-brand-navy/50">{count}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Customer Reviews List (Shows 1 Review by default) */}
-          <div className="space-y-4">
-            {(showAllReviews ? reviewsList : reviewsList.slice(0, 1)).map((rev) => (
-              <div key={rev.id} className="p-5 sm:p-6 bg-white border border-brand-powder/60 rounded-sm shadow-2xs text-left">
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-sans text-sm font-bold text-brand-navy">{rev.author}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-brand-navy/50 font-sans">
-                      <div className="flex items-center text-amber-400">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star key={s} size={12} className={s <= rev.rating ? 'fill-amber-400' : 'text-slate-300'} />
-                        ))}
-                      </div>
-                      <span>•</span>
-                      <span>{rev.location}</span>
-                      <span>•</span>
-                      <span>{rev.date}</span>
-                    </div>
-                  </div>
+          {reviewsList.length === 0 ? (
+            /* Clean Empty State for New Products */
+            <div className="bg-brand-powderLight/30 border border-brand-powder/60 p-8 sm:p-12 rounded-sm mb-3 sm:mb-4 text-center">
+              <div className="max-w-md mx-auto space-y-3">
+                <div className="w-14 h-14 rounded-full bg-white border border-brand-powder text-amber-400 flex items-center justify-center mx-auto shadow-2xs">
+                  <Star size={24} className="fill-amber-400 text-amber-400" />
                 </div>
-
-                <h4 className="font-serif text-base font-medium text-brand-navy mb-2">{rev.title}</h4>
-                <p className="font-sans text-xs sm:text-sm text-brand-navy/70 leading-relaxed font-light mb-3">
-                  {rev.content}
+                <h3 className="font-serif text-lg sm:text-xl font-medium text-brand-navy">No customer reviews yet</h3>
+                <p className="font-sans text-xs sm:text-sm text-brand-navy/60 font-light">
+                  This is a brand new creation. Be the first customer to share your thoughts and experience!
                 </p>
-
-                {/* Customer Uploaded Review Photo */}
-                {rev.image && (
-                  <div className="mb-4">
-                    <img
-                      src={rev.image}
-                      alt="Customer review photo"
-                      className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-md border border-brand-powder shadow-xs hover:opacity-90 transition-opacity cursor-zoom-in"
-                      onClick={() => window.open(rev.image, '_blank')}
-                      title="Click to view full image"
-                    />
-                  </div>
-                )}
-
-                <div className="flex items-center gap-4 text-xs font-sans text-brand-navy/50 pt-3 border-t border-brand-powder/40">
-                  <span>Was this helpful?</span>
+                <div className="pt-2">
                   <button
-                    onClick={() => handleHelpfulClick(rev.id)}
-                    className={`flex items-center gap-1.5 transition-colors cursor-pointer ${
-                      helpfulClicked[rev.id] ? 'text-brand-teal font-semibold' : 'hover:text-brand-navy'
-                    }`}
+                    type="button"
+                    onClick={() => {
+                      if (!isLoggedIn) {
+                        navigate('/login');
+                        return;
+                      }
+                      setReviewModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-2 bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-xs uppercase tracking-wider px-6 py-3 rounded-sm transition-all shadow-xs cursor-pointer hover:shadow-md active:scale-95"
                   >
-                    <ThumbsUp size={12} /> ({rev.helpfulCount})
+                    <MessageSquare size={14} /> <span>Write the First Review</span>
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Toggle Expand / Collapse */}
-          {reviewsList.length > 1 && (
-            <div className="text-center mt-6">
-              <button
-                type="button"
-                onClick={() => setShowAllReviews(!showAllReviews)}
-                className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-white hover:bg-brand-teal hover:text-white border border-brand-teal text-brand-teal font-sans text-[11px] uppercase tracking-[0.18em] font-bold rounded-sm transition-all shadow-2xs hover:shadow-md cursor-pointer"
-              >
-                <span>{showAllReviews ? 'Show Fewer Reviews' : `Read All ${reviewsList.length} Reviews`}</span>
-                <ChevronDown size={14} className={`transition-transform duration-300 ${showAllReviews ? 'rotate-180' : ''}`} />
-              </button>
             </div>
+          ) : (
+            <>
+              {/* Rating Summary Card */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-6 bg-brand-powderLight/40 border border-brand-powder/60 p-3.5 sm:p-6 rounded-sm mb-3 sm:mb-4">
+                <div className="md:col-span-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-brand-powder/60 pb-3 md:pb-0 md:pr-6 text-center">
+                  <span className="font-serif text-4xl sm:text-6xl text-brand-navy font-light mb-1">
+                    {product.rating ? Number(product.rating).toFixed(1) : '5.0'}
+                  </span>
+                  <div className="flex items-center gap-1 text-amber-400 mb-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} size={15} className={s <= Math.floor(product.rating || 5) ? 'fill-amber-400' : 'text-slate-300'} />
+                    ))}
+                  </div>
+                  <p className="font-sans text-[11px] sm:text-xs text-brand-navy/60">
+                    Based on {reviewsList.length} customer {reviewsList.length === 1 ? 'review' : 'reviews'}
+                  </p>
+                </div>
+
+                <div className="md:col-span-8 flex flex-col justify-center space-y-1.5 md:pl-4">
+                  {[5, 4, 3, 2, 1].map((rating) => {
+                    const matchCount = reviewsList.filter(r => Math.round(Number(r.rating)) === rating).length;
+                    const pct = reviewsList.length > 0 ? Math.round((matchCount / reviewsList.length) * 100) : 0;
+                    return (
+                      <div key={rating} className="flex items-center gap-3 text-xs font-sans text-brand-navy/70">
+                        <span className="w-12 flex items-center gap-1">{rating} <Star size={11} className="fill-amber-400 text-amber-400" /></span>
+                        <div className="flex-1 bg-brand-powder h-2 rounded-full overflow-hidden">
+                          <div
+                            className="bg-amber-400 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-10 text-right text-brand-navy/50">{pct}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Customer Reviews List */}
+              <div className="space-y-4">
+                {(showAllReviews ? reviewsList : reviewsList.slice(0, 1)).map((rev) => (
+                  <div key={rev.id} className="p-5 sm:p-6 bg-white border border-brand-powder/60 rounded-sm shadow-2xs text-left">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-sans text-sm font-bold text-brand-navy">{rev.author}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-brand-navy/50 font-sans">
+                          <div className="flex items-center text-amber-400">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star key={s} size={12} className={s <= rev.rating ? 'fill-amber-400' : 'text-slate-300'} />
+                            ))}
+                          </div>
+                          <span>•</span>
+                          <span>{rev.location}</span>
+                          <span>•</span>
+                          <span>{rev.date}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <h4 className="font-serif text-base font-medium text-brand-navy mb-2">{rev.title}</h4>
+                    <p className="font-sans text-xs sm:text-sm text-brand-navy/70 leading-relaxed font-light mb-3">
+                      {rev.content}
+                    </p>
+
+                    {/* Customer Uploaded Review Photo */}
+                    {rev.image && (
+                      <div className="mb-4">
+                        <img
+                          src={rev.image}
+                          alt="Customer review photo"
+                          className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-md border border-brand-powder shadow-xs hover:opacity-90 transition-opacity cursor-zoom-in"
+                          onClick={() => window.open(rev.image, '_blank')}
+                          title="Click to view full image"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-4 text-xs font-sans text-brand-navy/50 pt-3 border-t border-brand-powder/40">
+                      <span>Was this helpful?</span>
+                      <button
+                        onClick={() => handleHelpfulClick(rev.id)}
+                        className={`flex items-center gap-1.5 transition-colors cursor-pointer ${
+                          helpfulClicked[rev.id] ? 'text-brand-teal font-semibold' : 'hover:text-brand-navy'
+                        }`}
+                      >
+                        <ThumbsUp size={12} /> ({rev.helpfulCount})
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Toggle Expand / Collapse */}
+              {reviewsList.length > 1 && (
+                <div className="text-center mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllReviews(!showAllReviews)}
+                    className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-white hover:bg-brand-teal hover:text-white border border-brand-teal text-brand-teal font-sans text-[11px] uppercase tracking-[0.18em] font-bold rounded-sm transition-all shadow-2xs hover:shadow-md cursor-pointer"
+                  >
+                    <span>{showAllReviews ? 'Show Fewer Reviews' : `Read All ${reviewsList.length} Reviews`}</span>
+                    <ChevronDown size={14} className={`transition-transform duration-300 ${showAllReviews ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 

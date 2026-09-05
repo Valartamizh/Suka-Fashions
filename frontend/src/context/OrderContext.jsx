@@ -1,10 +1,30 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { adminOrders as defaultAdminOrders } from '../admin/data/adminOrders';
 
 const OrderContext = createContext();
 
+// Helper to auto-generate next Order ID
+export function generateNextOrderId(ordersList = []) {
+  let maxNum = 1028;
+  ordersList.forEach(o => {
+    if (o && o.id) {
+      const match = String(o.id).match(/\d+/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
+      }
+    }
+  });
+  return `SUK${maxNum + 1}`;
+}
+
 export function OrderProvider({ children }) {
   const { isLoggedIn } = useAuth();
+
+  // Storefront customer orders
   const [orders, setOrders] = useState(() => {
     try {
       const saved = localStorage.getItem('suka_orders');
@@ -15,14 +35,45 @@ export function OrderProvider({ children }) {
     }
   });
 
-  // Clear orders in memory & storage when logged out
+  // Admin orders (persisted in localStorage with fallback to defaultAdminOrders)
+  const [adminOrders, setAdminOrders] = useState(() => {
+    try {
+      const saved = localStorage.getItem('suka_admin_orders');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const existingIds = new Set(parsed.map(o => o.id));
+          const missingDefaults = defaultAdminOrders.filter(o => !existingIds.has(o.id));
+          if (missingDefaults.length > 0) {
+            return [...parsed, ...missingDefaults];
+          }
+          return parsed;
+        }
+      }
+      return defaultAdminOrders;
+    } catch (e) {
+      console.error('Error loading admin orders from localStorage', e);
+      return defaultAdminOrders;
+    }
+  });
+
+  // Save admin orders to localStorage whenever updated
+  useEffect(() => {
+    try {
+      localStorage.setItem('suka_admin_orders', JSON.stringify(adminOrders));
+    } catch (e) {
+      console.error('Error saving admin orders to localStorage', e);
+    }
+  }, [adminOrders]);
+
+  // Clear storefront orders when logged out
   useEffect(() => {
     if (!isLoggedIn) {
       setOrders([]);
     }
   }, [isLoggedIn]);
 
-  // Save orders to localStorage when logged in
+  // Save storefront orders to localStorage when logged in
   useEffect(() => {
     if (isLoggedIn) {
       try {
@@ -42,10 +93,108 @@ export function OrderProvider({ children }) {
     localStorage.removeItem('suka_orders');
   };
 
+  // ─── Admin Order Operations ────────────────────────────────────────────────
+  const addAdminOrder = (orderData) => {
+    const newId = orderData.id || generateNextOrderId(adminOrders);
+    const todayStr = new Date().toISOString().split('T')[0];
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const newOrder = {
+      id: newId,
+      customer: {
+        id: orderData.customer?.id || `CUS000${Math.floor(100 + Math.random() * 900)}`,
+        name: orderData.customer?.name || 'Walk-in / WhatsApp Customer',
+        phone: orderData.customer?.phone || '',
+        email: orderData.customer?.email || '',
+      },
+      address: {
+        line1: orderData.address?.line1 || '',
+        city: orderData.address?.city || '',
+        state: orderData.address?.state || '',
+        pincode: orderData.address?.pincode || '',
+      },
+      items: orderData.items || [],
+      subtotal: Number(orderData.subtotal || 0),
+      discount: Number(orderData.discount || 0),
+      shipping: Number(orderData.shipping || 0),
+      tax: Number(orderData.tax || 0),
+      total: Number(orderData.total || 0),
+      paymentMethod: orderData.paymentMethod || 'WhatsApp UPI',
+      paymentStatus: (orderData.paymentStatus || 'pending').toLowerCase(),
+      status: (orderData.status || 'processing').toLowerCase(),
+      orderSource: orderData.orderSource || 'WhatsApp',
+      notes: orderData.notes || '',
+      date: orderData.date || todayStr,
+      timeline: orderData.timeline || [
+        { status: (orderData.status || 'processing').toLowerCase(), time: `${todayStr} ${timeStr}`, note: orderData.notes ? `Order created (${orderData.orderSource || 'WhatsApp'}): ${orderData.notes}` : `Order created via ${orderData.orderSource || 'WhatsApp'}` },
+      ],
+    };
+
+    setAdminOrders(prev => [newOrder, ...prev]);
+    return newOrder;
+  };
+
+  const updateAdminOrder = (id, updatedFields) => {
+    setAdminOrders(prev =>
+      prev.map(ord => {
+        if (ord.id === id) {
+          const updated = {
+            ...ord,
+            ...updatedFields,
+            customer: {
+              ...ord.customer,
+              ...(updatedFields.customer || {}),
+            },
+            address: {
+              ...ord.address,
+              ...(updatedFields.address || {}),
+            },
+            items: updatedFields.items || ord.items,
+          };
+
+          // If status changed, append to timeline
+          if (updatedFields.status && updatedFields.status.toLowerCase() !== ord.status.toLowerCase()) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            updated.timeline = [
+              ...(ord.timeline || []),
+              {
+                status: updatedFields.status.toLowerCase(),
+                time: `${todayStr} ${timeStr}`,
+                note: updatedFields.timelineNote || `Status updated to ${updatedFields.status}`,
+              },
+            ];
+          }
+
+          return updated;
+        }
+        return ord;
+      })
+    );
+  };
+
+  const deleteAdminOrder = (id) => {
+    setAdminOrders(prev => prev.filter(o => o.id !== id));
+  };
+
+  const getAdminOrder = (id) => {
+    return adminOrders.find(o => o.id === id);
+  };
+
   const activeOrders = isLoggedIn ? orders : [];
 
   return (
-    <OrderContext.Provider value={{ orders: activeOrders, addOrder, clearOrders }}>
+    <OrderContext.Provider value={{
+      orders: activeOrders,
+      addOrder,
+      clearOrders,
+      adminOrders,
+      addAdminOrder,
+      updateAdminOrder,
+      deleteAdminOrder,
+      getAdminOrder,
+      generateNextOrderId: () => generateNextOrderId(adminOrders),
+    }}>
       {children}
     </OrderContext.Provider>
   );
@@ -58,3 +207,4 @@ export function useOrders() {
   }
   return context;
 }
+

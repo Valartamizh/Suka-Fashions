@@ -76,7 +76,8 @@ export default function UsersPage() {
 
       {tab === 'Users' && (
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
@@ -136,6 +137,49 @@ export default function UsersPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Staff Cards View */}
+          <div className="block sm:hidden divide-y divide-slate-100">
+            {users.map(user => (
+              <div key={user.id} className="p-4 hover:bg-slate-50 transition-colors space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${ROLE_COLORS[user.role] || 'bg-slate-100 text-slate-600'}`}>
+                      {user.avatar}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900 text-sm">{user.name}</p>
+                      <span className="text-[10px] font-mono text-slate-400">{user.id}</span>
+                    </div>
+                  </div>
+                  <StatusBadge status={user.status} />
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs bg-slate-50 p-2.5 rounded-xl">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase block">Role</span>
+                    <span className="font-bold text-slate-800">{roleLabels[user.role]}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase block">Contact</span>
+                    <span className="font-medium text-slate-600">{user.phone || user.email}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+                  <span className="text-[11px] text-slate-400 truncate max-w-[180px]">{user.email}</span>
+                  {user.role !== 'SUPER_ADMIN' && (
+                    <button
+                      onClick={() => setDeleteModal(user)}
+                      className="px-2.5 py-1 text-red-600 hover:bg-red-50 font-bold rounded-lg text-xs flex items-center gap-1"
+                    >
+                      <Trash2 size={12} /> Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -146,7 +190,7 @@ export default function UsersPage() {
             <p className="text-xs text-slate-400 mt-0.5">Overview of what each role can access and do.</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs min-w-[600px]">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
                   <th className="px-4 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px] w-36">Section</th>
@@ -174,7 +218,7 @@ export default function UsersPage() {
               <tfoot>
                 <tr className="border-t border-slate-200 bg-slate-50/30">
                   <td className="px-4 py-3 text-slate-400 text-[10px] col-span-8" colSpan={ROLES.length + 1}>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
                       <span className="flex items-center gap-1.5"><Check size={11} className="text-emerald-500" /> Full Access</span>
                       <span className="flex items-center gap-1.5"><span className="text-[10px] font-bold text-amber-500">View</span> View Only</span>
                       <span className="flex items-center gap-1.5"><X size={10} className="text-slate-300" /> No Access</span>
@@ -191,7 +235,7 @@ export default function UsersPage() {
       {addModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setAddModal(false)}>
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+          <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100vw-32px)] max-w-md max-h-[90vh] overflow-y-auto p-5 sm:p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-sans font-bold text-slate-800 text-base">Add Admin User</h3>
               <button onClick={() => setAddModal(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>

@@ -3,7 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Eye, Users, Plus, Edit2, Trash2, Check,
-  UserCheck, UserX, Crown, Phone, Mail, MapPin, X, RotateCcw
+  UserCheck, UserX, Crown, Phone, Mail, MapPin, X, RotateCcw,
+  ArrowUpDown, Filter
 } from 'lucide-react';
 import AdminPageHeader from '../components/ui/AdminPageHeader';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -26,8 +27,7 @@ export default function CustomersPage() {
   } = useCustomers();
 
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('All');
-  const [tierFilter, setTierFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('default');
   const [page, setPage] = useState(1);
 
   // Modals & Toasts
@@ -62,17 +62,36 @@ export default function CustomersPage() {
     if (search) {
       const q = search.toLowerCase();
       list = list.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q) ||
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.id && c.id.toLowerCase().includes(q)) ||
         (c.phone && c.phone.toLowerCase().includes(q)) ||
         (c.email && c.email.toLowerCase().includes(q)) ||
         (c.address?.city && c.address.city.toLowerCase().includes(q))
       );
     }
-    if (status !== 'All') list = list.filter(c => c.status === status.toLowerCase());
-    if (tierFilter !== 'All') list = list.filter(c => (c.tier || 'Regular') === tierFilter);
+
+    if (sortBy === 'active-first') {
+      list.sort((a, b) => {
+        const aVal = a.status === 'active' ? 1 : 0;
+        const bVal = b.status === 'active' ? 1 : 0;
+        return bVal - aVal;
+      });
+    } else if (sortBy === 'inactive-first') {
+      list.sort((a, b) => {
+        const aVal = a.status === 'inactive' ? 1 : 0;
+        const bVal = b.status === 'inactive' ? 1 : 0;
+        return bVal - aVal;
+      });
+    } else if (sortBy === 'spent-desc') {
+      list.sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0));
+    } else if (sortBy === 'orders-desc') {
+      list.sort((a, b) => (b.totalOrders || 0) - (a.totalOrders || 0));
+    } else if (sortBy === 'name-asc') {
+      list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
+
     return list;
-  }, [customers, search, status, tierFilter]);
+  }, [customers, search, sortBy]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -178,26 +197,36 @@ export default function CustomersPage() {
     });
   };
 
-  // Prompt Status Toggle
+  // Prompt Status Toggle with Confirmation
   const handleToggleStatus = (customer, e) => {
     if (e) e.stopPropagation();
-    const nextStatus = customer.status === 'active' ? 'inactive' : 'active';
-    toggleCustomerStatus(customer.id);
-    showToast(`Customer "${customer.name}" marked as ${nextStatus}.`);
-  };
+    const isCurrentlyActive = customer.status === 'active';
 
-  // Prompt Reset to Defaults
-  const promptResetDefaults = () => {
-    setConfirmModal({
-      title: 'Reset Customer Data',
-      message: 'Are you sure you want to reset all customer records back to the default dataset? Custom additions and edits will be removed.',
-      confirmLabel: 'Reset Defaults',
-      variant: 'danger',
-      onConfirm: () => {
-        resetCustomers();
-        showToast('Customer data reset to default demo records.');
-      },
-    });
+    if (isCurrentlyActive) {
+      setConfirmModal({
+        title: 'Deactivate Customer',
+        message: `Are you sure you want to mark customer "${customer.name}" (${customer.id}) as Inactive?`,
+        confirmLabel: 'Mark as Inactive',
+        variant: 'danger',
+        onConfirm: () => {
+          toggleCustomerStatus(customer.id);
+          showToast(`Customer "${customer.name}" marked as Inactive.`);
+          setConfirmModal(null);
+        },
+      });
+    } else {
+      setConfirmModal({
+        title: 'Activate Customer',
+        message: `Do you want to reactivate customer "${customer.name}" (${customer.id}) and set their status back to Active?`,
+        confirmLabel: 'Mark as Active',
+        variant: 'primary',
+        onConfirm: () => {
+          toggleCustomerStatus(customer.id);
+          showToast(`Customer "${customer.name}" marked as Active.`);
+          setConfirmModal(null);
+        },
+      });
+    }
   };
 
   return (
@@ -213,24 +242,16 @@ export default function CustomersPage() {
       )}
 
       <AdminPageHeader title="Customer Management" subtitle="View, create, edit, and manage your full customer base.">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={promptResetDefaults}
-            className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-xs font-semibold text-slate-500 hover:text-red-600 hover:border-red-200 rounded-lg hover:bg-red-50 transition-colors shadow-sm"
-          >
-            <RotateCcw size={13} /> Reset Demo Data
-          </button>
-          <button
-            onClick={handleOpenAdd}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold rounded-lg transition-colors shadow-sm"
-          >
-            <Plus size={14} /> Add Customer
-          </button>
-        </div>
+        <button
+          onClick={handleOpenAdd}
+          className="flex items-center gap-2 px-4 py-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold rounded-lg transition-colors shadow-sm cursor-pointer"
+        >
+          <Plus size={14} /> Add Customer
+        </button>
       </AdminPageHeader>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         {[
           { label: 'Total Customers', value: customers.length },
           { label: 'Active Customers', value: customers.filter(c => c.status === 'active').length },
@@ -242,59 +263,83 @@ export default function CustomersPage() {
               : '₹0'
           },
         ].map(stat => (
-          <div key={stat.label} className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4">
+          <div key={stat.label} className="bg-white rounded-xl border border-slate-100 shadow-sm px-4 sm:px-5 py-3.5 sm:py-4">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{stat.label}</p>
-            <p className="font-bold text-slate-800 text-xl font-sans mt-1">{stat.value}</p>
+            <p className="font-bold text-slate-800 text-lg sm:text-xl font-sans mt-1">{stat.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Filters & Search */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex-1 min-w-[200px] max-w-md">
-          <Search size={14} className="text-slate-400" />
+      {/* Filters, Search & Sort Bar */}
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-3.5 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        {/* Search input */}
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex-1 max-w-md">
+          <Search size={14} className="text-slate-400 flex-shrink-0" />
           <input
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             placeholder="Search customer name, ID, phone, email or city..."
             className="bg-transparent text-xs text-slate-700 placeholder-slate-400 outline-none w-full"
           />
+          {search && (
+            <button
+              onClick={() => { setSearch(''); setPage(1); }}
+              className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              title="Clear search"
+            >
+              <X size={13} />
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <span>Status:</span>
+        {/* Right side: Sort Dropdown */}
+        <div className="flex items-center gap-2.5 justify-end">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-2xs hover:border-slate-300 transition-colors">
+            <ArrowUpDown size={13} className="text-brand-teal flex-shrink-0" />
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Sort:</span>
             <select
-              value={status}
-              onChange={e => { setStatus(e.target.value); setPage(1); }}
-              className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 bg-white focus:outline-none focus:border-brand-teal"
+              value={sortBy}
+              onChange={e => { setSortBy(e.target.value); setPage(1); }}
+              className="bg-transparent text-xs font-semibold text-slate-700 outline-none cursor-pointer pr-1"
             >
-              {['All', 'Active', 'Inactive'].map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <span>Tier:</span>
-            <select
-              value={tierFilter}
-              onChange={e => { setTierFilter(e.target.value); setPage(1); }}
-              className="border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 bg-white focus:outline-none focus:border-brand-teal"
-            >
-              {['All', 'Regular', 'VIP', 'Wholesale', 'First Time'].map(t => <option key={t} value={t}>{t}</option>)}
+              <option value="default">Default</option>
+              <option value="active-first">🟢 Active First</option>
+              <option value="inactive-first">⚪ Inactive First</option>
+              <option value="spent-desc">💰 Total Spent (High to Low)</option>
+              <option value="orders-desc">📦 Total Orders (High to Low)</option>
+              <option value="name-asc">🔤 Name (A → Z)</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Customers table */}
+      {/* Customers container */}
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop & Tablet Table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
-                {['ID', 'Customer', 'Tier', 'Phone', 'Email', 'Orders', 'Total Spent', 'Status', 'Actions'].map(h => (
-                  <th key={h} className="px-5 py-3.5 text-left font-semibold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">
-                    {h}
+                {['ID', 'Customer', 'Phone', 'Email', 'Orders', 'Total Spent', 'Status', 'Actions'].map(h => (
+                  <th
+                    key={h}
+                    onClick={() => {
+                      if (h === 'Status') {
+                        setSortBy(prev => prev === 'active-first' ? 'inactive-first' : 'active-first');
+                      }
+                    }}
+                    className={`px-5 py-3.5 text-left font-semibold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap ${
+                      h === 'Status' ? 'cursor-pointer hover:text-brand-teal select-none' : ''
+                    }`}
+                    title={h === 'Status' ? 'Click to toggle Active / Inactive sorting' : undefined}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>{h}</span>
+                      {h === 'Status' && (
+                        <ArrowUpDown size={11} className={sortBy === 'active-first' || sortBy === 'inactive-first' ? 'text-brand-teal' : 'text-slate-300'} />
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -302,7 +347,7 @@ export default function CustomersPage() {
             <tbody className="divide-y divide-slate-50">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={8}>
                     <EmptyState icon={Users} title="No customers found" description="Try adjusting your search criteria or add a new customer." />
                   </td>
                 </tr>
@@ -330,25 +375,15 @@ export default function CustomersPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-3.5">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                      c.tier === 'VIP' ? 'bg-amber-100 text-amber-800' :
-                      c.tier === 'Wholesale' ? 'bg-indigo-50 text-indigo-700' :
-                      'bg-slate-100 text-slate-600'
-                    }`}>
-                      {c.tier === 'VIP' && <Crown size={10} />}
-                      {c.tier || 'Regular'}
-                    </span>
-                  </td>
                   <td className="px-5 py-3.5 text-slate-600 whitespace-nowrap font-medium">{c.phone || '—'}</td>
                   <td className="px-5 py-3.5 text-slate-500 max-w-[150px] truncate">{c.email}</td>
                   <td className="px-5 py-3.5 font-semibold text-slate-700">{c.totalOrders || 0}</td>
                   <td className="px-5 py-3.5 font-bold text-slate-800">₹{(c.totalSpent || 0).toLocaleString('en-IN')}</td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={(e) => handleToggleStatus(c, e)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                      title="Click to toggle status"
+                      className="cursor-pointer hover:opacity-80 transition-opacity active:scale-95"
+                      title={c.status === 'active' ? 'Click to mark as Inactive' : 'Click to mark as Active'}
                     >
                       <StatusBadge status={c.status} />
                     </button>
@@ -357,21 +392,14 @@ export default function CustomersPage() {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={(e) => handleOpenEdit(c, e)}
-                        className="p-1.5 hover:bg-brand-powder rounded-lg text-slate-400 hover:text-brand-teal transition-colors"
+                        className="p-1.5 hover:bg-brand-powder rounded-lg text-slate-400 hover:text-brand-teal transition-colors cursor-pointer"
                         title="Edit Customer"
                       >
                         <Edit2 size={13} />
                       </button>
                       <button
-                        onClick={() => navigate(`/admin/customers/${c.id}`)}
-                        className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
-                        title="View Profile"
-                      >
-                        <Eye size={13} />
-                      </button>
-                      <button
                         onClick={(e) => promptDelete(c, e)}
-                        className="p-1.5 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+                        className="p-1.5 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
                         title="Delete Customer"
                       >
                         <Trash2 size={13} />
@@ -383,6 +411,75 @@ export default function CustomersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Customer Cards View (< sm screens) */}
+        <div className="block sm:hidden divide-y divide-slate-100">
+          {paginated.length === 0 ? (
+            <div className="py-12 px-4 text-center">
+              <EmptyState icon={Users} title="No customers found" description="Try adjusting your search criteria or add a new customer." />
+            </div>
+          ) : paginated.map(c => (
+            <div
+              key={c.id}
+              onClick={() => navigate(`/admin/customers/${c.id}`)}
+              className="p-4 hover:bg-slate-50 transition-colors cursor-pointer space-y-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 bg-brand-powder rounded-full flex items-center justify-center text-brand-teal font-bold text-xs flex-shrink-0">
+                    {c.firstName ? c.firstName.charAt(0) : 'C'}{c.lastName ? c.lastName.charAt(0) : ''}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-900 text-sm truncate">{c.name || 'Unnamed'}</p>
+                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">{c.id} {c.address?.city ? `· ${c.address.city}` : ''}</p>
+                  </div>
+                </div>
+                <div onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => handleToggleStatus(c, e)}
+                    className="cursor-pointer"
+                  >
+                    <StatusBadge status={c.status} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-xl">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase block">Orders</span>
+                  <span className="font-bold text-slate-800">{c.totalOrders || 0}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase block">Spent</span>
+                  <span className="font-bold text-slate-900 font-mono">₹{(c.totalSpent || 0).toLocaleString('en-IN')}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase block">Contact</span>
+                  <span className="font-medium text-slate-700 truncate max-w-[110px] block">{c.phone || c.email}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-1 text-xs" onClick={e => e.stopPropagation()}>
+                <span className="text-slate-400 truncate max-w-[170px] text-[11px]">{c.email}</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={(e) => handleOpenEdit(c, e)}
+                    className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={(e) => promptDelete(c, e)}
+                    className="p-1 text-slate-400 hover:text-red-600 rounded-lg"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {paginated.length > 0 && (
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} totalItems={filtered.length} pageSize={PAGE_SIZE} />
         )}
@@ -407,7 +504,7 @@ export default function CustomersPage() {
                     {editingCustomer ? `Edit Customer (${editingCustomer.id})` : 'Add New Customer'}
                   </h3>
                   <p className="text-[10px] text-slate-400">
-                    {editingCustomer ? 'Update profile information and customer tier' : 'Fill out customer personal & contact information'}
+                    {editingCustomer ? 'Update customer profile information and status' : 'Fill out customer personal & contact information'}
                   </p>
                 </div>
               </div>
@@ -474,35 +571,18 @@ export default function CustomersPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    Account Status
-                  </label>
-                  <select
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 outline-none focus:border-brand-teal bg-white"
-                    value={formData.status}
-                    onChange={e => setFormData({ ...formData, status: e.target.value })}
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    Customer Tier / Tag
-                  </label>
-                  <select
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 outline-none focus:border-brand-teal bg-white"
-                    value={formData.tier}
-                    onChange={e => setFormData({ ...formData, tier: e.target.value })}
-                  >
-                    <option value="Regular">Regular</option>
-                    <option value="VIP">VIP Client</option>
-                    <option value="Wholesale">Wholesale Buyer</option>
-                    <option value="First Time">First Time Shopper</option>
-                  </select>
-                </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                  Account Status
+                </label>
+                <select
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 outline-none focus:border-brand-teal bg-white"
+                  value={formData.status}
+                  onChange={e => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
               </div>
 
               <div className="border-t border-slate-100 pt-3">

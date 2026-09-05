@@ -317,15 +317,15 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
   return (
     <>
       {/* Desktop Sidebar (Fixed under top navbar) */}
-      <aside className="hidden lg:flex flex-col w-[270px] bg-white border-r border-slate-200/80 sticky top-[88px] sm:top-[92px] h-[calc(100vh-88px)] sm:h-[calc(100vh-92px)] flex-shrink-0 z-30 shadow-2xs">
+      <aside className="hidden lg:flex flex-col w-[230px] xl:w-[270px] bg-white border-r border-slate-200/80 sticky top-[64px] sm:top-[80px] lg:top-[88px] h-[calc(100vh-64px)] sm:h-[calc(100vh-80px)] lg:h-[calc(100vh-88px)] flex-shrink-0 z-30 shadow-2xs">
         <SidebarContent />
       </aside>
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onMobileClose} />
-          <aside className="absolute left-0 top-0 h-full w-[270px] bg-white shadow-2xl z-50">
+        <div className="lg:hidden fixed inset-0 z-50 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onClick={onMobileClose} />
+          <aside className="absolute left-0 top-0 h-full w-[85vw] max-w-[300px] bg-white shadow-2xl z-50 animate-in slide-in-from-left duration-250">
             <SidebarContent onNavigate={onMobileClose} />
           </aside>
         </div>

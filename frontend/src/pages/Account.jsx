@@ -317,23 +317,55 @@ export default function Account() {
   }
 
   return (
-    <div className="bg-brand-cream/20 min-h-[85vh] pt-6 sm:pt-8 pb-12 lg:pb-16 text-left">
-      <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
+    <div className="bg-brand-cream/20 min-h-[85vh] pt-4 sm:pt-8 pb-8 sm:pb-12 lg:pb-16 text-left">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
         
         {/* Header */}
-        <div className="mb-6 pb-4 border-b border-brand-powder/60">
-          <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-1">
-            My Account
-          </h1>
-          <p className="font-sans text-xs sm:text-sm text-brand-navy/60 font-medium">
-            Welcome back, <span className="text-brand-teal font-bold">{user?.name || 'Pooja'}</span>
-          </p>
+        <div className="flex justify-between items-end mb-3.5 sm:mb-6 pb-3 sm:pb-4 border-b border-brand-powder/60">
+          <div>
+            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-0.5 sm:mb-1">
+              My Account
+            </h1>
+            <p className="font-sans text-xs sm:text-sm text-brand-navy/60 font-medium">
+              Welcome back, <span className="text-brand-teal font-bold">{user?.name || 'Pooja'}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSignOutRequest}
+            className="lg:hidden flex items-center gap-1.5 text-brand-navy/60 hover:text-red-500 font-sans text-[10px] uppercase tracking-wider font-semibold py-1.5 px-3 rounded-sm border border-brand-powder/70 bg-white shadow-2xs cursor-pointer transition-colors"
+          >
+            <LogOut size={13} />
+            <span>Sign Out</span>
+          </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-10">
+        {/* Mobile Horizontal Tabs */}
+        <div className="flex lg:hidden gap-1.5 p-1 bg-brand-powder/30 rounded-sm mb-3.5 overflow-x-auto no-scrollbar">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xs transition-all duration-200 text-center ${
+                  isActive
+                    ? 'bg-brand-teal text-white shadow-xs font-bold'
+                    : 'bg-white/80 text-brand-navy/70 hover:text-brand-teal font-medium'
+                }`}
+              >
+                <Icon size={14} strokeWidth={isActive ? 2 : 1.5} />
+                <span className="font-sans text-[10px] uppercase tracking-wider whitespace-nowrap">{tab.label.replace('My ', '')}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-10">
           
-          {/* Sidebar */}
-          <div className="lg:w-64 flex-shrink-0">
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block lg:w-64 flex-shrink-0">
             <nav className="flex flex-col gap-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -369,7 +401,7 @@ export default function Account() {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 bg-white border border-brand-powder/50 rounded-sm p-6 sm:p-10 shadow-sm min-h-[500px]">
+          <div className="flex-1 bg-white border border-brand-powder/50 rounded-sm p-4 sm:p-6 lg:p-10 shadow-sm min-h-0 lg:min-h-[500px]">
             
             {/* Orders Tab */}
             {activeTab === 'orders' && (
@@ -459,15 +491,15 @@ export default function Account() {
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div className="animate-in fade-in duration-300">
-                <h2 className="font-serif text-2xl text-brand-navy mb-6 pb-4 border-b border-brand-powder/60">Personal Information</h2>
+                <h2 className="font-serif text-xl sm:text-2xl text-brand-navy mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-brand-powder/60">Personal Information</h2>
                 
                 {profileSuccess && (
-                  <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-sm text-xs font-sans font-semibold flex items-center gap-2 animate-in fade-in">
+                  <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-sm text-xs font-sans font-semibold flex items-center gap-2 animate-in fade-in">
                     <Check size={16} className="text-emerald-600" /> Your profile details have been saved successfully!
                   </div>
                 )}
 
-                <form onSubmit={handleProfileSave} className="max-w-xl space-y-5">
+                <form onSubmit={handleProfileSave} className="max-w-xl space-y-4 sm:space-y-5">
                   <div className="grid grid-cols-2 gap-5">
                     <div>
                       <label className="block font-sans text-[10px] uppercase tracking-wider text-brand-navy/70 mb-2 font-semibold">First Name *</label>

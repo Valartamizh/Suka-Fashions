@@ -1,9 +1,11 @@
 // SettingsPage — /admin/settings
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Store, CreditCard, Truck, ShoppingBag, Package, Bell, Search, Shield,
+  Store, CreditCard, Truck, ShoppingBag, Package, Bell, Shield, Check, RotateCcw
 } from 'lucide-react';
 import AdminPageHeader from '../components/ui/AdminPageHeader';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import { useSettings } from '../../context/SettingsContext';
 
 const TABS = [
   { label: 'Store', icon: Store },
@@ -12,7 +14,6 @@ const TABS = [
   { label: 'Orders', icon: ShoppingBag },
   { label: 'Inventory', icon: Package },
   { label: 'Notifications', icon: Bell },
-  { label: 'SEO', icon: Search },
   { label: 'Security', icon: Shield },
 ];
 
@@ -42,47 +43,73 @@ function Toggle({ checked, onChange }) {
 const inputClass = "w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/10 transition-all";
 
 export default function SettingsPage() {
+  const { settings, saveSettings } = useSettings();
   const [activeTab, setActiveTab] = useState('Store');
+  const [savedToast, setSavedToast] = useState(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [lastSavedSnapshot, setLastSavedSnapshot] = useState(null);
 
-  const [store, setStore] = useState({
-    storeName: 'Suka Fashions',
-    supportEmail: 'support@sukafashions.com',
-    supportPhone: '+91 98765 00000',
-    address: '42, Commercial Street, Bengaluru, Karnataka 560001',
-    gst: '29ABCDE1234F1Z5',
-    currency: 'INR',
-    timezone: 'Asia/Kolkata',
-  });
+  const [store, setStore] = useState(settings.store);
+  const [shipping, setShipping] = useState(settings.shipping);
+  const [inventory, setInventory] = useState(settings.inventory);
+  const [orders, setOrders] = useState(settings.orders);
+  const [notifications, setNotifications] = useState(settings.notifications);
 
-  const [shipping, setShipping] = useState({
-    freeShippingMin: 1999,
-    standardCharge: 99,
-    deliveryDays: '3-7 working days',
-    codEnabled: true,
-  });
+  useEffect(() => {
+    if (settings) {
+      setStore(settings.store);
+      setShipping(settings.shipping);
+      setInventory(settings.inventory);
+      setOrders(settings.orders);
+      setNotifications(settings.notifications);
+    }
+  }, [settings]);
 
-  const [inventory, setInventory] = useState({
-    lowStockThreshold: 10,
-    allowOrderWhenOutOfStock: false,
-    trackInventory: true,
-    lowStockAlerts: true,
-  });
+  // Execute Save after Confirmation
+  const executeSave = () => {
+    // Record snapshot of current settings for undo
+    setLastSavedSnapshot({
+      store: { ...settings.store },
+      shipping: { ...settings.shipping },
+      inventory: { ...settings.inventory },
+      orders: { ...settings.orders },
+      notifications: { ...settings.notifications },
+    });
 
-  const [orders, setOrders] = useState({
-    autoConfirmPrepaid: true,
-    codConfirmation: false,
-    returnWindowDays: 7,
-    cancellationWindow: '24 hours',
-  });
+    saveSettings({
+      store,
+      shipping,
+      inventory,
+      orders,
+      notifications,
+    });
 
-  const [notifications, setNotifications] = useState({
-    newOrder: true,
-    lowStock: true,
-    outOfStock: true,
-    returnRequest: true,
-    newReview: false,
-    paymentFailure: true,
-  });
+    setSavedToast('Settings saved successfully! Main storefront updated.');
+    setTimeout(() => setSavedToast(null), 4500);
+  };
+
+  // Handle Undo / Revert
+  const handleUndo = () => {
+    if (lastSavedSnapshot) {
+      saveSettings(lastSavedSnapshot);
+      setStore(lastSavedSnapshot.store);
+      setShipping(lastSavedSnapshot.shipping);
+      setInventory(lastSavedSnapshot.inventory);
+      setOrders(lastSavedSnapshot.orders);
+      setNotifications(lastSavedSnapshot.notifications);
+      setLastSavedSnapshot(null);
+      setSavedToast('Settings changes undone. Reverted to previous settings.');
+    } else {
+      // Revert current form inputs back to active settings
+      setStore(settings.store);
+      setShipping(settings.shipping);
+      setInventory(settings.inventory);
+      setOrders(settings.orders);
+      setNotifications(settings.notifications);
+      setSavedToast('Form changes discarded. Reverted to current settings.');
+    }
+    setTimeout(() => setSavedToast(null), 3500);
+  };
 
   const s = (obj, setter, key, val) => setter({ ...obj, [key]: val });
 
@@ -206,14 +233,6 @@ export default function SettingsPage() {
       </div>
     ),
 
-    SEO: (
-      <div className="py-8 text-center text-sm text-slate-400">
-        <Search size={28} className="mx-auto mb-3 text-slate-300" />
-        <p className="font-semibold text-slate-600 mb-1">SEO Settings</p>
-        <p>Global meta tags, sitemap, and structured data will be configured here.</p>
-      </div>
-    ),
-
     Security: (
       <div>
         <SettingField label="Two-Factor Authentication" hint="Require 2FA for all admin logins">
@@ -254,18 +273,36 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 relative">
+      {/* Toast Alert with Undo Action */}
+      {savedToast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 animate-[fadeInUp_0.25s_ease-out]">
+          <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+            <Check size={14} />
+          </div>
+          <span className="text-xs font-semibold">{savedToast}</span>
+          {lastSavedSnapshot && (
+            <button
+              onClick={handleUndo}
+              className="ml-2 px-2.5 py-1 bg-white/10 hover:bg-white/20 text-brand-powder hover:text-white rounded-md text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <RotateCcw size={11} /> Undo
+            </button>
+          )}
+        </div>
+      )}
+
       <AdminPageHeader title="Settings" subtitle="Configure your store, payments, shipping, and preferences." />
 
-      <div className="flex gap-5">
-        {/* Settings tabs sidebar */}
-        <div className="w-44 flex-shrink-0">
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-2 space-y-0.5">
+      <div className="flex flex-col md:flex-row gap-4 sm:gap-5">
+        {/* Settings tabs sidebar / mobile pills bar */}
+        <div className="w-full md:w-44 flex-shrink-0">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-1.5 sm:p-2 flex md:flex-col overflow-x-auto no-scrollbar gap-1 sm:gap-0.5">
             {TABS.map(({ label, icon: Icon }) => (
               <button
                 key={label}
                 onClick={() => setActiveTab(label)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all text-left ${
+                className={`flex items-center gap-2 sm:gap-2.5 px-3 py-2 sm:py-2.5 rounded-lg text-xs font-semibold transition-all text-left whitespace-nowrap flex-shrink-0 md:w-full cursor-pointer ${
                   activeTab === label
                     ? 'bg-brand-powder text-brand-teal'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
@@ -280,17 +317,44 @@ export default function SettingsPage() {
 
         {/* Settings content */}
         <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-6 py-4">
-            <div className="flex items-center justify-between mb-4 pb-4 border-b border-slate-100">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-4 sm:px-6 py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100">
               <h3 className="font-sans font-bold text-slate-800 text-base">{activeTab} Settings</h3>
-              <button className="flex items-center gap-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors">
-                Save Changes
-              </button>
+              <div className="flex items-center gap-2.5 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleUndo}
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-semibold rounded-lg transition-all active:scale-95 cursor-pointer shadow-2xs"
+                  title="Undo / Revert settings"
+                >
+                  <RotateCcw size={13} className="text-slate-500" />
+                  <span>Undo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmModalOpen(true)}
+                  className="flex items-center gap-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <Check size={14} />
+                  <span>Save Changes</span>
+                </button>
+              </div>
             </div>
             {tabContent[activeTab]}
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={executeSave}
+        title="Save Settings Changes?"
+        message="Are you sure you want to save and apply these changes to your store settings? The changes will immediately reflect on the customer storefront."
+        confirmLabel="Save Changes"
+        variant="brand"
+      />
     </div>
   );
 }

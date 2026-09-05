@@ -147,6 +147,36 @@ export function FilterProvider({ children }) {
     });
   };
 
+  const ensureColorExists = (name, hex) => {
+    if (!name || !name.trim()) return;
+    const cleanName = name.trim();
+    const cleanHex = hex?.trim() || '#006B70';
+    const cleanId = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+    setFilters(prev => {
+      const existingColors = prev.colors || [];
+      const alreadyExists = existingColors.some(
+        c => c.name.toLowerCase() === cleanName.toLowerCase() ||
+             (cleanHex && c.hex && c.hex.toUpperCase() === cleanHex.toUpperCase()) ||
+             c.id === cleanId
+      );
+
+      if (alreadyExists) return prev;
+
+      const newColorItem = {
+        id: cleanId,
+        name: cleanName,
+        hex: cleanHex,
+        active: true,
+      };
+
+      return {
+        ...prev,
+        colors: [...existingColors, newColorItem],
+      };
+    });
+  };
+
   const resetFilters = () => {
     setFilters(DEFAULT_FILTERS);
   };
@@ -160,6 +190,7 @@ export function FilterProvider({ children }) {
         deleteItem,
         toggleItemActive,
         moveItem,
+        ensureColorExists,
         resetFilters,
       }}
     >

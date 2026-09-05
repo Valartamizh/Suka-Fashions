@@ -1,5 +1,6 @@
 // CategoriesPage — /admin/categories
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Plus,
   Edit,
@@ -10,7 +11,8 @@ import {
   CheckCircle2,
   Sparkles,
   Layers,
-  FolderPlus
+  FolderPlus,
+  ExternalLink
 } from 'lucide-react';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useCategories } from '../../../context/CategoryContext';
@@ -225,11 +227,11 @@ export default function CategoriesPage() {
             No categories match your search.
           </div>
         ) : filteredCategories.map((cat) => {
-          const catProducts = products.filter(p =>
-            p.category?.toLowerCase() === cat.name.toLowerCase() ||
-            p.category?.toLowerCase() === cat.id.toLowerCase()
-          );
-          const totalCatProductsCount = catProducts.length || (cat.subcategories ? cat.subcategories.length * 5 : 25);
+          const catProducts = (products || []).filter(p => {
+            const pc = (p.category || '').toLowerCase();
+            return pc === cat.name.toLowerCase() || pc === cat.id.toLowerCase() || pc.replace(/[^a-z0-9]+/g, '-') === cat.id.toLowerCase();
+          });
+          const totalCatProductsCount = catProducts.length;
           const subcategoriesList = cat.subcategories || [];
 
           return (
@@ -261,15 +263,30 @@ export default function CategoriesPage() {
                       }`}>
                         {cat.active !== false ? 'Active' : 'Inactive'}
                       </span>
+                      {cat.showOnHomepage && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 border border-blue-100">
+                          On Homepage
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">
-                      {cat.description || 'Luxury ethnic collection & handcrafted weaves'} • <span className="font-semibold text-slate-700">{totalCatProductsCount} total products</span>
+                      {cat.description || 'Luxury ethnic collection & handcrafted weaves'} • <span className="font-semibold text-slate-700">{totalCatProductsCount} {totalCatProductsCount === 1 ? 'product' : 'products'}</span>
                     </p>
                   </div>
                 </div>
 
-                {/* Right Actions: + Add Subcategory, Edit, Delete */}
+                {/* Right Actions: View in Store, + Add Subcategory, Edit, Delete */}
                 <div className="flex items-center gap-2">
+                  <Link
+                    to={cat.link || `/category/${cat.id}`}
+                    target="_blank"
+                    className="flex items-center gap-1 border border-teal-200 bg-teal-50/70 hover:bg-teal-50 text-teal-700 font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                    title="View category on storefront"
+                  >
+                    <ExternalLink size={12} strokeWidth={2} />
+                    <span>View Store</span>
+                  </Link>
+
                   <button
                     type="button"
                     onClick={() => {
@@ -314,18 +331,28 @@ export default function CategoriesPage() {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     {subcategoriesList.map((sub) => {
-                      const subProductCount = catProducts.filter(p =>
-                        p.subcategory?.toLowerCase() === sub.toLowerCase()
-                      ).length || 5;
+                      const subProductCount = catProducts.filter(p => {
+                        const ps = (p.subcategory || '').toLowerCase();
+                        const pn = (p.name || '').toLowerCase();
+                        return ps === sub.toLowerCase() || pn.includes(sub.toLowerCase());
+                      }).length;
 
                       return (
                         <div
                           key={sub}
                           className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between gap-2 shadow-2xs transition-all"
                         >
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-slate-800 truncate">{sub}</p>
-                            <p className="text-[10px] text-slate-400 font-medium mt-0.5">{subProductCount} products</p>
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              to={`/products?category=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sub)}`}
+                              target="_blank"
+                              className="text-xs font-bold text-slate-800 hover:text-brand-teal truncate flex items-center gap-1 group"
+                              title="View subcategory in store"
+                            >
+                              <span className="truncate">{sub}</span>
+                              <ExternalLink size={10} className="text-slate-400 group-hover:text-brand-teal flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Link>
+                            <p className="text-[10px] text-slate-400 font-medium mt-0.5">{subProductCount} {subProductCount === 1 ? 'product' : 'products'}</p>
                           </div>
 
                           <div className="flex items-center gap-1 flex-shrink-0">
@@ -361,7 +388,7 @@ export default function CategoriesPage() {
       {/* ── 4. ADD MAIN CATEGORY MODAL ── */}
       {addCategoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setAddCategoryModal(false)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-[calc(100vw-32px)] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="font-sans font-bold text-slate-900 text-base">Add Main Category</h3>
               <button onClick={() => setAddCategoryModal(false)} className="text-slate-400 hover:text-slate-600">
@@ -403,7 +430,7 @@ export default function CategoriesPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-4 pt-1">
+              <div className="flex flex-wrap items-center gap-4 pt-1">
                 <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
@@ -449,7 +476,7 @@ export default function CategoriesPage() {
       {/* ── 5. EDIT MAIN CATEGORY MODAL ── */}
       {editCategoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setEditCategoryModal(null)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-[calc(100vw-32px)] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="font-sans font-bold text-slate-900 text-base">Edit Category</h3>
               <button onClick={() => setEditCategoryModal(null)} className="text-slate-400 hover:text-slate-600">
@@ -488,7 +515,7 @@ export default function CategoriesPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-4 pt-1">
+              <div className="flex flex-wrap items-center gap-4 pt-1">
                 <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
@@ -534,7 +561,7 @@ export default function CategoriesPage() {
       {/* ── 6. ADD SUBCATEGORY MODAL ── */}
       {addSubModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setAddSubModal(null)}>
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-[calc(100vw-32px)] max-w-sm max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="font-sans font-bold text-slate-900 text-base">Add Subcategory</h3>
               <button onClick={() => setAddSubModal(null)} className="text-slate-400 hover:text-slate-600">
@@ -596,7 +623,7 @@ export default function CategoriesPage() {
       {/* ── 7. EDIT SUBCATEGORY MODAL ── */}
       {editSubModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setEditSubModal(null)}>
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-[calc(100vw-32px)] max-w-sm max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="font-sans font-bold text-slate-900 text-base">Edit Subcategory</h3>
               <button onClick={() => setEditSubModal(null)} className="text-slate-400 hover:text-slate-600">

@@ -96,8 +96,8 @@ export default function ReviewsPage() {
         ) : (
           <div className="divide-y divide-slate-50">
             {filtered.map(review => (
-              <div key={review.id} className="px-5 py-5 hover:bg-slate-50/40 transition-colors">
-                <div className="flex gap-4">
+              <div key={review.id} className="px-4 sm:px-5 py-4 sm:py-5 hover:bg-slate-50/40 transition-colors">
+                <div className="flex flex-col sm:flex-row gap-4 justify-between">
                   {/* Review content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-start gap-3 mb-2">
@@ -124,11 +124,11 @@ export default function ReviewsPage() {
                       </div>
                     </div>
 
-                    <p className="text-sm text-slate-600 leading-relaxed ml-12 mt-1">{review.review}</p>
+                    <p className="text-sm text-slate-600 leading-relaxed sm:ml-12 mt-1">{review.review}</p>
 
                     {/* Review images */}
                     {review.images.length > 0 && (
-                      <div className="flex gap-2 mt-2.5 ml-12">
+                      <div className="flex gap-2 mt-2.5 sm:ml-12 flex-wrap">
                         {review.images.map((img, i) => (
                           <img key={i} src={img} alt="Review" className="w-12 h-12 object-cover rounded-lg border border-slate-100" />
                         ))}
@@ -137,25 +137,25 @@ export default function ReviewsPage() {
 
                     {/* Admin note */}
                     {review.adminNote && (
-                      <div className="ml-12 mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs text-amber-700">
+                      <div className="sm:ml-12 mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs text-amber-700">
                         <span className="font-bold">Note:</span> {review.adminNote}
                       </div>
                     )}
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-col gap-1.5 flex-shrink-0">
+                  <div className="flex flex-row sm:flex-col gap-1.5 flex-wrap sm:flex-nowrap flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                     {review.status === 'pending' && (
                       <>
                         <button
                           onClick={() => updateStatus(review.id, 'approved')}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer"
                         >
                           <CheckCircle size={12} /> Approve
                         </button>
                         <button
                           onClick={() => updateStatus(review.id, 'rejected')}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer"
                         >
                           <XCircle size={12} /> Reject
                         </button>
@@ -164,7 +164,7 @@ export default function ReviewsPage() {
                     {review.status === 'approved' && (
                       <button
                         onClick={() => updateStatus(review.id, 'rejected')}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer"
                       >
                         <XCircle size={12} /> Reject
                       </button>
@@ -172,7 +172,7 @@ export default function ReviewsPage() {
                     {review.status === 'rejected' && (
                       <button
                         onClick={() => updateStatus(review.id, 'approved')}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer"
                       >
                         <CheckCircle size={12} /> Approve
                       </button>
@@ -180,14 +180,14 @@ export default function ReviewsPage() {
                     {review.status === 'deleted' ? (
                       <button
                         onClick={() => restoreReview(review.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer"
                       >
                         <RotateCcw size={12} /> Restore
                       </button>
                     ) : (
                       <button
                         onClick={() => setDeleteModal(review)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-red-50 text-slate-500 hover:text-red-600 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-red-50 text-slate-500 hover:text-red-600 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer"
                       >
                         <Trash2 size={12} /> Delete
                       </button>
@@ -195,7 +195,7 @@ export default function ReviewsPage() {
                     {review.status === 'approved' && (
                       <button
                         onClick={() => toggleHomepage(review.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap border ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap border cursor-pointer ${
                           review.homepageFeatured
                             ? 'border-brand-teal/30 bg-brand-powder text-brand-teal hover:bg-red-50 hover:text-red-500 hover:border-red-200'
                             : 'border-slate-200 text-slate-500 hover:bg-brand-powder hover:text-brand-teal hover:border-brand-teal/30'

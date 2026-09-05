@@ -291,16 +291,16 @@ export default function ContentPage() {
 
       {/* ─── Comprehensive Edit Modal ─── */}
       {editSection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={() => setEditSection(null)} />
           <div
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-[fadeInUp_0.2s_ease-out]"
+            className="relative bg-white rounded-2xl shadow-2xl w-[calc(100vw-24px)] sm:w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-[fadeInUp_0.2s_ease-out]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/50">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-brand-powder rounded-xl flex items-center justify-center text-brand-teal font-bold shadow-2xs">
+                <div className="w-9 h-9 bg-brand-powder rounded-xl flex items-center justify-center text-brand-teal font-bold shadow-2xs flex-shrink-0">
                   {React.createElement(ICON_MAP[editSection.id] || LayoutTemplate, { size: 18 })}
                 </div>
                 <div>
@@ -314,7 +314,7 @@ export default function ContentPage() {
             </div>
 
             {/* Modal Body with section-specific editors */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4">
               
               {/* 1. HERO SLIDER EDITOR */}
               {editSection.id === 'hero' && (

@@ -149,12 +149,15 @@ export default function ProductStoreView({
     );
   }
 
-  const discountPercent = product.discount || (product.mrp && product.price
-    ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
-    : 0);
+  const activeVariant = availableSizes.find(s => (typeof s === 'string' ? s : s.size) === selectedSize) || availableSizes[0] || {};
+  const activePrice = Number(activeVariant.sellingPrice) || Number(product?.price) || 0;
+  const activeMrp = Number(activeVariant.mrp) || Number(product?.mrp) || 0;
+  const discountPercent = activeMrp > activePrice
+    ? Math.round(((activeMrp - activePrice) / activeMrp) * 100)
+    : (product?.discount || 0);
 
-  const profitMargin = product.costPrice ? (product.price - product.costPrice) : Math.round(product.price * 0.45);
-  const marginPercent = product.costPrice ? Math.round((profitMargin / product.price) * 100) : 45;
+  const profitMargin = product.costPrice ? (activePrice - product.costPrice) : Math.round(activePrice * 0.45);
+  const marginPercent = product.costPrice ? Math.round((profitMargin / activePrice) * 100) : 45;
 
   const activeBadge = (() => {
     if (product.badge === 'none') return null;
@@ -356,12 +359,18 @@ export default function ProductStoreView({
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sales & Rating</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-lg font-extrabold text-slate-900">{product.unitsSold || 0} sold</span>
-              <span className="text-xs font-bold text-amber-500 flex items-center gap-0.5">
-                ★ {product.rating || 4.8}
-              </span>
+              {Number(product.reviewsCount) > 0 ? (
+                <span className="text-xs font-bold text-amber-500 flex items-center gap-0.5">
+                  ★ {Number(product.rating || 5).toFixed(1)}
+                </span>
+              ) : (
+                <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                  New Product
+                </span>
+              )}
             </div>
             <p className="text-[10px] text-slate-400">
-              {product.reviewsCount || 124} customer reviews
+              {Number(product.reviewsCount) > 0 ? `${product.reviewsCount} customer reviews` : 'No reviews yet'}
             </p>
           </div>
         </div>
@@ -494,11 +503,11 @@ export default function ProductStoreView({
               {/* Price Row with Large Figures */}
               <div className="flex items-baseline gap-3.5 pb-4 border-b border-slate-100">
                 <span className="font-sans text-3xl sm:text-4xl font-extrabold text-slate-900">
-                  ₹{product.price?.toLocaleString('en-IN')}
+                  ₹{activePrice?.toLocaleString('en-IN')}
                 </span>
-                {product.mrp && product.mrp > product.price && (
+                {activeMrp > activePrice && (
                   <span className="font-sans text-lg sm:text-xl text-slate-400 line-through">
-                    ₹{product.mrp?.toLocaleString('en-IN')}
+                    ₹{activeMrp?.toLocaleString('en-IN')}
                   </span>
                 )}
                 {discountPercent > 0 && (
@@ -510,23 +519,36 @@ export default function ProductStoreView({
 
               {/* Ratings and Review Bar */}
               <div className="flex items-center gap-3">
-                <div className="flex items-center text-amber-400">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star
-                      key={s}
-                      size={16}
-                      className={s <= Math.floor(product.rating || 5) ? 'fill-amber-400' : 'text-slate-200'}
-                      strokeWidth={1}
-                    />
-                  ))}
-                </div>
-                <span className="text-xs font-bold text-slate-700">
-                  {product.rating || 4.8}
-                </span>
-                <span className="text-slate-300">•</span>
-                <span className="text-xs text-slate-500">
-                  {product.reviewsCount || 124} customer reviews
-                </span>
+                {Number(product.reviewsCount) > 0 ? (
+                  <>
+                    <div className="flex items-center text-amber-400">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={16}
+                          className={s <= Math.floor(product.rating || 5) ? 'fill-amber-400' : 'text-slate-200'}
+                          strokeWidth={1}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-bold text-slate-700">
+                      {Number(product.rating || 5).toFixed(1)}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-xs text-slate-500">
+                      {product.reviewsCount} customer {product.reviewsCount === 1 ? 'review' : 'reviews'}
+                    </span>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center text-slate-300">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star key={s} size={15} className="text-slate-300" strokeWidth={1.5} />
+                      ))}
+                    </div>
+                    <span className="text-xs font-medium text-slate-400">No reviews yet</span>
+                  </div>
+                )}
               </div>
 
               {/* Color Selection & Swatches */}
@@ -791,7 +813,7 @@ export default function ProductStoreView({
             {activeTab === 'storefront' && (
               <div className="pt-6 text-left animate-in fade-in duration-150 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Left: Storefront Trust Badges & Highlights (Editable) */}
+                  {/* Left: Storefront Trust Badges & Highlights */}
                   <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                       <div className="flex items-center gap-2">
@@ -803,88 +825,22 @@ export default function ProductStoreView({
                           <p className="text-[11px] text-slate-400">Assurance perks displayed across live PDP pages.</p>
                         </div>
                       </div>
-                      {!isEditingPerks ? (
-                        <button
-                          onClick={() => {
-                            setDraftPerks([...perks]);
-                            setIsEditingPerks(true);
-                          }}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-brand-teal hover:text-brand-tealDark bg-white hover:bg-brand-powder/60 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors shadow-2xs cursor-pointer"
-                          title="Edit store assurance texts"
-                        >
-                          <Edit size={12} />
-                          <span>Edit</span>
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={handleResetPerks}
-                            className="text-[10px] font-semibold text-slate-500 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-200 transition-colors cursor-pointer"
-                          >
-                            Reset Defaults
-                          </button>
-                          <button
-                            onClick={handleCancelPerks}
-                            className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 bg-white transition-colors cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={handleSavePerks}
-                            className="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-teal hover:bg-brand-tealDark px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                          >
-                            <Check size={13} />
-                            <span>Save</span>
-                          </button>
-                        </div>
-                      )}
                     </div>
 
-                    {savedPerksToast && (
-                      <div className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
-                        <CheckCircle2 size={13} />
-                        <span>Assurance highlights updated successfully!</span>
-                      </div>
-                    )}
-
-                    {!isEditingPerks ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                        {perks.map((p) => {
-                          const Icon = getPerkIcon(p.icon);
-                          return (
-                            <div key={p.id} className="flex items-center gap-2.5 p-3 bg-white rounded-xl border border-slate-200 text-xs font-medium text-slate-800">
-                              <Icon size={16} className="text-brand-teal flex-shrink-0" />
-                              <span className="truncate">{p.text}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                        {draftPerks.map((dp, idx) => {
-                          const Icon = getPerkIcon(dp.icon);
-                          return (
-                            <div key={dp.id} className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-brand-teal/40 shadow-2xs focus-within:ring-2 focus-within:ring-brand-powder">
-                              <Icon size={15} className="text-brand-teal flex-shrink-0" />
-                              <input
-                                type="text"
-                                value={dp.text}
-                                onChange={(e) => {
-                                  const next = [...draftPerks];
-                                  next[idx] = { ...next[idx], text: e.target.value };
-                                  setDraftPerks(next);
-                                }}
-                                className="text-xs font-medium text-slate-800 bg-transparent outline-none w-full"
-                                placeholder="Badge text..."
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {perks.map((p) => {
+                        const Icon = getPerkIcon(p.icon);
+                        return (
+                          <div key={p.id} className="flex items-center gap-2.5 p-3 bg-white rounded-xl border border-slate-200 text-xs font-medium text-slate-800">
+                            <Icon size={16} className="text-brand-teal flex-shrink-0" />
+                            <span className="truncate">{p.text}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {/* Right: STOREFRONT ACCORDIONS (Live PDP Accordion & Direct Editor) */}
+                  {/* Right: STOREFRONT ACCORDIONS (Live PDP Accordion Simulation) */}
                   <div className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-2">
@@ -896,138 +852,67 @@ export default function ProductStoreView({
                           <p className="text-[11px] text-slate-400">Collapsible detail accordions for customer product page.</p>
                         </div>
                       </div>
-                      {!isEditingAccordions ? (
-                        <button
-                          onClick={() => setIsEditingAccordions(true)}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-brand-teal hover:text-brand-tealDark bg-brand-powder/40 hover:bg-brand-powder px-3 py-1.5 rounded-lg border border-brand-teal/20 transition-colors shadow-2xs cursor-pointer"
-                          title="Edit accordion texts"
-                        >
-                          <Edit size={12} />
-                          <span>Edit Accordions</span>
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => setIsEditingAccordions(false)}
-                            className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 bg-white transition-colors cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={handleSaveAccordions}
-                            className="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-teal hover:bg-brand-tealDark px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                          >
-                            <Check size={13} />
-                            <span>Save</span>
-                          </button>
-                        </div>
-                      )}
                     </div>
 
-                    {savedAccordionsToast && (
-                      <div className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
-                        <CheckCircle2 size={13} />
-                        <span>Product accordions & policies saved and synchronized!</span>
+                    {/* Interactive Accordion View */}
+                    <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden">
+                      {/* Accordion 1: Product Description */}
+                      <div className="p-3.5">
+                        <button
+                          type="button"
+                          onClick={() => setOpenStoreAccordion(openStoreAccordion === 'details' ? null : 'details')}
+                          className="w-full flex items-center justify-between text-left group cursor-pointer"
+                        >
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-brand-teal transition-colors">
+                            Product Description
+                          </span>
+                          <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${openStoreAccordion === 'details' ? 'rotate-180 text-brand-teal' : ''}`} />
+                        </button>
+                        {openStoreAccordion === 'details' && (
+                          <p className="text-xs text-slate-600 pt-2 leading-relaxed whitespace-pre-line">
+                            {product.description || 'Elevate your celebratory ensemble with this handcrafted creation.'}
+                          </p>
+                        )}
                       </div>
-                    )}
 
-                    {!isEditingAccordions ? (
-                      /* Interactive Accordion View */
-                      <div className="border border-slate-200 rounded-xl divide-y divide-slate-100 overflow-hidden">
-                        {/* Accordion 1: Product Description */}
-                        <div className="p-3.5">
-                          <button
-                            type="button"
-                            onClick={() => setOpenStoreAccordion(openStoreAccordion === 'details' ? null : 'details')}
-                            className="w-full flex items-center justify-between text-left group cursor-pointer"
-                          >
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-brand-teal transition-colors">
-                              Product Description
-                            </span>
-                            <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${openStoreAccordion === 'details' ? 'rotate-180 text-brand-teal' : ''}`} />
-                          </button>
-                          {openStoreAccordion === 'details' && (
-                            <p className="text-xs text-slate-600 pt-2 leading-relaxed whitespace-pre-line">
-                              {product.description || 'Elevate your celebratory ensemble with this handcrafted creation.'}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Accordion 2: Material & Care */}
-                        <div className="p-3.5">
-                          <button
-                            type="button"
-                            onClick={() => setOpenStoreAccordion(openStoreAccordion === 'fabric' ? null : 'fabric')}
-                            className="w-full flex items-center justify-between text-left group cursor-pointer"
-                          >
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-brand-teal transition-colors">
-                              Material & Care
-                            </span>
-                            <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${openStoreAccordion === 'fabric' ? 'rotate-180 text-brand-teal' : ''}`} />
-                          </button>
-                          {openStoreAccordion === 'fabric' && (
-                            <p className="text-xs text-slate-600 pt-2 leading-relaxed whitespace-pre-line">
-                              {product.materialCare || (product.attributes?.fabric ? `Fabric: ${product.attributes.fabric}. ${product.attributes?.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}` : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.')}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Accordion 3: Shipping & Returns */}
-                        <div className="p-3.5">
-                          <button
-                            type="button"
-                            onClick={() => setOpenStoreAccordion(openStoreAccordion === 'shipping' ? null : 'shipping')}
-                            className="w-full flex items-center justify-between text-left group cursor-pointer"
-                          >
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-brand-teal transition-colors">
-                              Shipping & Returns
-                            </span>
-                            <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${openStoreAccordion === 'shipping' ? 'rotate-180 text-brand-teal' : ''}`} />
-                          </button>
-                          {openStoreAccordion === 'shipping' && (
-                            <p className="text-xs text-slate-600 pt-2 leading-relaxed whitespace-pre-line">
-                              {product.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.'}
-                            </p>
-                          )}
-                        </div>
+                      {/* Accordion 2: Material & Care */}
+                      <div className="p-3.5">
+                        <button
+                          type="button"
+                          onClick={() => setOpenStoreAccordion(openStoreAccordion === 'fabric' ? null : 'fabric')}
+                          className="w-full flex items-center justify-between text-left group cursor-pointer"
+                        >
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-brand-teal transition-colors">
+                            Material & Care
+                          </span>
+                          <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${openStoreAccordion === 'fabric' ? 'rotate-180 text-brand-teal' : ''}`} />
+                        </button>
+                        {openStoreAccordion === 'fabric' && (
+                          <p className="text-xs text-slate-600 pt-2 leading-relaxed whitespace-pre-line">
+                            {product.materialCare || (product.attributes?.fabric ? `Fabric: ${product.attributes.fabric}. ${product.attributes?.careInstructions || 'Dry clean only. Do not bleach. Iron on low heat.'}` : 'Fabric: Premium Blend. Dry clean only. Do not bleach. Iron on low heat.')}
+                          </p>
+                        )}
                       </div>
-                    ) : (
-                      /* Direct Edit Form */
-                      <div className="space-y-3 pt-1">
-                        <div>
-                          <label className="text-[11px] font-bold text-slate-700 block mb-1">Product Description Accordion</label>
-                          <textarea
-                            rows={2}
-                            value={draftAccordions.description}
-                            onChange={(e) => setDraftAccordions({ ...draftAccordions, description: e.target.value })}
-                            className="w-full text-xs p-2.5 border border-brand-teal/40 rounded-xl outline-none focus:ring-2 focus:ring-brand-powder"
-                            placeholder="Detailed narrative description..."
-                          />
-                        </div>
 
-                        <div>
-                          <label className="text-[11px] font-bold text-slate-700 block mb-1">Material & Care Accordion</label>
-                          <textarea
-                            rows={2}
-                            value={draftAccordions.materialCare}
-                            onChange={(e) => setDraftAccordions({ ...draftAccordions, materialCare: e.target.value })}
-                            className="w-full text-xs p-2.5 border border-brand-teal/40 rounded-xl outline-none focus:ring-2 focus:ring-brand-powder"
-                            placeholder="Fabric details and washing guidelines..."
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[11px] font-bold text-slate-700 block mb-1">Shipping & Returns Accordion</label>
-                          <textarea
-                            rows={2}
-                            value={draftAccordions.shippingReturns}
-                            onChange={(e) => setDraftAccordions({ ...draftAccordions, shippingReturns: e.target.value })}
-                            className="w-full text-xs p-2.5 border border-brand-teal/40 rounded-xl outline-none focus:ring-2 focus:ring-brand-powder"
-                            placeholder="Dispatch timeframe and return policy terms..."
-                          />
-                        </div>
+                      {/* Accordion 3: Shipping & Returns */}
+                      <div className="p-3.5">
+                        <button
+                          type="button"
+                          onClick={() => setOpenStoreAccordion(openStoreAccordion === 'shipping' ? null : 'shipping')}
+                          className="w-full flex items-center justify-between text-left group cursor-pointer"
+                        >
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-brand-teal transition-colors">
+                            Shipping & Returns
+                          </span>
+                          <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${openStoreAccordion === 'shipping' ? 'rotate-180 text-brand-teal' : ''}`} />
+                        </button>
+                        {openStoreAccordion === 'shipping' && (
+                          <p className="text-xs text-slate-600 pt-2 leading-relaxed whitespace-pre-line">
+                            {product.shippingReturns || 'Dispatched within 24-48 hours. Delivered in 3-5 business days. 7-day hassle-free return policy.'}
+                          </p>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>

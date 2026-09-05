@@ -1,19 +1,22 @@
 // OrderDetailPage — /admin/orders/:id
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Phone, MapPin, Package, ChevronRight, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Phone, MapPin, Package, ChevronRight, CheckCircle, Edit2 } from 'lucide-react';
 import StatusBadge from '../components/ui/StatusBadge';
 import ConfirmModal from '../components/ui/ConfirmModal';
-import { adminOrders } from '../data/adminOrders';
+import { useOrders } from '../../context/OrderContext';
+import OrderFormModal from '../components/orders/OrderFormModal';
 
 const STATUS_FLOW = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'];
 
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { adminOrders, updateAdminOrder } = useOrders();
+
   const order = adminOrders.find(o => o.id === id);
-  const [currentStatus, setCurrentStatus] = useState(order?.status || 'pending');
   const [cancelModal, setCancelModal] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   if (!order) {
     return (
@@ -24,40 +27,62 @@ export default function OrderDetailPage() {
     );
   }
 
+  const currentStatus = order.status || 'pending';
   const currentIdx = STATUS_FLOW.indexOf(currentStatus);
 
   const advance = () => {
     if (currentIdx < STATUS_FLOW.length - 1) {
-      setCurrentStatus(STATUS_FLOW[currentIdx + 1]);
+      const next = STATUS_FLOW[currentIdx + 1];
+      updateAdminOrder(order.id, { status: next, timelineNote: `Marked as ${next} by Admin` });
     }
   };
 
   const nextStatus = STATUS_FLOW[currentIdx + 1];
 
+  const handleSaveEdit = (updatedData) => {
+    updateAdminOrder(order.id, updatedData);
+  };
+
   return (
     <div className="space-y-5">
-      {/* Back */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => navigate('/admin/orders')}
-          className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
-        >
-          <ArrowLeft size={15} />
-        </button>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-sans font-bold text-slate-800 text-lg">Order #{order.id}</h1>
-            <StatusBadge status={currentStatus} size="md" />
+      {/* Back & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/admin/orders')}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+          >
+            <ArrowLeft size={15} />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="font-sans font-bold text-slate-800 text-lg">Order #{order.id}</h1>
+              {order.orderSource === 'WhatsApp' && (
+                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
+                  WhatsApp Order
+                </span>
+              )}
+              <StatusBadge status={currentStatus} size="md" />
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">Placed on {order.date}</p>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">Placed on {order.date}</p>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
+          >
+            <Edit2 size={13} className="text-brand-teal" />
+            <span>Edit Order</span>
+          </button>
+
           {['cancelled', 'delivered', 'returned', 'refunded'].includes(currentStatus) ? null : (
             <>
               {nextStatus && (
                 <button
                   onClick={advance}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold rounded-lg transition-colors capitalize"
+                  className="flex items-center gap-2 px-4 py-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold rounded-lg transition-colors capitalize shadow-sm shadow-brand-teal/20"
                 >
                   Mark as {nextStatus} <ChevronRight size={13} />
                 </button>
@@ -65,7 +90,7 @@ export default function OrderDetailPage() {
               {currentStatus !== 'delivered' && (
                 <button
                   onClick={() => setCancelModal(true)}
-                  className="px-4 py-2.5 border border-red-200 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-50 transition-colors"
+                  className="px-3.5 py-2 border border-red-200 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-50 transition-colors"
                 >
                   Cancel Order
                 </button>
@@ -75,33 +100,36 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
+
       {/* Status timeline */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
         <h3 className="font-sans font-bold text-slate-800 text-sm mb-4">Order Timeline</h3>
-        <div className="flex items-center gap-0">
-          {STATUS_FLOW.map((s, i) => {
-            const done = STATUS_FLOW.indexOf(currentStatus) >= i;
-            const current = currentStatus === s;
-            return (
-              <React.Fragment key={s}>
-                <div className="flex flex-col items-center flex-shrink-0">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                    done
-                      ? 'bg-brand-teal border-brand-teal text-white'
-                      : 'border-slate-200 text-slate-300 bg-white'
-                  } ${current ? 'ring-4 ring-brand-teal/20' : ''}`}>
-                    {done ? <CheckCircle size={14} /> : <span className="text-xs font-bold">{i + 1}</span>}
+        <div className="overflow-x-auto no-scrollbar pb-1">
+          <div className="flex items-center gap-0 min-w-[340px]">
+            {STATUS_FLOW.map((s, i) => {
+              const done = STATUS_FLOW.indexOf(currentStatus) >= i;
+              const current = currentStatus === s;
+              return (
+                <React.Fragment key={s}>
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                      done
+                        ? 'bg-brand-teal border-brand-teal text-white'
+                        : 'border-slate-200 text-slate-300 bg-white'
+                    } ${current ? 'ring-4 ring-brand-teal/20' : ''}`}>
+                      {done ? <CheckCircle size={14} /> : <span className="text-xs font-bold">{i + 1}</span>}
+                    </div>
+                    <span className={`text-[9px] font-semibold mt-1.5 capitalize whitespace-nowrap ${done ? 'text-brand-teal' : 'text-slate-400'}`}>
+                      {s}
+                    </span>
                   </div>
-                  <span className={`text-[9px] font-semibold mt-1.5 capitalize whitespace-nowrap ${done ? 'text-brand-teal' : 'text-slate-400'}`}>
-                    {s}
-                  </span>
-                </div>
-                {i < STATUS_FLOW.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-1 transition-all ${STATUS_FLOW.indexOf(currentStatus) > i ? 'bg-brand-teal' : 'bg-slate-200'}`} />
-                )}
-              </React.Fragment>
-            );
-          })}
+                  {i < STATUS_FLOW.length - 1 && (
+                    <div className={`flex-1 h-0.5 mx-1 transition-all ${STATUS_FLOW.indexOf(currentStatus) > i ? 'bg-brand-teal' : 'bg-slate-200'}`} />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
         </div>
 
         {/* History log */}
@@ -233,11 +261,23 @@ export default function OrderDetailPage() {
       <ConfirmModal
         isOpen={cancelModal}
         onClose={() => setCancelModal(false)}
-        onConfirm={() => setCurrentStatus('cancelled')}
+        onConfirm={() => {
+          updateAdminOrder(order.id, { status: 'cancelled', timelineNote: 'Order cancelled by Admin' });
+          setCancelModal(false);
+        }}
         title="Cancel Order"
         message="Are you sure you want to cancel this order? The customer will be notified and a refund will be initiated if payment was received."
         confirmLabel="Cancel Order"
         variant="danger"
+      />
+
+      {/* Edit Order Modal */}
+      <OrderFormModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveEdit}
+        initialOrder={order}
+        nextOrderId={order.id}
       />
     </div>
   );

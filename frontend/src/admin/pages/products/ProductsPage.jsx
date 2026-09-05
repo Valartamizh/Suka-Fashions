@@ -13,18 +13,28 @@ import Pagination from '../../components/ui/Pagination';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import EmptyState from '../../components/ui/EmptyState';
 import { useProducts } from '../../../context/ProductContext';
+import { useCategories } from '../../../context/CategoryContext';
 import sareeGolden from '../../../assets/saree_golden.jpg';
 import ProductStoreView from './ProductStoreView';
 import QuickStockModal from '../../components/ui/QuickStockModal';
 
 const PAGE_SIZE = 8;
-const CATEGORIES = ['All', 'Sarees', 'Lehengas', 'Kurtis', 'Dresses', 'Co-ords', 'Dupattas'];
 const STATUSES = ['All', 'ACTIVE', 'INACTIVE', 'DRAFT', 'ARCHIVED', 'OUT_OF_STOCK'];
 
 export default function ProductsPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { products, editProduct, setProductStatus, deleteProduct } = useProducts();
+  const { categories: dynamicCategories } = useCategories();
+
+  const categoryOptions = useMemo(() => {
+    const list = ['All'];
+    (dynamicCategories || []).forEach(c => {
+      if (!list.includes(c.name)) list.push(c.name);
+    });
+    return list;
+  }, [dynamicCategories]);
+
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
@@ -131,9 +141,9 @@ export default function ProductsPage() {
     <div className="space-y-4 animate-in fade-in duration-150">
       
       {/* Top Filter & Action Bar */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
         {/* Search Input */}
-        <div className="relative flex-1 min-w-[220px] max-w-sm">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
@@ -147,10 +157,10 @@ export default function ProductsPage() {
         <select
           value={category}
           onChange={e => { setCategory(e.target.value); setPage(1); }}
-          className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-700 focus:outline-none cursor-pointer shadow-2xs"
+          className="bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-700 focus:outline-none cursor-pointer shadow-2xs flex-1 sm:flex-initial min-w-[130px]"
         >
           <option value="All">All Categories ({products.length})</option>
-          {CATEGORIES.filter(c => c !== 'All').map(c => (
+          {categoryOptions.filter(c => c !== 'All').map(c => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
@@ -159,7 +169,7 @@ export default function ProductsPage() {
         <select
           value={status}
           onChange={e => { setStatus(e.target.value); setPage(1); }}
-          className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-700 focus:outline-none cursor-pointer shadow-2xs"
+          className="bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-700 focus:outline-none cursor-pointer shadow-2xs flex-1 sm:flex-initial min-w-[110px]"
         >
           <option value="All">All Status</option>
           <option value="ACTIVE">Active</option>
@@ -179,9 +189,10 @@ export default function ProductsPage() {
         </Link>
       </div>
 
-      {/* Main Products Table Card */}
+      {/* Main Products Card / Container */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop & Tablet Table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100">
@@ -291,45 +302,162 @@ export default function ProductsPage() {
           </table>
         </div>
 
+        {/* Mobile Product Cards View (Visible on < sm screens) */}
+        <div className="block sm:hidden divide-y divide-slate-100">
+          {paginated.length === 0 ? (
+            <div className="py-12 px-4 text-center">
+              <EmptyState
+                icon={Package}
+                title="No products found"
+                description="Try adjusting your search or category filters."
+              />
+            </div>
+          ) : paginated.map(product => {
+            const originalPrice = product.mrp || product.price || 0;
+            const sellingPrice = product.price || 0;
+            const isActive = !product.status || product.status?.toUpperCase() === 'ACTIVE';
+
+            return (
+              <div
+                key={product.id}
+                onClick={() => setSelectedProduct(product)}
+                className="p-4 hover:bg-slate-50/80 transition-colors cursor-pointer space-y-3"
+              >
+                <div className="flex items-start gap-3">
+                  <img
+                    src={product.image || sareeGolden}
+                    alt={product.name}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = sareeGolden;
+                    }}
+                    className="w-16 h-16 rounded-xl object-cover bg-slate-100 border border-slate-200/80 shadow-2xs flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">
+                        {product.id.startsWith('#') ? product.id.slice(1) : product.id}
+                      </span>
+                      <span className="text-[10px] font-semibold text-brand-teal bg-brand-powderLight px-2 py-0.5 rounded-full">
+                        {product.category}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-sm text-slate-900 truncate mt-0.5">{product.name}</h4>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="font-bold text-sm text-[#16a34a] font-mono">
+                        ₹{Number(sellingPrice).toLocaleString('en-IN')}
+                      </span>
+                      {Number(originalPrice) > Number(sellingPrice) && (
+                        <span className="text-xs text-slate-400 line-through font-mono">
+                          ₹{Number(originalPrice).toLocaleString('en-IN')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
+                  <span className="font-medium text-slate-600">
+                    Stock: <strong className="text-slate-900">{product.stock}</strong>
+                  </span>
+
+                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setStatusToggleProduct(product);
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer ${
+                        isActive
+                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/60'
+                          : 'bg-slate-100 text-slate-500 border border-slate-200'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                      <span>{isActive ? 'Active' : 'Inactive'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProduct(product);
+                      }}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         {/* Pagination & Count at Bottom */}
-        <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 bg-white">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-3.5 sm:py-4 border-t border-slate-100 bg-white">
           <div className="text-xs text-slate-500 font-medium">
             Showing <span className="font-bold text-slate-900">({paginated.length})</span> of <span className="font-bold text-slate-900">({filtered.length})</span> products
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center gap-1.5 ml-auto">
-              <button
-                onClick={() => setPage(p => Math.max(p - 1, 1))}
-                disabled={page === 1}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => {
-                const p = i + 1;
-                const isCurr = p === page;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      isCurr
-                        ? 'bg-[#0b1b4f] text-white shadow-xs'
-                        : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setPage(p => Math.min(p + 1, totalPages))}
-                disabled={page === totalPages}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                <ChevronRight size={16} />
-              </button>
+            <div className="w-full sm:w-auto">
+              {/* Desktop pagination buttons */}
+              <div className="hidden min-[520px]:flex items-center gap-1.5 ml-auto">
+                <button
+                  onClick={() => setPage(p => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => {
+                  const p = i + 1;
+                  const isCurr = p === page;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        isCurr
+                          ? 'bg-[#0b1b4f] text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+
+              {/* Mobile pagination */}
+              <div className="flex min-[520px]:hidden items-center justify-between w-full">
+                <button
+                  onClick={() => setPage(p => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 text-slate-600 bg-slate-50 disabled:opacity-30 flex items-center gap-1"
+                >
+                  <ChevronLeft size={14} /> Prev
+                </button>
+                <span className="text-xs font-bold text-slate-700 font-mono">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 text-slate-600 bg-slate-50 disabled:opacity-30 flex items-center gap-1"
+                >
+                  Next <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
           )}
         </div>
