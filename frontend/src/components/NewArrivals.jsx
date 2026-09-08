@@ -23,11 +23,31 @@ export default function NewArrivals() {
   // Ensure we provide plenty of items so the slider is always scrollable
   const displayItems = React.useMemo(() => {
     const list = (activeProducts && activeProducts.length > 0) ? activeProducts : (products || []);
+
+    if (content?.customItems && content.customItems.length > 0) {
+      const activeCustom = content.customItems.filter(item => item.active !== false);
+      const mapped = activeCustom.map(item => {
+        const found = list.find(p => p.id === item.productId || p.slug === item.productId || p.id === item.id);
+        if (found) return found;
+        return {
+          id: item.id || item.productId,
+          name: item.name,
+          category: item.category,
+          price: item.price,
+          mrp: Math.round((item.price || 4999) * 1.4),
+          colors: [{ id: 'c1', name: 'Default', hex: '#000', images: [{ url: item.image, isPrimary: true }] }],
+          rating: 4.8,
+          isNew: true,
+        };
+      });
+      if (mapped.length > 0) return mapped.slice(0, maxItems);
+    }
+
     const newItems = list.filter((p) => p.isNew);
     const otherItems = list.filter((p) => !p.isNew);
     const combined = [...newItems, ...otherItems];
     return combined.slice(0, maxItems);
-  }, [activeProducts, products, maxItems]);
+  }, [activeProducts, products, maxItems, content?.customItems]);
 
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);

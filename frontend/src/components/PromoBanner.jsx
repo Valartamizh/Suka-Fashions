@@ -12,13 +12,17 @@ export default function PromoBanner() {
   const { getSectionContent } = useContent();
   const content = getSectionContent('promo-banners');
 
-  const eyebrow = content?.eyebrow || 'Featured Collections';
-  const title = content?.title || 'Curated For You';
-  const subtitle = content?.subtitle || 'Grace in Every Drape • Comfort in Every Stitch';
-  const description = content?.description || 'Explore our handwoven pure silk & organza sarees and effortlessly chic printed sets.';
-  const ctaText = content?.ctaText || 'EXPLORE ALL';
-  const ctaLink = content?.ctaLink || '/products';
-  const bgImage = content?.image || sareeGolden;
+  const activeBanner = (content?.banners && content.banners.length > 0)
+    ? (content.banners.find(b => b.active) || content.banners[0])
+    : null;
+
+  const eyebrow = activeBanner?.type || content?.eyebrow || 'Featured Collections';
+  const title = activeBanner?.title || content?.title || 'Curated For You';
+  const subtitle = activeBanner?.subtitle || content?.subtitle || 'Grace in Every Drape • Comfort in Every Stitch';
+  const description = activeBanner?.description || content?.description || 'Explore our handwoven pure silk & organza sarees and effortlessly chic printed sets.';
+  const ctaText = activeBanner?.ctaText || content?.ctaText || 'EXPLORE ALL';
+  const ctaLink = activeBanner?.ctaLink || content?.ctaLink || '/products';
+  const bgImage = activeBanner?.image || content?.image || sareeGolden;
 
   return (
     <section ref={sectionRef} className="py-2 sm:py-4 lg:py-5 bg-brand-cream/20">

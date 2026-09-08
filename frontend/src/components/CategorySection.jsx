@@ -13,7 +13,9 @@ export default function CategorySection() {
   const eyebrow = content?.eyebrow || 'Collections';
   const title = content?.title || 'Shop By Category';
 
-  const displayList = homepageCategories.filter(c => c.id !== 'sale');
+  const displayList = (content?.tiles && content.tiles.length > 0)
+    ? content.tiles.filter(t => t.active !== false)
+    : homepageCategories.filter(c => c.id !== 'sale');
 
   const scrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);

@@ -5,12 +5,18 @@ import lehengaRed from '../assets/lehenga_red.jpg';
 import lehengaPink from '../assets/lehenga_pink.jpg';
 import lehengaMint from '../assets/lehenga_mint.jpg';
 import sareeGolden from '../assets/saree_golden.jpg';
+import sareeBeigePink from '../assets/saree_beige_pink.jpg';
 import sareeBeigeMaroon from '../assets/saree_beige_maroon.jpg';
 import sareeBeigeOrange from '../assets/saree_beige_orange.jpg';
 import anarkaliBlackMulti from '../assets/anarkali_black_multicolor.jpg';
+import kurtiTealPrinted from '../assets/kurti_teal_printed.jpg';
 import kurtiPurplePrinted from '../assets/kurti_purple_printed.jpg';
 import kurtiBrownPrinted from '../assets/kurti_brown_printed.jpg';
 import coordSet from '../assets/coord_set.jpg';
+import festiveSuit from '../assets/festive_suit.jpg';
+import dressNavy from '../assets/dress_navy.jpg';
+
+import dupattaSilk from '../assets/dupatta_silk.jpg';
 
 export const initialDefaultSections = [
   {
@@ -105,19 +111,171 @@ export const initialDefaultSections = [
   {
     id: 'categories',
     label: 'Shop By Category',
-    desc: 'Circular category cards',
+    desc: 'Category cards & collections',
     active: true,
     updated: '2026-08-20',
     content: {
       eyebrow: 'Collections',
       title: 'Shop By Category',
-      subtitle: 'Explore our handpicked curation across all ethnic silhouettes',
+      subtitle: 'Configure the categories and collection cards displayed in the "Shop By Category" section of the homepage. Customise tile labels, routing, colors, background gradients, and imagery in real-time.',
+      viewAllText: 'View All',
+      viewAllLink: '/products',
+      tiles: [
+        {
+          id: 'cat-sarees',
+          name: 'Sarees',
+          link: '/category/sarees',
+          targetRoute: 'sarees',
+          themeColor: 'Orange Gradient',
+          bgGradient: 'from-amber-200/90 via-orange-100 to-amber-100/80',
+          borderColor: 'border-orange-200/80',
+          textColor: 'text-amber-950',
+          image: sareeGolden,
+          order: 1,
+          active: true,
+        },
+        {
+          id: 'cat-lehengas',
+          name: 'Lehengas',
+          link: '/category/lehengas',
+          targetRoute: 'lehengas',
+          themeColor: 'Soft Pink',
+          bgGradient: 'from-rose-100/90 via-pink-100 to-rose-100/80',
+          borderColor: 'border-pink-200/80',
+          textColor: 'text-rose-950',
+          image: lehengaRed,
+          order: 2,
+          active: true,
+        },
+        {
+          id: 'cat-kurtis',
+          name: 'Kurtis & Suits',
+          link: '/category/kurtis',
+          targetRoute: 'kurtis',
+          themeColor: 'Mint Green',
+          bgGradient: 'from-emerald-100/90 via-teal-100/80 to-green-100/80',
+          borderColor: 'border-emerald-200/80',
+          textColor: 'text-emerald-950',
+          image: anarkaliBlackMulti,
+          order: 3,
+          active: true,
+        },
+        {
+          id: 'cat-dresses',
+          name: 'Dresses',
+          link: '/category/dresses',
+          targetRoute: 'dresses',
+          themeColor: 'Lavender Purple',
+          bgGradient: 'from-purple-100/90 via-violet-100 to-indigo-100/80',
+          borderColor: 'border-purple-200/80',
+          textColor: 'text-purple-950',
+          image: dressNavy,
+          order: 4,
+          active: true,
+        },
+        {
+          id: 'cat-coords',
+          name: 'Co-ords',
+          link: '/category/coords',
+          targetRoute: 'coords',
+          themeColor: 'Teal Elegance',
+          bgGradient: 'from-teal-100/90 via-cyan-100 to-emerald-100/80',
+          borderColor: 'border-teal-200/80',
+          textColor: 'text-teal-950',
+          image: coordSet,
+          order: 5,
+          active: true,
+        },
+        {
+          id: 'cat-dupattas',
+          name: 'Dupattas',
+          link: '/category/dupattas',
+          targetRoute: 'dupattas',
+          themeColor: 'Sky Blue',
+          bgGradient: 'from-sky-100/90 via-blue-100/80 to-cyan-100/80',
+          borderColor: 'border-sky-200/80',
+          textColor: 'text-sky-950',
+          image: dupattaSilk,
+          order: 6,
+          active: true,
+        },
+        {
+          id: 'cat-festive',
+          name: 'Festive Wear',
+          link: '/category/occasion',
+          targetRoute: 'festive',
+          themeColor: 'Soft Gold',
+          bgGradient: 'from-amber-100/90 via-yellow-100/80 to-amber-100/70',
+          borderColor: 'border-amber-200/80',
+          textColor: 'text-amber-950',
+          image: festiveSuit,
+          order: 7,
+          active: true,
+        },
+      ],
+    },
+  },
+  {
+    id: 'promo-banners',
+    label: 'Promo Banners',
+    desc: 'Promotional banners and special offer campaigns',
+    active: true,
+    updated: '2026-08-18',
+    content: {
+      eyebrow: 'Featured Collections',
+      title: 'Curated For You',
+      subtitle: 'Grace in Every Drape • Comfort in Every Stitch',
+      description: 'Explore our handwoven pure silk & organza sarees and effortlessly chic printed sets.',
+      ctaText: 'EXPLORE ALL',
+      ctaLink: '/products',
+      image: sareeGolden,
+      banners: [
+        {
+          id: 'promo-1',
+          order: 1,
+          title: 'Royal Heritage Silks',
+          subtitle: 'Handcrafted Pure Kanchipuram & Organza',
+          description: 'Explore authentic handwoven pure silk & organza sarees at up to 40% off.',
+          type: 'PROMOTION',
+          ctaText: 'Shop Sarees',
+          ctaLink: '/category/sarees',
+          targetRoute: 'sarees',
+          image: sareeGolden,
+          active: true,
+        },
+        {
+          id: 'promo-2',
+          order: 2,
+          title: 'Bridal & Festive Couture',
+          subtitle: 'Exclusive Zardozi & Velvet Lehengas',
+          description: 'Luxury bridal ensembles with intricate handcrafted dori, sequins and cutdana work.',
+          type: 'COLLECTION',
+          ctaText: 'Explore Lehengas',
+          ctaLink: '/category/lehengas',
+          targetRoute: 'lehengas',
+          image: lehengaRed,
+          active: true,
+        },
+        {
+          id: 'promo-3',
+          order: 3,
+          title: 'Contemporary Festive Edit',
+          subtitle: 'Kurtis, Co-ords & Anarkali Sets',
+          description: 'Effortlessly chic breathable silhouettes designed for modern celebratory occasions.',
+          type: 'NEW ARRIVAL',
+          ctaText: 'Discover Kurtis',
+          ctaLink: '/category/kurtis',
+          targetRoute: 'kurtis',
+          image: anarkaliBlackMulti,
+          active: true,
+        },
+      ],
     },
   },
   {
     id: 'new-arrivals',
     label: 'New Arrivals',
-    desc: 'Fresh product drops carousel',
+    desc: 'Fresh product drops showcase',
     active: true,
     updated: '2026-08-22',
     content: {
@@ -126,6 +284,18 @@ export const initialDefaultSections = [
       viewAllText: 'View All',
       viewAllLink: '/products?sort=newest',
       maxItems: 10,
+      customItems: [
+        { id: 'prd-3136', productId: 'PRD-3136', name: 'Teal Embroidered Organza Saree', category: 'Sarees', price: 3499, order: 1, active: true, image: sareeGolden },
+        { id: 'prd-3138', productId: 'PRD-3138', name: 'Golden Zari Banarasi Silk Saree', category: 'Sarees', price: 4599, order: 2, active: true, image: sareeBeigeMaroon },
+        { id: 'prd-3139', productId: 'PRD-3139', name: 'Crimson Bridal Velvet Lehenga', category: 'Lehengas', price: 12999, order: 3, active: true, image: lehengaRed },
+        { id: 'prd-3140', productId: 'PRD-3140', name: 'Blush Pink Sequin Party Lehenga', category: 'Lehengas', price: 8499, order: 4, active: true, image: lehengaPink },
+        { id: 'prd-3141', productId: 'PRD-3141', name: 'Mint Pastel Organza Lehenga', category: 'Lehengas', price: 7999, order: 5, active: true, image: lehengaMint },
+        { id: 'prd-3142', productId: 'PRD-3142', name: 'Blush Pink Scalloped Organza Saree', category: 'Sarees', price: 3899, order: 6, active: true, image: sareeBeigePink },
+        { id: 'prd-3145', productId: 'PRD-3145', name: 'Festive Orange Zari Georgette Saree', category: 'Sarees', price: 2999, order: 7, active: true, image: sareeBeigeOrange },
+        { id: 'prd-3147', productId: 'PRD-3147', name: 'Chanderi Floral Printed Saree', category: 'Sarees', price: 2499, order: 8, active: true, image: coordSet },
+        { id: 'prd-3148', productId: 'PRD-3148', name: 'Kanchipuram Style Crimson Saree', category: 'Sarees', price: 5299, order: 9, active: true, image: festiveSuit },
+        { id: 'prd-3150', productId: 'PRD-3150', name: 'Royal Purple Bandhani Silk Saree', category: 'Sarees', price: 4399, order: 10, active: true, image: kurtiPurplePrinted },
+      ],
     },
   },
   {
@@ -139,7 +309,18 @@ export const initialDefaultSections = [
       title: 'Best Sellers',
       viewAllText: 'View All',
       viewAllLink: '/products?sort=popular',
-      maxItems: 8,
+      maxItems: 9,
+      customItems: [
+        { id: 'prd-3136', productId: 'PRD-3136', name: 'Teal Embroidered Organza Saree', category: 'Sarees', price: 3499, order: 1, active: true, image: sareeGolden },
+        { id: 'prd-3138', productId: 'PRD-3138', name: 'Golden Zari Banarasi Silk Saree', category: 'Sarees', price: 4599, order: 2, active: true, image: sareeBeigeMaroon },
+        { id: 'prd-3139', productId: 'PRD-3139', name: 'Crimson Bridal Velvet Lehenga', category: 'Lehengas', price: 12999, order: 3, active: true, image: lehengaRed },
+        { id: 'prd-3140', productId: 'PRD-3140', name: 'Blush Pink Sequin Party Lehenga', category: 'Lehengas', price: 8499, order: 4, active: true, image: lehengaPink },
+        { id: 'prd-3144', productId: 'PRD-3144', name: 'Maroon & Beige Dual-Tone Saree', category: 'Sarees', price: 3299, order: 5, active: true, image: sareeBeigeOrange },
+        { id: 'prd-3146', productId: 'PRD-3146', name: 'Vintage Black Zari Saree', category: 'Sarees', price: 4199, order: 6, active: true, image: anarkaliBlackMulti },
+        { id: 'prd-3148', productId: 'PRD-3148', name: 'Kanchipuram Style Crimson Saree', category: 'Sarees', price: 5299, order: 7, active: true, image: festiveSuit },
+        { id: 'prd-3150', productId: 'PRD-3150', name: 'Royal Purple Bandhani Silk Saree', category: 'Sarees', price: 4399, order: 8, active: true, image: kurtiPurplePrinted },
+        { id: 'prd-3153', productId: 'PRD-3153', name: 'Emerald Green Silk Lehenga', category: 'Lehengas', price: 11499, order: 9, active: true, image: lehengaMint },
+      ],
     },
   },
   {
@@ -159,22 +340,6 @@ export const initialDefaultSections = [
       item3Desc: 'Secure doorstep express delivery across all pin codes in India.',
       item4Title: 'Easy 7-Day Returns',
       item4Desc: 'Hassle-free exchange and returns guarantee for complete peace of mind.',
-    },
-  },
-  {
-    id: 'promo-banners',
-    label: 'Promotional Banner',
-    desc: 'Wide editorial spotlight banner',
-    active: true,
-    updated: '2026-08-18',
-    content: {
-      eyebrow: 'Featured Collections',
-      title: 'Curated For You',
-      subtitle: 'Grace in Every Drape • Comfort in Every Stitch',
-      description: 'Explore our handwoven pure silk & organza sarees and effortlessly chic printed sets.',
-      ctaText: 'EXPLORE ALL',
-      ctaLink: '/products',
-      image: sareeGolden,
     },
   },
   {
@@ -344,7 +509,6 @@ export function ContentProvider({ children }) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge with initial defaults to ensure newly added keys are always available
           return initialDefaultSections.map(defaultSec => {
             const matched = parsed.find(p => p.id === defaultSec.id);
             if (!matched) return defaultSec;
@@ -352,8 +516,8 @@ export function ContentProvider({ children }) {
             if (defaultSec.id === 'hero') {
               const defaultSlides = defaultSec.content?.slides || [];
               const matchedSlides = matched.content?.slides || [];
-              const mergedSlides = defaultSlides.map((defSlide, idx) => {
-                const mSlide = matchedSlides[idx] || {};
+              const mergedSlides = (matchedSlides.length > 0 ? matchedSlides : defaultSlides).map((mSlide, idx) => {
+                const defSlide = defaultSlides[idx] || {};
                 return {
                   ...defSlide,
                   ...mSlide,
@@ -373,12 +537,32 @@ export function ContentProvider({ children }) {
               };
             }
 
+            // Sanitize legacy mattress placeholder names
+            const hasLegacyTiles = (matched.content?.tiles || []).some(t => ['Hybrid', 'Firm', 'dddd'].includes(t.name));
+            const hasLegacyBanners = (matched.content?.banners || []).some(b => b.title?.includes('Mattress') || b.title === 'Classic Comfort');
+            const hasLegacyItems = (matched.content?.customItems || []).some(item => item.name === 'FoamCloud');
+
+            const safeTiles = (matched.content?.tiles && matched.content.tiles.length > 0 && !hasLegacyTiles)
+              ? matched.content.tiles
+              : defaultSec.content?.tiles;
+
+            const safeBanners = (matched.content?.banners && matched.content.banners.length > 0 && !hasLegacyBanners)
+              ? matched.content.banners
+              : defaultSec.content?.banners;
+
+            const safeCustomItems = (matched.content?.customItems && matched.content.customItems.length > 0 && !hasLegacyItems)
+              ? matched.content.customItems
+              : defaultSec.content?.customItems;
+
             return {
               ...defaultSec,
               ...matched,
               content: {
                 ...defaultSec.content,
                 ...matched.content,
+                tiles: safeTiles,
+                banners: safeBanners,
+                customItems: safeCustomItems,
                 image: matched.content?.image || defaultSec.content?.image,
               },
             };
@@ -423,6 +607,20 @@ export function ContentProvider({ children }) {
     );
   };
 
+  const reorderSections = (newSections) => {
+    setSections(newSections);
+  };
+
+  const moveSection = (fromIndex, toIndex) => {
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= sections.length || toIndex >= sections.length) return;
+    setSections(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  };
+
   const resetContent = () => {
     setSections(initialDefaultSections);
     localStorage.removeItem('suka_content_settings');
@@ -436,6 +634,8 @@ export function ContentProvider({ children }) {
         getSectionContent,
         toggleSection,
         updateSectionContent,
+        reorderSections,
+        moveSection,
         resetContent,
       }}
     >
