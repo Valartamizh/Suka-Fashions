@@ -666,36 +666,51 @@ export default function ContentPage() {
             </div>
 
             {/* Live Storefront Component Preview Box */}
-            <div className="p-4 sm:p-6 bg-slate-50/60 rounded-2xl border border-slate-100 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Shop By Category</h3>
-                <span className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer">
-                  View All
-                </span>
+            <div className="p-6 sm:p-8 bg-white rounded-2xl border border-slate-200/80 shadow-inner overflow-hidden">
+              {/* Landing Page Category Heading */}
+              <div className="text-center mb-5 sm:mb-6">
+                <p className="font-sans text-[9.5px] sm:text-[10.5px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-1 sm:mb-1.5">
+                  {categoriesSection?.content?.eyebrow || 'COLLECTIONS'}
+                </p>
+                <h3 className="font-serif text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
+                  {categoriesSection?.content?.title || 'SHOP BY CATEGORY'}
+                </h3>
+                <div className="w-9 h-[2px] bg-brand-teal mx-auto mt-2" />
               </div>
 
-              {/* Horizontal Live Category Cards Row */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+              {/* Circular Categories Row (Exact Match to Landing Page) */}
+              <div className="flex items-start justify-start sm:justify-center gap-3 min-[390px]:gap-4 sm:gap-6 md:gap-7 lg:gap-8 pb-3 px-2 overflow-x-auto no-scrollbar scroll-smooth">
                 {categoryTiles.map((tile) => (
-                  <div
+                  <button
                     key={tile.id}
-                    className={`relative overflow-hidden rounded-2xl border p-3 flex items-center justify-between transition-all duration-200 bg-gradient-to-br ${
-                      tile.bgGradient || 'from-amber-100 to-orange-100'
-                    } ${tile.borderColor || 'border-orange-200'} ${
-                      tile.active ? 'opacity-100 shadow-2xs hover:shadow-md' : 'opacity-40 grayscale'
+                    type="button"
+                    onClick={() => handleOpenEditCategory(tile)}
+                    title={`Click to edit "${tile.name}"`}
+                    className={`flex-shrink-0 w-[74px] min-[390px]:w-[80px] sm:w-[95px] md:w-[105px] lg:w-[115px] flex flex-col items-center group cursor-pointer transition-all ${
+                      tile.active ? 'opacity-100' : 'opacity-45 hover:opacity-80'
                     }`}
                   >
-                    <span className={`font-bold text-xs ${tile.textColor || 'text-slate-900'}`}>
-                      {tile.name}
-                    </span>
-                    <div className="w-11 h-11 rounded-xl overflow-hidden bg-white/60 p-0.5 shadow-2xs flex-shrink-0 flex items-center justify-center">
+                    {/* Circle Container */}
+                    <div className="relative w-[70px] h-[70px] min-[390px]:w-[76px] min-[390px]:h-[76px] sm:w-[92px] sm:h-[92px] md:w-[102px] md:h-[102px] lg:w-[112px] lg:h-[112px] rounded-full overflow-hidden border-2 border-brand-powder bg-brand-cream/30 shadow-xs group-hover:border-brand-teal group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
                       <img
                         src={tile.image}
                         alt={tile.name}
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                     </div>
-                  </div>
+
+                    {/* Category Name */}
+                    <span className="mt-2.5 font-sans text-[9px] min-[390px]:text-[10px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.14em] font-medium text-brand-navy group-hover:text-brand-teal text-center leading-tight transition-colors line-clamp-2 px-0.5">
+                      {tile.name}
+                    </span>
+
+                    {/* Hidden Badge if Inactive */}
+                    {!tile.active && (
+                      <span className="mt-1 text-[8.5px] sm:text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100">
+                        Hidden
+                      </span>
+                    )}
+                  </button>
                 ))}
               </div>
             </div>
@@ -836,8 +851,8 @@ export default function ContentPage() {
 
                         {/* Preview Thumbnail */}
                         <td className="py-3.5 px-4">
-                          <div className={`w-12 h-10 rounded-xl p-1 bg-gradient-to-br ${tile.bgGradient || 'from-amber-100 to-orange-100'} border ${tile.borderColor || 'border-orange-200'} flex items-center justify-center overflow-hidden`}>
-                            <img src={tile.image} alt={tile.name} className="w-full h-full object-cover rounded-lg" />
+                          <div className="w-11 h-11 rounded-full border-2 border-brand-powder/80 bg-brand-cream/30 overflow-hidden shadow-2xs flex items-center justify-center p-0.5">
+                            <img src={tile.image} alt={tile.name} className="w-full h-full object-cover rounded-full" />
                           </div>
                         </td>
 
