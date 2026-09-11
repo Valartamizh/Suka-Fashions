@@ -8,6 +8,9 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useOrders } from '../context/OrderContext';
 import { useProducts } from '../context/ProductContext';
+import { useSettings } from '../context/SettingsContext';
+import { getWhatsAppUrl } from '../utils/whatsapp';
+import AppLoader from '../components/common/AppLoader';
 
 // Color name mapping
 const COLOR_NAMES = {
@@ -110,7 +113,10 @@ export default function ProductDetail() {
   const { user, isLoggedIn } = useAuth();
   const { addOrder } = useOrders();
   const { getProductById, products, activeProducts } = useProducts();
+  const { settings } = useSettings();
+  const storeWhatsAppPhone = settings?.store?.whatsappNumber || settings?.store?.supportPhone || '+91 9488463850';
   const [product, setProduct] = useState(null);
+  const [isProductLoading, setIsProductLoading] = useState(true);
   
   // Interactive States
   const [selectedColorId, setSelectedColorId] = useState(null);
@@ -121,6 +127,42 @@ export default function ProductDetail() {
   const { addToCart, cartCount } = useCart();
   const [addedToCart, setAddedToCart] = useState(false);
   const [copiedSku, setCopiedSku] = useState(false);
+
+  // Swipe / drag state for mobile image gallery
+  const imgSwipeTouchStartX = useRef(null);
+  const imgSwipeTouchCurrentX = useRef(null);
+  const [imgDragX, setImgDragX] = useState(0);
+  const IMG_SWIPE_THRESHOLD = 50;
+
+  const handleImgTouchStart = (e) => {
+    imgSwipeTouchStartX.current = e.changedTouches[0].clientX;
+    imgSwipeTouchCurrentX.current = e.changedTouches[0].clientX;
+    setImgDragX(0);
+  };
+
+  const handleImgTouchMove = (e) => {
+    if (imgSwipeTouchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - imgSwipeTouchStartX.current;
+    imgSwipeTouchCurrentX.current = e.changedTouches[0].clientX;
+    setImgDragX(dx);
+  };
+
+  const handleImgTouchEnd = () => {
+    if (imgSwipeTouchStartX.current === null) return;
+    const delta = imgSwipeTouchStartX.current - (imgSwipeTouchCurrentX.current ?? imgSwipeTouchStartX.current);
+    setImgDragX(0);
+    if (Math.abs(delta) >= IMG_SWIPE_THRESHOLD) {
+      if (delta > 0) {
+        // swiped left → next image (clamp at last)
+        setSelectedImageIdx((prev) => Math.min(prev + 1, activeGalleryImages.length - 1));
+      } else {
+        // swiped right → previous image (clamp at 0)
+        setSelectedImageIdx((prev) => Math.max(prev - 1, 0));
+      }
+    }
+    imgSwipeTouchStartX.current = null;
+    imgSwipeTouchCurrentX.current = null;
+  };
   
   // WhatsApp Express Checkout & Address Modal States
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
@@ -209,33 +251,39 @@ export default function ProductDetail() {
 
   // Determine product & initial variant states
   useEffect(() => {
+    setIsProductLoading(true);
     const all = products?.length > 0 ? products : fallbackProducts;
     const foundProduct = (getProductById && getProductById(id)) || all.find(p => p.id === id || p.slug === id) || all[0];
-    setProduct(foundProduct);
     
-    if (foundProduct) {
-      const defaultColor = foundProduct.colors?.[0];
-      const defaultColorId = defaultColor?.id || (foundProduct.colors?.[0] ? '0' : 'default');
-      setSelectedColorId(defaultColorId);
-      setSelectedImageIdx(0);
-      const firstSize = defaultColor?.variants?.[0]?.size || foundProduct.sizes?.[0] || 'Free Size';
-      setSelectedSize(firstSize);
-      setQuantity(1);
-      setAddedToCart(false);
+    const timer = setTimeout(() => {
+      setProduct(foundProduct);
       
-      const related = (activeProducts || all).filter(p => p.category === foundProduct.category && p.id !== foundProduct.id).slice(0, 8);
-      setRelatedProducts(related);
+      if (foundProduct) {
+        const defaultColor = foundProduct.colors?.[0];
+        const defaultColorId = defaultColor?.id || (foundProduct.colors?.[0] ? '0' : 'default');
+        setSelectedColorId(defaultColorId);
+        setSelectedImageIdx(0);
+        const firstSize = defaultColor?.variants?.[0]?.size || foundProduct.sizes?.[0] || 'Free Size';
+        setSelectedSize(firstSize);
+        setQuantity(1);
+        setAddedToCart(false);
+        
+        const related = (activeProducts || all).filter(p => p.category === foundProduct.category && p.id !== foundProduct.id).slice(0, 8);
+        setRelatedProducts(related);
 
-      if (Array.isArray(foundProduct.reviews)) {
-        setReviewsList(foundProduct.reviews);
-      } else if (foundProduct.reviewsCount > 0) {
-        setReviewsList(MOCK_PRODUCT_REVIEWS);
-      } else {
-        setReviewsList([]);
+        if (Array.isArray(foundProduct.reviews)) {
+          setReviewsList(foundProduct.reviews);
+        } else if (foundProduct.reviewsCount > 0) {
+          setReviewsList(MOCK_PRODUCT_REVIEWS);
+        } else {
+          setReviewsList([]);
+        }
       }
-    }
-    
+      setIsProductLoading(false);
+    }, 250);
+
     window.scrollTo({ top: 0, behavior: 'instant' });
+    return () => clearTimeout(timer);
   }, [id, products, getProductById, activeProducts]);
 
   // Derived normalized Color Variants list
@@ -356,15 +404,13 @@ export default function ProductDetail() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [previewOpen, previewIndex, product]);
 
-  if (!product) {
+  if (isProductLoading || !product) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center py-20 px-4 text-center bg-white">
-        <div className="w-10 h-10 border-3 border-brand-teal border-t-transparent rounded-full animate-spin mb-4" />
-        <h2 className="font-serif text-lg font-bold text-slate-800 mb-1">Loading Product Details...</h2>
-        <p className="text-xs text-slate-500 mb-5">Fetching fabric specifications, images & size options</p>
+      <div className="min-h-[65vh] flex flex-col items-center justify-center py-16 px-4 text-center bg-white">
+        <AppLoader size="md" message="Fetching fabric specifications, images & size options..." />
         <Link
           to="/products"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-brand-teal text-white text-xs font-bold rounded-lg shadow-xs hover:bg-brand-tealDark transition-colors"
+          className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-brand-teal text-white text-xs font-bold rounded-lg shadow-xs hover:bg-brand-tealDark transition-colors"
         >
           <ArrowLeft size={14} /> Back to All Products
         </Link>
@@ -542,7 +588,7 @@ export default function ProductDetail() {
       `Hi Suka Fashions, I have submitted my delivery address and would like to confirm this order. Please share payment and dispatch details. Thank you!`
     );
 
-    window.open(`https://wa.me/919876543210?text=${whatsappMsg}`, '_blank');
+    window.open(getWhatsAppUrl(storeWhatsAppPhone, whatsappMsg), '_blank');
     setWhatsappModalOpen(false);
     setOrderSuccessNotification({
       orderId,
@@ -619,12 +665,35 @@ export default function ProductDetail() {
         <div 
           onClick={() => openPreviewModal(selectedImageIdx)}
           className="relative w-full aspect-[3/4] sm:aspect-[4/5] bg-brand-cream/40 overflow-hidden cursor-zoom-in"
+          onTouchStart={handleImgTouchStart}
+          onTouchMove={handleImgTouchMove}
+          onTouchEnd={handleImgTouchEnd}
         >
-          <img
-            src={displayImage}
-            alt={product.name}
-            className="w-full h-full object-cover object-top"
-          />
+          {/* Horizontal image strip — all images side-by-side, strip slides */}
+          <div
+            style={{
+              display: 'flex',
+              width: `${activeGalleryImages.length * 100}%`,
+              height: '100%',
+              transform: `translateX(calc(-${selectedImageIdx * (100 / activeGalleryImages.length)}% + ${imgDragX}px))`,
+              transition: imgDragX === 0 ? 'transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none',
+              willChange: 'transform',
+            }}
+          >
+            {activeGalleryImages.map((imgSrc, idx) => (
+              <div
+                key={idx}
+                style={{ width: `${100 / activeGalleryImages.length}%`, flexShrink: 0, height: '100%' }}
+              >
+                <img
+                  src={imgSrc}
+                  alt={`${product.name} - view ${idx + 1}`}
+                  className="w-full h-full object-cover object-top"
+                  draggable={false}
+                />
+              </div>
+            ))}
+          </div>
 
           {/* Floating Top Header Over Image: Back (Left), Wishlist & Cart (Right) */}
           <div className="absolute top-4 inset-x-4 flex items-center justify-between z-20" onClick={(e) => e.stopPropagation()}>
@@ -925,16 +994,35 @@ export default function ProductDetail() {
       {/* ── DESKTOP & SHARED DETAILS CONTAINER ── */}
       <div className="max-w-[1520px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 pt-0 sm:pt-4 pb-6 text-left">
         
-        {/* Breadcrumbs (Desktop Only) */}
-        <nav className="hidden lg:flex text-[10px] font-sans text-brand-navy/50 uppercase tracking-[0.2em] mb-4 lg:mb-5 items-center flex-wrap gap-2">
-          <Link to="/" className="hover:text-brand-teal transition-colors">Home</Link>
-          <span>/</span>
-          <Link to="/products" className="hover:text-brand-teal transition-colors">Shop</Link>
-          <span>/</span>
-          <Link to={`/category/${product.category}`} className="hover:text-brand-teal transition-colors capitalize">{product.category}</Link>
-          <span>/</span>
-          <span className="text-brand-navy font-semibold truncate max-w-[240px] sm:max-w-none">{product.name}</span>
-        </nav>
+        {/* Breadcrumbs & Back Button (Desktop) */}
+        <div className="hidden lg:flex items-center justify-between mb-4 lg:mb-5 gap-4">
+          <nav className="text-[10px] font-sans text-brand-navy/50 uppercase tracking-[0.2em] flex items-center flex-wrap gap-2">
+            <Link to="/" className="hover:text-brand-teal transition-colors">Home</Link>
+            <span>/</span>
+            <Link to="/products" className="hover:text-brand-teal transition-colors">Shop</Link>
+            <span>/</span>
+            <Link to={`/category/${product.category}`} className="hover:text-brand-teal transition-colors capitalize">{product.category}</Link>
+            <span>/</span>
+            <span className="text-brand-navy font-semibold truncate max-w-[240px] xl:max-w-md">{product.name}</span>
+          </nav>
+
+          {/* Back Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/products');
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-brand-powder/90 hover:border-brand-teal/50 bg-white hover:bg-brand-powder/30 text-brand-navy/75 hover:text-brand-teal text-[11px] font-sans font-semibold tracking-wider transition-all duration-200 shadow-2xs hover:shadow-xs group cursor-pointer flex-shrink-0"
+            aria-label="Go back to previous page"
+          >
+            <ArrowLeft size={13} className="text-brand-navy/60 group-hover:text-brand-teal group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back</span>
+          </button>
+        </div>
 
         {/* Main Product Layout: Balanced 2-Column Grid (Desktop) */}
         <div className="hidden lg:grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-14 items-start">

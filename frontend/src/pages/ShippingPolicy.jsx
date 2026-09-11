@@ -1,7 +1,10 @@
 import React from 'react';
 import { Truck, Clock, ShieldCheck, Globe, PackageCheck, AlertCircle } from 'lucide-react';
+import { useSettings } from '../context/SettingsContext';
 
 export default function ShippingPolicy() {
+  const { settings } = useSettings();
+  const supportPhone = settings?.store?.supportPhone || '+91 9488463850';
   return (
     <div className="w-full bg-white text-left">
       
@@ -96,7 +99,7 @@ export default function ShippingPolicy() {
             <div>
               <p className="font-bold text-xs uppercase tracking-wider mb-1">Tamper-Proof Packaging Assurance</p>
               <p className="text-xs">
-                All Suka Fashions orders are shipped in sealed tamper-evident luxury boxes. If your package appears opened, torn, or damaged at the time of delivery, please refuse delivery and immediately contact Customer Care at +91 98765 43210.
+                All Suka Fashions orders are shipped in sealed tamper-evident luxury boxes. If your package appears opened, torn, or damaged at the time of delivery, please refuse delivery and immediately contact Customer Care at {supportPhone}.
               </p>
             </div>
           </div>

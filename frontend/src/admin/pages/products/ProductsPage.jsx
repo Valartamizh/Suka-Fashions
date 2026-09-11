@@ -14,9 +14,9 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import EmptyState from '../../components/ui/EmptyState';
 import { useProducts } from '../../../context/ProductContext';
 import { useCategories } from '../../../context/CategoryContext';
-import sareeGolden from '../../../assets/saree_golden.jpg';
 import ProductStoreView from './ProductStoreView';
 import QuickStockModal from '../../components/ui/QuickStockModal';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 
 const PAGE_SIZE = 8;
 const STATUSES = ['All', 'ACTIVE', 'INACTIVE', 'DRAFT', 'ARCHIVED', 'OUT_OF_STOCK'];
@@ -24,8 +24,13 @@ const STATUSES = ['All', 'ACTIVE', 'INACTIVE', 'DRAFT', 'ARCHIVED', 'OUT_OF_STOC
 export default function ProductsPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { hasPermission } = useAdminAuth();
   const { products, editProduct, setProductStatus, deleteProduct } = useProducts();
   const { categories: dynamicCategories } = useCategories();
+
+  const canAddProduct = hasPermission('products.create');
+  const canEditProduct = hasPermission('products.edit');
+  const canDeleteProduct = hasPermission('products.delete');
 
   const categoryOptions = useMemo(() => {
     const list = ['All'];
@@ -180,13 +185,15 @@ export default function ProductsPage() {
         </select>
 
         {/* Add Product Button */}
-        <Link
-          to="/admin/products/add"
-          className="ml-auto flex items-center gap-1.5 bg-[#0b1b4f] hover:bg-[#07133a] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-xs cursor-pointer whitespace-nowrap"
-        >
-          <Plus size={15} strokeWidth={2.5} />
-          <span>Add Product</span>
-        </Link>
+        {canAddProduct && (
+          <Link
+            to="/admin/products/add"
+            className="ml-auto flex items-center gap-1.5 bg-[#0b1b4f] hover:bg-[#07133a] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-xs cursor-pointer whitespace-nowrap"
+          >
+            <Plus size={15} strokeWidth={2.5} />
+            <span>Add Product</span>
+          </Link>
+        )}
       </div>
 
       {/* Main Products Card / Container */}

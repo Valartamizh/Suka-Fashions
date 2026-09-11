@@ -1,4 +1,4 @@
-// AdminSidebar — Fixed left sidebar (270px width) with exact route matching for Products submenu
+// AdminSidebar — Fixed left sidebar with dynamic role-based module filtering for 4 roles
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
@@ -6,10 +6,28 @@ import {
   PanelsTopLeft, ShieldCheck, Settings, LogOut, ChevronDown, ChevronRight, X,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { ROLES, roleLabels, ROLE_BADGE_STYLES } from '../../data/adminUsers';
 
 export default function AdminSidebar({ mobileOpen, onMobileClose }) {
   const location = useLocation();
-  const { logout } = useAdminAuth();
+  const { admin, hasPermission, logout } = useAdminAuth();
+
+  // Role permissions determination
+  const role = admin?.role || ROLES.STAFF;
+  const isSuperAdmin = role === ROLES.SUPER_ADMIN;
+  const isAdmin = role === ROLES.ADMIN;
+  const isManager = role === ROLES.MANAGER;
+  const isStaff = role === ROLES.STAFF;
+
+  // Check section visibility
+  const canSeeProducts = hasPermission('products', 'view');
+  const canSeeInventory = hasPermission('inventory', 'view');
+  const canSeeOrders = hasPermission('orders', 'view');
+  const canSeeCustomers = hasPermission('customers', 'view');
+  const canSeeReviews = hasPermission('reviews', 'view');
+  const canSeeContent = hasPermission('content', 'view');
+  const canSeeUsers = hasPermission('users', 'view');
+  const canSeeSettings = isSuperAdmin || isAdmin; // Manager and Staff never see settings
 
   // Check if current route is inside product management section
   const isProductsSection =
@@ -18,10 +36,9 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
     location.pathname === '/admin/categories' ||
     location.pathname === '/admin/filters';
 
-  // Products dropdown expanded state — defaults to true if inside products section
+  // Products dropdown expanded state
   const [productsOpen, setProductsOpen] = useState(isProductsSection);
 
-  // Keep expanded if route changes into products section
   useEffect(() => {
     if (isProductsSection) {
       setProductsOpen(true);
@@ -34,7 +51,12 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
       {/* Mobile Header Close Button */}
       {onNavigate && (
         <div className="p-4 flex items-center justify-between border-b border-slate-200 lg:hidden flex-shrink-0">
-          <span className="font-extrabold text-slate-950 text-base">Navigation</span>
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-slate-950 text-base">Navigation</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full ${ROLE_BADGE_STYLES[role]}`}>
+              {roleLabels[role]}
+            </span>
+          </div>
           <button onClick={onNavigate} className="p-1 text-slate-700 hover:text-slate-950">
             <X size={22} />
           </button>
@@ -68,235 +90,258 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
         </div>
 
         {/* PRODUCT MANAGEMENT */}
-        <div>
-          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
-            PRODUCT MANAGEMENT
-          </p>
-          <div className="space-y-1.5">
-            {/* Products Dropdown Parent */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setProductsOpen(o => !o)}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all group ${
-                  isProductsSection
-                    ? 'text-brand-teal font-extrabold bg-brand-powder/60'
-                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Package size={20} className={isProductsSection ? 'text-brand-teal' : 'text-slate-700 group-hover:text-slate-900'} />
-                  <span>Products</span>
-                </div>
-                {productsOpen ? (
-                  <ChevronDown size={18} className={isProductsSection ? 'text-brand-teal' : 'text-slate-700'} />
-                ) : (
-                  <ChevronRight size={18} className="text-slate-700" />
-                )}
-              </button>
+        {(canSeeProducts || canSeeInventory) && (
+          <div>
+            <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
+              PRODUCT MANAGEMENT
+            </p>
+            <div className="space-y-1.5">
+              {/* Products Dropdown Parent */}
+              {canSeeProducts && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setProductsOpen(o => !o)}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all group ${
+                      isProductsSection
+                        ? 'text-brand-teal font-extrabold bg-brand-powder/60'
+                        : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Package size={20} className={isProductsSection ? 'text-brand-teal' : 'text-slate-700 group-hover:text-slate-900'} />
+                      <span>Products</span>
+                    </div>
+                    {productsOpen ? (
+                      <ChevronDown size={18} className={isProductsSection ? 'text-brand-teal' : 'text-slate-700'} />
+                    ) : (
+                      <ChevronRight size={18} className="text-slate-700" />
+                    )}
+                  </button>
 
-              {/* Submenu Children with EXACT Route Matching */}
-              {productsOpen && (
-                <div className="mt-1 space-y-1">
-                  {[
-                    { label: 'All Products', to: '/admin/products' },
-                    { label: 'Add Product', to: '/admin/products/add' },
-                    { label: 'Categories', to: '/admin/categories' },
-                    { label: 'Filter Catalog', to: '/admin/filters' },
-                  ].map(child => {
-                    // EXACT ROUTE MATCHING logic
-                    const isChildActive = location.pathname === child.to;
-                    return (
-                      <NavLink
-                        key={child.to}
-                        to={child.to}
-                        onClick={onNavigate}
-                        className={`flex items-center gap-3 pl-11 pr-4 py-2.5 rounded-xl text-sm transition-all ${
-                          isChildActive
-                            ? 'text-brand-teal font-extrabold bg-brand-powder/80 shadow-2xs'
-                            : 'text-slate-800 font-bold hover:text-brand-teal hover:bg-brand-powder/30'
-                        }`}
-                      >
-                        <span
-                          className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
-                            isChildActive ? 'bg-brand-teal' : 'bg-slate-400'
-                          }`}
-                        />
-                        <span>{child.label}</span>
-                      </NavLink>
-                    );
-                  })}
+                  {/* Submenu Children */}
+                  {productsOpen && (
+                    <div className="mt-1 space-y-1">
+                      {[
+                        { label: 'All Products', to: '/admin/products', show: true },
+                        { label: 'Add Product', to: '/admin/products/add', show: !isStaff },
+                        { label: 'Categories', to: '/admin/categories', show: !isStaff },
+                        { label: 'Filter Catalog', to: '/admin/filters', show: !isStaff },
+                      ]
+                        .filter(item => item.show)
+                        .map(child => {
+                          const isChildActive = location.pathname === child.to;
+                          return (
+                            <NavLink
+                              key={child.to}
+                              to={child.to}
+                              onClick={onNavigate}
+                              className={`flex items-center gap-3 pl-11 pr-4 py-2.5 rounded-xl text-sm transition-all ${
+                                isChildActive
+                                  ? 'text-brand-teal font-extrabold bg-brand-powder/80 shadow-2xs'
+                                  : 'text-slate-800 font-bold hover:text-brand-teal hover:bg-brand-powder/30'
+                              }`}
+                            >
+                              <span
+                                className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
+                                  isChildActive ? 'bg-brand-teal' : 'bg-slate-400'
+                                }`}
+                              />
+                              <span>{child.label}</span>
+                            </NavLink>
+                          );
+                        })}
+                    </div>
+                  )}
                 </div>
+              )}
+
+              {/* Inventory */}
+              {canSeeInventory && (
+                <NavLink
+                  to="/admin/inventory"
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
+                      isActive
+                        ? 'bg-brand-teal text-white shadow-xs'
+                        : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Boxes size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
+                      <span>Inventory</span>
+                    </>
+                  )}
+                </NavLink>
               )}
             </div>
-
-            {/* Inventory */}
-            <NavLink
-              to="/admin/inventory"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
-                  isActive
-                    ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Boxes size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
-                  <span>Inventory</span>
-                </>
-              )}
-            </NavLink>
           </div>
-        </div>
+        )}
 
         {/* SALES */}
-        <div>
-          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
-            SALES
-          </p>
-          <div className="space-y-1.5">
-            <NavLink
-              to="/admin/orders"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
-                  isActive
-                    ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <ShoppingBag size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
-                  <span>Orders</span>
-                </>
+        {(canSeeOrders || canSeeCustomers) && (
+          <div>
+            <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
+              SALES
+            </p>
+            <div className="space-y-1.5">
+              {canSeeOrders && (
+                <NavLink
+                  to="/admin/orders"
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
+                      isActive
+                        ? 'bg-brand-teal text-white shadow-xs'
+                        : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <ShoppingBag size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
+                      <span>Orders</span>
+                    </>
+                  )}
+                </NavLink>
               )}
-            </NavLink>
 
-            <NavLink
-              to="/admin/customers"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
-                  isActive
-                    ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Users size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
-                  <span>Customers</span>
-                </>
+              {canSeeCustomers && (
+                <NavLink
+                  to="/admin/customers"
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
+                      isActive
+                        ? 'bg-brand-teal text-white shadow-xs'
+                        : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Users size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
+                      <span>Customers</span>
+                    </>
+                  )}
+                </NavLink>
               )}
-            </NavLink>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ENGAGEMENT */}
-        <div>
-          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
-            ENGAGEMENT
-          </p>
-          <div className="space-y-1.5">
-            <NavLink
-              to="/admin/reviews"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
-                  isActive
-                    ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Star size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
-                  <span>Reviews</span>
-                </>
-              )}
-            </NavLink>
+        {canSeeReviews && (
+          <div>
+            <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
+              ENGAGEMENT
+            </p>
+            <div className="space-y-1.5">
+              <NavLink
+                to="/admin/reviews"
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
+                    isActive
+                      ? 'bg-brand-teal text-white shadow-xs'
+                      : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Star size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
+                    <span>Reviews</span>
+                  </>
+                )}
+              </NavLink>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* STORE */}
-        <div>
-          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
-            STORE
-          </p>
-          <div className="space-y-1.5">
-            <NavLink
-              to="/admin/content"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
-                  isActive
-                    ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <PanelsTopLeft size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
-                  <span>Content Management</span>
-                </>
-              )}
-            </NavLink>
+        {/* STORE (Content Management - shown to Super Admin, Admin, and Manager if permitted) */}
+        {canSeeContent && (
+          <div>
+            <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
+              STORE
+            </p>
+            <div className="space-y-1.5">
+              <NavLink
+                to="/admin/content"
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
+                    isActive
+                      ? 'bg-brand-teal text-white shadow-xs'
+                      : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <PanelsTopLeft size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
+                    <span>Content Management</span>
+                  </>
+                )}
+              </NavLink>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* ADMINISTRATION */}
-        <div>
-          <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
-            ADMINISTRATION
-          </p>
-          <div className="space-y-1.5">
-            <NavLink
-              to="/admin/users"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
-                  isActive
-                    ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <ShieldCheck size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
-                  <span>Users & Roles</span>
-                </>
+        {/* ADMINISTRATION (Users & Roles, Settings - Only for Super Admin and Admin) */}
+        {(canSeeUsers || canSeeSettings) && (
+          <div>
+            <p className="px-4 text-xs font-extrabold text-slate-900 tracking-wider uppercase mb-2.5">
+              ADMINISTRATION
+            </p>
+            <div className="space-y-1.5">
+              {canSeeUsers && (
+                <NavLink
+                  to="/admin/users"
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
+                      isActive
+                        ? 'bg-brand-teal text-white shadow-xs'
+                        : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <ShieldCheck size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
+                      <span>Users & Roles</span>
+                    </>
+                  )}
+                </NavLink>
               )}
-            </NavLink>
 
-            <NavLink
-              to="/admin/settings"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
-                  isActive
-                    ? 'bg-brand-teal text-white shadow-xs'
-                    : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Settings size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
-                  <span>Settings</span>
-                </>
+              {canSeeSettings && (
+                <NavLink
+                  to="/admin/settings"
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all ${
+                      isActive
+                        ? 'bg-brand-teal text-white shadow-xs'
+                        : 'text-slate-900 hover:bg-slate-100 hover:text-slate-950'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Settings size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
+                      <span>Settings</span>
+                    </>
+                  )}
+                </NavLink>
               )}
-            </NavLink>
+            </div>
           </div>
-        </div>
+        )}
 
       </nav>
 

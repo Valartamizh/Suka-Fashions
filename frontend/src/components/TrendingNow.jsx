@@ -40,6 +40,10 @@ export default function TrendingNow() {
   const eyebrow = content?.eyebrow || 'In The Spotlight';
   const title = content?.title || 'Trending Now';
 
+  // Use CMS items if available, fallback to hardcoded defaults
+  const cmsItems = (content?.items || []).filter(i => i.enabled !== false);
+  const items = cmsItems.length > 0 ? cmsItems : defaultTrending;
+
   return (
     <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-b border-brand-powder/30">
       <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-16">
@@ -57,7 +61,7 @@ export default function TrendingNow() {
 
         {/* Cards */}
         <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar snap-x snap-mandatory">
-          {defaultTrending.map((item, index) => (
+          {items.map((item, index) => (
             <Link 
               key={item.id} 
               to={item.link}

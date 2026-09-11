@@ -5,6 +5,8 @@ import logo from '../assets/logo.jpg';
 
 import { useCategories } from '../context/CategoryContext';
 import { useSettings } from '../context/SettingsContext';
+import { useContent } from '../context/ContentContext';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 /* ─── Social SVG Icons ──────────────────────────────────────────────────────── */
 const InstagramIcon = () => (
@@ -56,14 +58,6 @@ const helpAndAboutColumns = [
   },
 ];
 
-const socials = [
-  { SvgIcon: InstagramIcon, href: 'https://instagram.com',        label: 'Instagram' },
-  { SvgIcon: FacebookIcon,  href: 'https://facebook.com',         label: 'Facebook'  },
-  { SvgIcon: PinterestIcon, href: 'https://pinterest.com',        label: 'Pinterest' },
-  { SvgIcon: YoutubeIcon,   href: 'https://youtube.com',          label: 'YouTube'   },
-  { SvgIcon: WhatsAppIcon,  href: 'https://wa.me/919876543210',   label: 'WhatsApp'  },
-];
-
 /* ─── Accordion column (mobile) ─────────────────────────────────────────────── */
 function FooterColumn({ col }) {
   const [open, setOpen] = useState(false);
@@ -103,6 +97,8 @@ function FooterColumn({ col }) {
 export default function Footer() {
   const { categories } = useCategories();
   const { settings } = useSettings();
+  const { getSectionContent } = useContent();
+  const footerContent = getSectionContent('footer');
   const [customerOpen, setCustomerOpen] = useState(false);
 
   // Dynamic Shop links
@@ -127,8 +123,21 @@ export default function Footer() {
   ];
 
   const storeName = settings?.store?.storeName || 'Suka Fashions';
-  const supportPhone = settings?.store?.supportPhone || '+91 98765 43210';
-  const supportEmail = settings?.store?.supportEmail || 'care@sukafashions.com';
+  const tagline = footerContent?.brandTagline || 'Women Based • Women Empowered';
+  const description = footerContent?.brandDescription || "A luxury women's clothing brand dedicated to celebrating femininity, empowering women artisans, and keeping traditional weaves alive for the modern woman.";
+  const supportPhone = footerContent?.supportPhone || settings?.store?.supportPhone || '+91 9488463850';
+  const supportEmail = footerContent?.supportEmail || settings?.store?.supportEmail || 'care@sukafashions.com';
+  const workingHours = footerContent?.workingHours || 'Mon–Sat, 10 AM – 7 PM';
+
+  const socialLinks = footerContent?.socialLinks || {};
+  const whatsAppPhone = settings?.store?.whatsappNumber || supportPhone;
+  const socials = [
+    { SvgIcon: InstagramIcon, href: socialLinks.instagram || 'https://instagram.com/sukafashions', label: 'Instagram' },
+    { SvgIcon: FacebookIcon,  href: socialLinks.facebook || 'https://facebook.com/sukafashions',   label: 'Facebook'  },
+    { SvgIcon: PinterestIcon, href: socialLinks.pinterest || 'https://pinterest.com/sukafashions',  label: 'Pinterest' },
+    { SvgIcon: YoutubeIcon,   href: socialLinks.youtube || 'https://youtube.com/sukafashions',      label: 'YouTube'   },
+    { SvgIcon: WhatsAppIcon,  href: socialLinks.whatsapp ? getWhatsAppUrl(socialLinks.whatsapp) : getWhatsAppUrl(whatsAppPhone), label: 'WhatsApp'  },
+  ];
 
   return (
     <footer className="bg-brand-tealDark text-white pt-5 sm:pt-8 lg:pt-10 pb-20 sm:pb-8 lg:pb-5 border-t border-brand-tealLight/10">
@@ -155,12 +164,12 @@ export default function Footer() {
 
             {/* Tagline */}
             <p className="font-sans text-[9px] sm:text-[10px] tracking-[0.2em] font-semibold text-brand-powder uppercase mb-2 text-left">
-              Women Based • Women Empowered
+              {tagline}
             </p>
 
             {/* About blurb */}
             <p className="font-sans text-[10.5px] sm:text-[11px] text-brand-powder/55 font-light mb-3 sm:mb-5 leading-relaxed max-w-sm text-left">
-              A luxury women's clothing brand dedicated to celebrating femininity, empowering women artisans, and keeping traditional weaves alive for the modern woman.
+              {description}
             </p>
 
             {/* Social icons */}
@@ -218,15 +227,19 @@ export default function Footer() {
                 },
                 { 
                   Icon: InstagramIcon, 
-                  text: '@sukafashions (Instagram DM)', 
+                  text: (() => {
+                    const url = socialLinks.instagram || '';
+                    const handle = url.replace(/https?:\/\/(www\.)?instagram\.com\/?/, '').replace(/\/$/, '');
+                    return handle ? `@${handle} (Instagram DM)` : '@sukafashions (Instagram DM)';
+                  })(), 
                   label: 'Instagram', 
-                  href: 'https://instagram.com/sukafashions', 
+                  href: socialLinks.instagram || 'https://instagram.com/sukafashions', 
                   isSvg: true,
                   isExternal: true 
                 },
                 { 
                   Icon: Clock, 
-                  text: 'Mon–Sat, 10 AM – 7 PM', 
+                  text: workingHours, 
                   label: 'Hours' 
                 },
               ].map(({ Icon, text, label, href, isSvg, isExternal }) => {
@@ -268,7 +281,6 @@ export default function Footer() {
 
         {/* ── Bottom row ─────────────────────────────── */}
         <div className="pt-3 sm:pt-5 flex justify-center items-center">
-          {/* Copyright */}
           <p className="font-sans text-[10px] sm:text-[11px] text-brand-powder/40 font-light text-center">
             © {new Date().getFullYear()} {storeName}. All Rights Reserved. Crafted with care.
           </p>

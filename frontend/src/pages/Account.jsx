@@ -4,6 +4,8 @@ import { User, Package, MapPin, LogOut, ChevronRight, X, Truck, CheckCircle2, Pl
 import { products } from '../data/products';
 import { useOrders } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 const DEFAULT_SAVED_ADDRESSES = [
@@ -24,6 +26,8 @@ export default function Account() {
   const navigate = useNavigate();
   const { user, isLoggedIn, updateUser, logout } = useAuth();
   const { orders } = useOrders();
+  const { settings } = useSettings();
+  const storeWhatsAppPhone = settings?.store?.whatsappNumber || settings?.store?.supportPhone || '+91 9488463850';
   const [activeTab, setActiveTab] = useState('profile');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -778,7 +782,7 @@ export default function Account() {
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-brand-powder/60">
               <button
                 onClick={() => {
-                  window.open(`https://wa.me/919876543210?text=${encodeURIComponent(`Hi Suka Fashions, I need live updates or support for my Order ID: ${selectedOrder.id}`)}`, '_blank');
+                  window.open(getWhatsAppUrl(storeWhatsAppPhone, `Hi Suka Fashions, I need live updates or support for my Order ID: ${selectedOrder.id}`), '_blank');
                 }}
                 className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 font-sans text-[10px] font-bold uppercase tracking-[0.18em] rounded-sm transition-all shadow-sm"
               >

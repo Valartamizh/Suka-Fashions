@@ -11,6 +11,9 @@ import {
 } from 'lucide-react';
 import StatusBadge from '../../components/ui/StatusBadge';
 import sareeGolden from '../../../assets/saree_golden.jpg';
+import { useSettings } from '../../../context/SettingsContext';
+import { getWhatsAppUrl } from '../../../utils/whatsapp';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 
 export default function ProductStoreView({
   product,
@@ -23,6 +26,13 @@ export default function ProductStoreView({
   onUpdateProduct
 }) {
   const navigate = useNavigate();
+  const { settings } = useSettings();
+  const { hasPermission } = useAdminAuth();
+  const canEdit = hasPermission('products.edit');
+  const canDelete = hasPermission('products.delete');
+  const canCreate = hasPermission('products.create');
+  const canUpdateStock = hasPermission('inventory.update');
+  const storeWhatsAppPhone = settings?.store?.whatsappNumber || settings?.store?.supportPhone || '+91 9488463850';
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
@@ -227,22 +237,26 @@ export default function ProductStoreView({
 
         {/* Right: Quick Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap ml-auto">
-          <button
-            onClick={() => onEdit(product.id)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
-          >
-            <Edit size={14} />
-            <span>Edit Product</span>
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => onEdit(product.id)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+            >
+              <Edit size={14} />
+              <span>Edit Product</span>
+            </button>
+          )}
 
-          <button
-            onClick={() => onQuickStock(product)}
-            className="flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
-            title="Adjust inventory stock quantity"
-          >
-            <PackagePlus size={14} className="text-brand-teal" />
-            <span className="hidden sm:inline">Quick Stock</span>
-          </button>
+          {canUpdateStock && (
+            <button
+              onClick={() => onQuickStock(product)}
+              className="flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+              title="Adjust inventory stock quantity"
+            >
+              <PackagePlus size={14} className="text-brand-teal" />
+              <span className="hidden sm:inline">Quick Stock</span>
+            </button>
+          )}
 
           <button
             onClick={() => window.open(`/product/${product.slug || product.id}`, '_blank')}
@@ -266,7 +280,7 @@ export default function ProductStoreView({
             )}
           </button>
 
-          {onDuplicate && (
+          {canCreate && onDuplicate && (
             <button
               onClick={() => onDuplicate(product.id)}
               className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors cursor-pointer"
@@ -276,7 +290,7 @@ export default function ProductStoreView({
             </button>
           )}
 
-          {onDelete && (
+          {canDelete && onDelete && (
             <button
               onClick={() => onDelete(product)}
               className="w-9 h-9 flex items-center justify-center rounded-xl border border-red-100 hover:bg-red-50 text-red-500 transition-colors cursor-pointer"
@@ -642,7 +656,7 @@ export default function ProductStoreView({
                   </button>
 
                   <button
-                    onClick={() => window.open(`https://wa.me/919876543210?text=Hi%2C%20I%20am%20interested%20in%20${encodeURIComponent(product.name)}`, '_blank')}
+                    onClick={() => window.open(getWhatsAppUrl(storeWhatsAppPhone, `Hi, I am interested in ${product.name}`), '_blank')}
                     className="py-3.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
                   >
                     <MessageSquare size={16} />

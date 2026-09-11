@@ -1,11 +1,13 @@
 // SettingsPage — /admin/settings
 import React, { useState, useEffect } from 'react';
 import {
-  Store, CreditCard, Truck, ShoppingBag, Package, Bell, Shield, Check, RotateCcw
+  Store, CreditCard, Truck, ShoppingBag, Package, Bell, Shield, Check, RotateCcw,
+  Terminal, Lock, RefreshCw, Server
 } from 'lucide-react';
 import AdminPageHeader from '../components/ui/AdminPageHeader';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { useSettings } from '../../context/SettingsContext';
+import { useAdminAuth } from '../context/AdminAuthContext';
 
 const TABS = [
   { label: 'Store', icon: Store },
@@ -15,6 +17,7 @@ const TABS = [
   { label: 'Inventory', icon: Package },
   { label: 'Notifications', icon: Bell },
   { label: 'Security', icon: Shield },
+  { label: 'System', icon: Terminal, superAdminOnly: true },
 ];
 
 function SettingField({ label, hint, children }) {
@@ -44,6 +47,7 @@ const inputClass = "w-full border border-slate-200 rounded-lg px-3 py-2.5 text-s
 
 export default function SettingsPage() {
   const { settings, saveSettings } = useSettings();
+  const { isSuperAdmin } = useAdminAuth();
   const [activeTab, setActiveTab] = useState('Store');
   const [savedToast, setSavedToast] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -122,8 +126,11 @@ export default function SettingsPage() {
         <SettingField label="Support Email">
           <input type="email" className={inputClass} value={store.supportEmail} onChange={e => s(store, setStore, 'supportEmail', e.target.value)} />
         </SettingField>
-        <SettingField label="Support Phone">
+        <SettingField label="Support Phone" hint="General customer support phone number">
           <input className={inputClass} value={store.supportPhone} onChange={e => s(store, setStore, 'supportPhone', e.target.value)} />
+        </SettingField>
+        <SettingField label="WhatsApp Order Number" hint="Phone number receiving customer WhatsApp orders & direct messages">
+          <input className={inputClass} placeholder="+91 9488463850" value={store.whatsappNumber !== undefined ? store.whatsappNumber : store.supportPhone} onChange={e => s(store, setStore, 'whatsappNumber', e.target.value)} />
         </SettingField>
         <SettingField label="Business Address">
           <textarea className={`${inputClass} resize-none`} rows={2} value={store.address} onChange={e => s(store, setStore, 'address', e.target.value)} />
@@ -267,6 +274,74 @@ export default function SettingsPage() {
           <button className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg border border-red-200 transition-colors">
             Logout All Admin Sessions
           </button>
+        </SettingField>
+      </div>
+    ),
+
+    System: !isSuperAdmin ? (
+      <div className="py-12 px-6 text-center max-w-lg mx-auto space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto shadow-xs">
+          <Lock size={26} />
+        </div>
+        <div>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-700 bg-amber-100/70 border border-amber-200 px-3 py-1 rounded-full">
+            Restricted Configuration
+          </span>
+          <h4 className="font-serif text-xl font-bold text-slate-800 mt-2">Technical / System Settings</h4>
+          <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+            System infrastructure, server endpoints, and environment variables are managed exclusively by the Super Admin.
+          </p>
+        </div>
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 text-left">
+          <p className="font-semibold text-slate-700 mb-1">Admin Access:</p>
+          <p className="text-[11px] text-slate-500">
+            As Admin, you can freely manage Store info, Shipping rules, Low-stock alerts, Order policies, and Notifications.
+          </p>
+        </div>
+      </div>
+    ) : (
+      <div>
+        <div className="mb-5 p-3.5 bg-purple-50 border border-purple-200 rounded-xl text-xs text-purple-900 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Server size={18} className="text-purple-600" />
+            <div>
+              <p className="font-bold">Super Admin System Console</p>
+              <p className="text-[11px] text-purple-700">Full technical controls & Spring Boot backend readiness</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-extrabold bg-purple-200/80 px-2.5 py-1 rounded-full uppercase tracking-wider">
+            Super Admin Access
+          </span>
+        </div>
+
+        <SettingField label="Backend Environment" hint="Target Spring Boot environment">
+          <select className={`${inputClass} bg-white`}>
+            <option>Production (AWS Cloud / Spring Boot 3)</option>
+            <option>Staging (Testing Sandbox)</option>
+            <option>Development (Localhost 8080)</option>
+          </select>
+        </SettingField>
+
+        <SettingField label="API Endpoint URL" hint="Base REST endpoint for store services">
+          <input className={inputClass} defaultValue="https://api.sukafashions.com/v1" />
+        </SettingField>
+
+        <SettingField label="Cache & Index Flush" hint="Invalidate product search and storefront redis cache">
+          <button
+            type="button"
+            onClick={() => {
+              setSavedToast('Cache invalidated and storefront search re-indexed.');
+              setTimeout(() => setSavedToast(null), 3500);
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+          >
+            <RefreshCw size={13} />
+            <span>Flush Cache Now</span>
+          </button>
+        </SettingField>
+
+        <SettingField label="Maintenance Lockdown" hint="Emergency lockdown restricting customer access">
+          <Toggle checked={false} onChange={() => {}} />
         </SettingField>
       </div>
     ),

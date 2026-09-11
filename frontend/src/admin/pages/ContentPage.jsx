@@ -1,23 +1,30 @@
-// ContentPage — /admin/content (Comprehensive Homepage & Landing Page Content Engine)
-import React, { useState, useMemo } from 'react';
+// ContentPage.jsx — /admin/content (Comprehensive Suka Fashions CMS & Live Storefront Controller)
+import React, { useState, useMemo, useEffect } from 'react';
 import {
-  LayoutTemplate, ImagePlay, Grid3x3, Sparkles, TrendingUp,
+  Layers, ImagePlay, Grid3x3, Sparkles, TrendingUp,
   Image, ShoppingBag, Palette, BookOpen, Scissors, Star,
   Instagram, Gift, Mail, Edit, ExternalLink, X, Save, Check,
   RotateCcw, Plus, Trash2, Search, Eye, EyeOff, GripVertical,
   ArrowUp, ArrowDown, CheckCircle2, ChevronRight, Filter,
-  Tag, SlidersHorizontal, Layers, ArrowRight, Upload, RefreshCw
+  Tag, SlidersHorizontal, ArrowRight, Upload, RefreshCw, History,
+  Send, AlertTriangle, ShieldCheck, Copy, Phone, Clock, Link as LinkIcon,
+  Globe, LayoutTemplate, HelpCircle, CheckCircle, ChevronDown, ChevronUp
 } from 'lucide-react';
 import AdminPageHeader from '../components/ui/AdminPageHeader';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { useContent } from '../../context/ContentContext';
 import { useProducts } from '../../context/ProductContext';
 import { useCategories } from '../../context/CategoryContext';
+import { useAdminAuth } from '../context/AdminAuthContext';
+import { adminReviews } from '../data/adminReviews';
+import AppLoader from '../../components/common/AppLoader';
 
 // Local asset fallbacks
 import sareeGolden from '../../assets/saree_golden.jpg';
 import sareeBeigePink from '../../assets/saree_beige_pink.jpg';
 import sareeBeigeMaroon from '../../assets/saree_beige_maroon.jpg';
+import sareeBeigeMaroonFull from '../../assets/saree_beige_maroon_full.jpg';
+import sareeBeigeMaroonFull2 from '../../assets/saree_beige_maroon_full2.jpg';
 import sareeBeigeOrange from '../../assets/saree_beige_orange.jpg';
 import lehengaRed from '../../assets/lehenga_red.jpg';
 import lehengaPink from '../../assets/lehenga_pink.jpg';
@@ -25,540 +32,248 @@ import lehengaMint from '../../assets/lehenga_mint.jpg';
 import kurtiTealPrinted from '../../assets/kurti_teal_printed.jpg';
 import kurtiPurplePrinted from '../../assets/kurti_purple_printed.jpg';
 import kurtiBrownPrinted from '../../assets/kurti_brown_printed.jpg';
+import anarkaliBlack from '../../assets/anarkali_black.jpg';
 import anarkaliBlackMulti from '../../assets/anarkali_black_multicolor.jpg';
 import coordSet from '../../assets/coord_set.jpg';
 import festiveSuit from '../../assets/festive_suit.jpg';
 import dressNavy from '../../assets/dress_navy.jpg';
+import dressWhite from '../../assets/dress_white.jpg';
+import dupattaSilk from '../../assets/dupatta_silk.jpg';
 
-// Map icon types to appropriate Lucide components
-const ICON_MAP = {
-  announcement: LayoutTemplate,
-  hero: ImagePlay,
-  categories: Grid3x3,
-  'promo-banners': Image,
-  'new-arrivals': Sparkles,
-  'best-sellers': TrendingUp,
-  'four-pillars': Gift,
-  trending: TrendingUp,
-  occasion: ShoppingBag,
-  collections: Palette,
-  'brand-story': BookOpen,
-  craftsmanship: Scissors,
-  testimonials: Star,
-  instagram: Instagram,
-  newsletter: Mail,
-};
+const ASSET_LIBRARY = [
+  { name: 'Gold Banarasi Saree', url: sareeGolden },
+  { name: 'Blush Pink Saree', url: sareeBeigePink },
+  { name: 'Maroon Zari Saree', url: sareeBeigeMaroon },
+  { name: 'Maroon Heritage Full', url: sareeBeigeMaroonFull },
+  { name: 'Maroon Wedding Edit', url: sareeBeigeMaroonFull2 },
+  { name: 'Festive Orange Saree', url: sareeBeigeOrange },
+  { name: 'Crimson Velvet Lehenga', url: lehengaRed },
+  { name: 'Blush Pink Lehenga', url: lehengaPink },
+  { name: 'Mint Pastel Lehenga', url: lehengaMint },
+  { name: 'Teal Printed Kurti', url: kurtiTealPrinted },
+  { name: 'Purple Bandhani Kurti', url: kurtiPurplePrinted },
+  { name: 'Brown Floral Kurti', url: kurtiBrownPrinted },
+  { name: 'Black Handloom Anarkali', url: anarkaliBlack },
+  { name: 'Multicolor Anarkali', url: anarkaliBlackMulti },
+  { name: 'Modern Coord Set', url: coordSet },
+  { name: 'Festive Banarasi Suit', url: festiveSuit },
+  { name: 'Navy Midi Dress', url: dressNavy },
+  { name: 'Ivory Comfort Dress', url: dressWhite },
+  { name: 'Pure Silk Dupatta', url: dupattaSilk },
+];
 
-// Section badge definitions
-const SECTION_BADGES = {
-  hero: 'Hero Showcase',
-  categories: 'Category Grid',
-  'promo-banners': 'Promo Banner • Promotion',
-  'new-arrivals': 'Fresh Drops',
-  'best-sellers': 'Most Loved',
-  'four-pillars': 'Trust Badges',
-  trending: 'Curated Highlights',
-  occasion: 'Occasion Edit',
-  collections: 'Curated Edit',
-  testimonials: 'Client Reviews',
-  instagram: 'Social Grid',
-  'brand-story': 'Brand Story',
-  announcement: 'Header Bar',
-  newsletter: 'Email Signup',
-};
-
-// Theme presets for Category Tiles
 const CATEGORY_THEMES = [
-  {
-    name: 'Orange Gradient',
-    bgGradient: 'from-amber-200/90 via-orange-100 to-amber-100/80',
-    borderColor: 'border-orange-200/80',
-    textColor: 'text-amber-950',
-    dotColor: '#F97316',
-    previewBg: 'bg-orange-100 text-orange-800',
-  },
-  {
-    name: 'Mint Green',
-    bgGradient: 'from-emerald-100/90 via-teal-100/80 to-green-100/80',
-    borderColor: 'border-emerald-200/80',
-    textColor: 'text-emerald-950',
-    dotColor: '#10B981',
-    previewBg: 'bg-emerald-100 text-emerald-800',
-  },
-  {
-    name: 'Soft Pink',
-    bgGradient: 'from-rose-100/90 via-pink-100 to-rose-100/80',
-    borderColor: 'border-pink-200/80',
-    textColor: 'text-rose-950',
-    dotColor: '#EC4899',
-    previewBg: 'bg-pink-100 text-pink-800',
-  },
-  {
-    name: 'Lavender Purple',
-    bgGradient: 'from-purple-100/90 via-violet-100 to-indigo-100/80',
-    borderColor: 'border-purple-200/80',
-    textColor: 'text-purple-950',
-    dotColor: '#8B5CF6',
-    previewBg: 'bg-purple-100 text-purple-800',
-  },
-  {
-    name: 'Soft Gold',
-    bgGradient: 'from-amber-100/90 via-yellow-100/80 to-amber-100/70',
-    borderColor: 'border-amber-200/80',
-    textColor: 'text-amber-950',
-    dotColor: '#F59E0B',
-    previewBg: 'bg-amber-100 text-amber-800',
-  },
-  {
-    name: 'Sky Blue',
-    bgGradient: 'from-sky-100/90 via-blue-100/80 to-cyan-100/80',
-    borderColor: 'border-sky-200/80',
-    textColor: 'text-sky-950',
-    dotColor: '#0EA5E9',
-    previewBg: 'bg-sky-100 text-sky-800',
-  },
-  {
-    name: 'Teal Elegance',
-    bgGradient: 'from-teal-100/90 via-cyan-100 to-emerald-100/80',
-    borderColor: 'border-teal-200/80',
-    textColor: 'text-teal-950',
-    dotColor: '#14B8A6',
-    previewBg: 'bg-teal-100 text-teal-800',
-  },
+  { name: 'Orange Gradient', color: '#F97316' },
+  { name: 'Soft Pink', color: '#EC4899' },
+  { name: 'Mint Green', color: '#10B981' },
+  { name: 'Lavender Purple', color: '#8B5CF6' },
+  { name: 'Soft Gold', color: '#F59E0B' },
+  { name: 'Sky Blue', color: '#0EA5E9' },
+  { name: 'Teal Elegance', color: '#14B8A6' },
 ];
 
 export default function ContentPage() {
   const {
     sections,
+    draftSections,
+    status,
+    lastPublishedAt,
+    lastPublishedBy,
+    versionHistory,
     toggleSection,
     updateSectionContent,
     reorderSections,
-    moveSection,
-    resetContent
+    moveSectionUp,
+    moveSectionDown,
+    saveDraft,
+    publishChanges,
+    restoreVersion,
+    resetContent,
   } = useContent();
 
   const { products } = useProducts();
-  const { categories: storeCategories } = useCategories();
+  const { categories } = useCategories();
+  const { admin } = useAdminAuth();
 
-  // Active top navigation tab
-  const [activeTab, setActiveTab] = useState('categories'); // 'layout' | 'categories' | 'hero' | 'promo-banners' | 'new-arrivals' | 'best-sellers' | etc.
+  // Role authorization check (Super Admin, Admin, Content Manager)
+  const isAuthorized = useMemo(() => {
+    if (!admin) return true;
+    const role = admin.role || 'SUPER_ADMIN';
+    return ['SUPER_ADMIN', 'ADMIN', 'CONTENT_MANAGER'].includes(role);
+  }, [admin]);
 
-  // Search & Filter state
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  // Top Tabs
+  const [activeTab, setActiveTab] = useState('layout'); // 'layout' | section id
 
-  // Modals state
-  const [categoryModal, setCategoryModal] = useState(null); // { mode: 'add'|'edit', data: {...} }
-  const [bannerModal, setBannerModal] = useState(null); // { mode: 'add'|'edit', data: {...} }
-  const [productPickerModal, setProductPickerModal] = useState(null); // { targetSection: 'new-arrivals'|'best-sellers' }
-  const [selectedProductIdsInPicker, setSelectedProductIdsInPicker] = useState([]);
-  const [pickerCategoryFilter, setPickerCategoryFilter] = useState('All');
-  const [pickerSearch, setPickerSearch] = useState('');
-
-  // Hero slide modal / state
-  const [heroSlideModal, setHeroSlideModal] = useState(null);
-  const [activeHeroSlideIdx, setActiveHeroSlideIdx] = useState(0);
-
-  // General Edit Modal for other sections
-  const [genericEditModal, setGenericEditModal] = useState(null);
-  const [genericEditForm, setGenericEditForm] = useState({});
-
-  // Confirmation modal & Toast
-  const [confirmModal, setConfirmModal] = useState(null);
+  // Modals & UI States
   const [toast, setToast] = useState(null);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
+  const [productPickerModal, setProductPickerModal] = useState(null); // { sectionId, selectedIds }
+  const [pickerSearch, setPickerSearch] = useState('');
+  const [pickerCategory, setPickerCategory] = useState('All');
+  const [imageModal, setImageModal] = useState(null); // { title, currentUrl, onSelect }
 
-  // Drag-and-drop state
+  // Drag and drop state for layout reordering
   const [draggedIdx, setDraggedIdx] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
+
+  // Hero Slider editing state
+  const [activeHeroSlideIdx, setActiveHeroSlideIdx] = useState(0);
 
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3500);
   };
 
-  // ── Top Navigation Tabs Bar ──
-  const topTabs = [
-    { id: 'layout', label: 'Homepage Layout', icon: Layers },
-    { id: 'categories', label: 'Shop by Category', icon: Grid3x3 },
-    { id: 'hero', label: 'Hero Slides', icon: ImagePlay },
-    { id: 'promo-banners', label: 'Promo Banners', icon: Image },
-    { id: 'new-arrivals', label: 'New Arrivals', icon: Sparkles },
-    { id: 'best-sellers', label: 'Best Sellers', icon: TrendingUp },
-    { id: 'four-pillars', label: 'Four Pillars', icon: Gift },
-    { id: 'collections', label: 'Curated Collections', icon: Palette },
-    { id: 'testimonials', label: 'Testimonials', icon: Star },
-    { id: 'instagram', label: 'Instagram', icon: Instagram },
-    { id: 'newsletter', label: 'Newsletter', icon: Mail },
-  ];
+  const currentSection = useMemo(() => {
+    return draftSections.find(s => s.id === activeTab);
+  }, [draftSections, activeTab]);
 
-  // Helper getters for current section
-  const currentSection = sections.find(s => s.id === activeTab);
-  const categoriesSection = sections.find(s => s.id === 'categories');
-  const promoSection = sections.find(s => s.id === 'promo-banners');
-  const newArrivalsSection = sections.find(s => s.id === 'new-arrivals');
-  const bestSellersSection = sections.find(s => s.id === 'best-sellers');
-  const heroSection = sections.find(s => s.id === 'hero');
+  // STRUCTURAL tabs always shown regardless of visibility
+  const STRUCTURAL_TAB_IDS = useMemo(() => new Set(['layout']), []);
 
-  // Categories tiles array
-  const categoryTiles = categoriesSection?.content?.tiles || [];
-  // Promo banners array
-  const promoBanners = promoSection?.content?.banners || [];
-  // New Arrivals custom items / products
-  const newArrivalsItems = newArrivalsSection?.content?.customItems || [];
-  // Best Sellers custom items / products
-  const bestSellersItems = bestSellersSection?.content?.customItems || [];
-  // Hero slides array
-  const heroSlides = heroSection?.content?.slides || [];
+  // Build visible tabs dynamically: always show Layout, then only ENABLED sections
+  const topTabs = useMemo(() => {
+    const sectionTabMap = {
+      announcement:  { label: 'Announcement Bar',      icon: LayoutTemplate },
+      hero:          { label: 'Hero Slider',            icon: ImagePlay },
+      categories:    { label: 'Shop By Category',       icon: Grid3x3 },
+      'new-arrivals':{ label: 'New Arrivals',           icon: Sparkles },
+      'best-sellers':{ label: 'Best Sellers',           icon: TrendingUp },
+      'promo-banners':{ label: 'Promo Banners',         icon: Image },
+      trending:      { label: 'Trending Now',           icon: TrendingUp },
+      occasion:      { label: 'Shop By Occasion',       icon: ShoppingBag },
+      collections:   { label: 'Curated Collections',    icon: Palette },
+      'brand-story': { label: 'Brand Story',            icon: BookOpen },
+      craftsmanship: { label: 'Craftsmanship',          icon: Scissors },
+      testimonials:  { label: 'Testimonials',           icon: Star },
+      instagram:     { label: 'Instagram',              icon: Instagram },
+      'four-pillars':{ label: 'Benefits & Four Pillars',icon: Gift },
+      newsletter:    { label: 'Newsletter',             icon: Mail },
+      footer:        { label: 'Footer',                 icon: Phone },
+    };
 
-  // Reset all content back to defaults
-  const promptReset = () => {
+    const enabledCount = draftSections.filter(s => s.enabled !== false && s.active !== false).length;
+    const layoutTab = {
+      id: 'layout',
+      label: 'Homepage Layout & Order',
+      icon: Layers,
+      badge: `${enabledCount} Active`,
+    };
+
+    // Section tabs: only sections that are enabled
+    const sectionTabs = draftSections
+      .filter(s => s.enabled !== false && s.active !== false)
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(s => ({
+        id: s.id,
+        label: sectionTabMap[s.id]?.label || s.label,
+        icon: sectionTabMap[s.id]?.icon || Layers,
+      }))
+      .filter(t => sectionTabMap[t.id]); // only known section ids
+
+    return [layoutTab, ...sectionTabs];
+  }, [draftSections]);
+
+  // Count of hidden sections for the hint
+  const hiddenSectionCount = useMemo(
+    () => draftSections.filter(s => s.enabled === false || s.active === false).length,
+    [draftSections]
+  );
+
+  // If the active tab's section gets hidden, fall back to the Layout overview
+  useEffect(() => {
+    if (activeTab === 'layout') return;
+    const validIds = new Set(topTabs.map(t => t.id));
+    if (!validIds.has(activeTab)) {
+      setActiveTab('layout');
+    }
+  }, [topTabs, activeTab]);
+
+  // ── Actions ──
+  const handleSaveDraft = async () => {
+    const res = await saveDraft();
+    if (res.success) {
+      showToast('Draft content saved successfully.');
+    } else {
+      showToast('Failed to save draft.');
+    }
+  };
+
+  const handlePublish = async () => {
+    const publisher = admin?.name || 'Aditi Sharma';
+    const res = await publishChanges(publisher);
+    setIsPublishModalOpen(false);
+    if (res.success) {
+      showToast('Homepage changes published successfully.');
+    } else {
+      showToast('Failed to publish changes.');
+    }
+  };
+
+  const handlePromptReset = () => {
     setConfirmModal({
       title: 'Reset Homepage Content',
-      message: 'Are you sure you want to reset all homepage categories, promo banners, new arrivals, best sellers, hero slides, and layout back to the initial default state?',
+      message: 'Are you sure you want to reset all 16 homepage sections back to the initial default state? All unpublished drafts will be discarded.',
       confirmLabel: 'Reset Defaults',
       variant: 'danger',
-      onConfirm: () => {
-        resetContent();
+      onConfirm: async () => {
+        await resetContent();
         showToast('Homepage content reset to defaults successfully.');
       },
     });
   };
 
-  // ════════════════════════════════════════════════════════════════
-  // ─── CATEGORY TILES HANDLERS ───
-  // ════════════════════════════════════════════════════════════════
-  const handleOpenAddCategory = () => {
-    setCategoryModal({
-      mode: 'add',
-      data: {
-        id: `cat-${Date.now()}`,
-        name: '',
-        link: '/category/sarees',
-        targetRoute: 'sarees',
-        themeColor: 'Orange Gradient',
-        bgGradient: 'from-amber-200/90 via-orange-100 to-amber-100/80',
-        borderColor: 'border-orange-200/80',
-        textColor: 'text-amber-950',
-        image: sareeGolden,
-        order: categoryTiles.length + 1,
-        active: true,
-      }
-    });
+  // Drag & drop handlers for layout overview
+  const handleDragStart = (e, index) => {
+    setDraggedIdx(index);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleOpenEditCategory = (tile) => {
-    setCategoryModal({
-      mode: 'edit',
-      data: { ...tile }
-    });
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    setDragOverIdx(index);
   };
 
-  const handleSaveCategory = (data) => {
-    let updatedTiles;
-    if (categoryModal.mode === 'add') {
-      const newTile = {
-        ...data,
-        id: data.id || `cat-${Date.now()}`,
-        order: categoryTiles.length + 1,
-      };
-      updatedTiles = [...categoryTiles, newTile];
-      showToast(`Category tile "${data.name}" added successfully.`);
-    } else {
-      updatedTiles = categoryTiles.map(t => (t.id === data.id ? { ...t, ...data } : t));
-      showToast(`Category tile "${data.name}" updated successfully.`);
-    }
-    updateSectionContent('categories', { tiles: updatedTiles });
-    setCategoryModal(null);
+  const handleDrop = (e, index) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === index) return;
+    const reordered = [...draftSections];
+    const [moved] = reordered.splice(draggedIdx, 1);
+    reordered.splice(index, 0, moved);
+    reorderSections(reordered);
+    setDraggedIdx(null);
+    setDragOverIdx(null);
+    showToast('Section order updated.');
   };
 
-  const handleDeleteCategory = (tileId) => {
-    const target = categoryTiles.find(t => t.id === tileId);
-    setConfirmModal({
-      title: 'Delete Category Tile',
-      message: `Are you sure you want to remove the category tile "${target?.name || 'Selected Tile'}"?`,
-      confirmLabel: 'Delete Tile',
-      variant: 'danger',
-      onConfirm: () => {
-        const filtered = categoryTiles.filter(t => t.id !== tileId).map((t, i) => ({ ...t, order: i + 1 }));
-        updateSectionContent('categories', { tiles: filtered });
-        showToast('Category tile removed.');
-      }
-    });
-  };
-
-  const handleToggleCategoryActive = (tileId) => {
-    const updated = categoryTiles.map(t => (t.id === tileId ? { ...t, active: !t.active } : t));
-    updateSectionContent('categories', { tiles: updated });
-    const target = updated.find(t => t.id === tileId);
-    showToast(`"${target.name}" is now ${target.active ? 'visible on' : 'hidden from'} storefront.`);
-  };
-
-  const handleReorderCategoryTiles = (dragIndex, dropIndex) => {
-    if (dragIndex === dropIndex) return;
-    const newTiles = [...categoryTiles];
-    const [moved] = newTiles.splice(dragIndex, 1);
-    newTiles.splice(dropIndex, 0, moved);
-    const reindexed = newTiles.map((t, idx) => ({ ...t, order: idx + 1 }));
-    updateSectionContent('categories', { tiles: reindexed });
-    showToast('Category display order updated.');
-  };
-
-  // ════════════════════════════════════════════════════════════════
-  // ─── PROMO BANNERS HANDLERS ───
-  // ════════════════════════════════════════════════════════════════
-  const handleOpenAddBanner = () => {
-    setBannerModal({
-      mode: 'add',
-      data: {
-        id: `promo-${Date.now()}`,
-        order: promoBanners.length + 1,
-        title: '',
-        subtitle: '',
-        description: '',
-        type: 'PROMOTION',
-        ctaText: 'shop now',
-        ctaLink: '/products',
-        targetRoute: 'sarees',
-        image: sareeGolden,
-        active: true,
-      }
-    });
-  };
-
-  const handleOpenEditBanner = (banner) => {
-    setBannerModal({
-      mode: 'edit',
-      data: { ...banner }
-    });
-  };
-
-  const handleSaveBanner = (data) => {
-    let updated;
-    if (bannerModal.mode === 'add') {
-      const newBanner = {
-        ...data,
-        id: data.id || `promo-${Date.now()}`,
-        order: promoBanners.length + 1,
-      };
-      updated = [...promoBanners, newBanner];
-      showToast(`Promo banner "${data.title}" created.`);
-    } else {
-      updated = promoBanners.map(b => (b.id === data.id ? { ...b, ...data } : b));
-      showToast(`Promo banner "${data.title}" updated.`);
-    }
-    updateSectionContent('promo-banners', { banners: updated });
-    setBannerModal(null);
-  };
-
-  const handleDeleteBanner = (bannerId) => {
-    const target = promoBanners.find(b => b.id === bannerId);
-    setConfirmModal({
-      title: 'Delete Promo Banner',
-      message: `Are you sure you want to delete the banner "${target?.title || 'Selected Banner'}"?`,
-      confirmLabel: 'Delete Banner',
-      variant: 'danger',
-      onConfirm: () => {
-        const filtered = promoBanners.filter(b => b.id !== bannerId).map((b, i) => ({ ...b, order: i + 1 }));
-        updateSectionContent('promo-banners', { banners: filtered });
-        showToast('Promo banner deleted.');
-      }
-    });
-  };
-
-  const handleToggleBannerActive = (bannerId) => {
-    const updated = promoBanners.map(b => (b.id === bannerId ? { ...b, active: !b.active } : b));
-    updateSectionContent('promo-banners', { banners: updated });
-    const target = updated.find(b => b.id === bannerId);
-    showToast(`Banner "${target.title}" is now ${target.active ? 'active on' : 'hidden from'} storefront.`);
-  };
-
-  const handleReorderPromoBanners = (dragIndex, dropIndex) => {
-    if (dragIndex === dropIndex) return;
-    const newBanners = [...promoBanners];
-    const [moved] = newBanners.splice(dragIndex, 1);
-    newBanners.splice(dropIndex, 0, moved);
-    const reindexed = newBanners.map((b, idx) => ({ ...b, order: idx + 1 }));
-    updateSectionContent('promo-banners', { banners: reindexed });
-    showToast('Promo banner order updated.');
-  };
-
-  // ════════════════════════════════════════════════════════════════
-  // ─── PRODUCT LIST SECTION HANDLERS (NEW ARRIVALS / BEST SELLERS) ───
-  // ════════════════════════════════════════════════════════════════
-  const handleOpenProductPicker = (targetSection) => {
-    const currentList = targetSection === 'new-arrivals' ? newArrivalsItems : bestSellersItems;
-    const currentIds = currentList.map(item => item.productId || item.id);
-    setSelectedProductIdsInPicker(currentIds);
-    setPickerSearch('');
-    setPickerCategoryFilter('All');
-    setProductPickerModal({ targetSection });
-  };
-
-  const handleToggleProductInPicker = (prodId) => {
-    setSelectedProductIdsInPicker(prev =>
-      prev.includes(prodId) ? prev.filter(id => id !== prodId) : [...prev, prodId]
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-12">
+        <AppLoader minHeight="min-h-[360px]" message="Loading storefront content & section configurations..." />
+      </div>
     );
-  };
+  }
 
-  const handleSavePickedProducts = () => {
-    if (!productPickerModal) return;
-    const { targetSection } = productPickerModal;
-    const currentList = targetSection === 'new-arrivals' ? newArrivalsItems : bestSellersItems;
-
-    // Build the new customItems list
-    const newItems = selectedProductIdsInPicker.map((prodId, idx) => {
-      const existing = currentList.find(item => item.productId === prodId || item.id === prodId);
-      const productObj = products.find(p => p.id === prodId || p.slug === prodId);
-
-      if (existing) {
-        return {
-          ...existing,
-          order: idx + 1,
-        };
-      }
-
-      return {
-        id: productObj?.slug || prodId.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        productId: prodId,
-        name: productObj?.name || 'Store Product',
-        category: productObj?.category || 'Category',
-        price: productObj?.price || 4999,
-        image: productObj?.colors?.[0]?.images?.[0]?.url || sareeGolden,
-        order: idx + 1,
-        active: true,
-      };
-    });
-
-    updateSectionContent(targetSection, {
-      customItems: newItems,
-      selectedProductIds: selectedProductIdsInPicker,
-      maxItems: newItems.length,
-    });
-
-    const label = targetSection === 'new-arrivals' ? 'New Arrivals' : 'Best Sellers';
-    showToast(`${label} updated with ${newItems.length} products.`);
-    setProductPickerModal(null);
-  };
-
-  const handleToggleSectionProductActive = (sectionId, itemId) => {
-    const currentList = sectionId === 'new-arrivals' ? newArrivalsItems : bestSellersItems;
-    const updated = currentList.map(item => (item.id === itemId ? { ...item, active: !item.active } : item));
-    updateSectionContent(sectionId, { customItems: updated });
-    const target = updated.find(item => item.id === itemId);
-    showToast(`"${target.name}" is now ${target.active ? 'active' : 'hidden'}.`);
-  };
-
-  const handleDeleteSectionProduct = (sectionId, itemId) => {
-    const currentList = sectionId === 'new-arrivals' ? newArrivalsItems : bestSellersItems;
-    const target = currentList.find(item => item.id === itemId);
-
-    setConfirmModal({
-      title: 'Remove Product from Section',
-      message: `Are you sure you want to remove "${target?.name || 'this product'}" from this showcase section? (It will remain in your store catalog).`,
-      confirmLabel: 'Remove Product',
-      variant: 'danger',
-      onConfirm: () => {
-        const filtered = currentList.filter(item => item.id !== itemId).map((item, i) => ({ ...item, order: i + 1 }));
-        const newIds = filtered.map(item => item.productId || item.id);
-        updateSectionContent(sectionId, {
-          customItems: filtered,
-          selectedProductIds: newIds,
-          maxItems: filtered.length,
-        });
-        showToast('Product removed from section.');
-      }
-    });
-  };
-
-  const handleReorderSectionProducts = (sectionId, dragIndex, dropIndex) => {
-    if (dragIndex === dropIndex) return;
-    const currentList = sectionId === 'new-arrivals' ? [...newArrivalsItems] : [...bestSellersItems];
-    const [moved] = currentList.splice(dragIndex, 1);
-    currentList.splice(dropIndex, 0, moved);
-    const reindexed = currentList.map((item, idx) => ({ ...item, order: idx + 1 }));
-    const newIds = reindexed.map(item => item.productId || item.id);
-    updateSectionContent(sectionId, {
-      customItems: reindexed,
-      selectedProductIds: newIds,
-    });
-    showToast('Display order updated.');
-  };
-
-  // ════════════════════════════════════════════════════════════════
-  // ─── FILTERED DATA CALCULATIONS ───
-  // ════════════════════════════════════════════════════════════════
-  // Filtered categories
-  const filteredCategories = useMemo(() => {
-    return categoryTiles.filter(t => {
-      const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) ||
-        (t.link || '').toLowerCase().includes(search.toLowerCase()) ||
-        (t.themeColor || '').toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === 'All' ? true : statusFilter === 'Active' ? t.active : !t.active;
-      return matchSearch && matchStatus;
-    });
-  }, [categoryTiles, search, statusFilter]);
-
-  // Filtered promo banners
-  const filteredBanners = useMemo(() => {
-    return promoBanners.filter(b => {
-      const matchSearch = b.title.toLowerCase().includes(search.toLowerCase()) ||
-        (b.subtitle || '').toLowerCase().includes(search.toLowerCase()) ||
-        (b.description || '').toLowerCase().includes(search.toLowerCase()) ||
-        (b.type || '').toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === 'All' ? true : statusFilter === 'Active' ? b.active : !b.active;
-      return matchSearch && matchStatus;
-    });
-  }, [promoBanners, search, statusFilter]);
-
-  // Filtered new arrivals
-  const filteredNewArrivals = useMemo(() => {
-    return newArrivalsItems.filter(item => {
-      const matchSearch = item.name.toLowerCase().includes(search.toLowerCase()) ||
-        (item.id || '').toLowerCase().includes(search.toLowerCase()) ||
-        (item.category || '').toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === 'All' ? true : statusFilter === 'Active' ? item.active : !item.active;
-      return matchSearch && matchStatus;
-    });
-  }, [newArrivalsItems, search, statusFilter]);
-
-  // Filtered best sellers
-  const filteredBestSellers = useMemo(() => {
-    return bestSellersItems.filter(item => {
-      const matchSearch = item.name.toLowerCase().includes(search.toLowerCase()) ||
-        (item.id || '').toLowerCase().includes(search.toLowerCase()) ||
-        (item.category || '').toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === 'All' ? true : statusFilter === 'Active' ? item.active : !item.active;
-      return matchSearch && matchStatus;
-    });
-  }, [bestSellersItems, search, statusFilter]);
-
-  // Available catalog products for picker modal
-  const pickerFilteredProducts = useMemo(() => {
-    return products.filter(p => {
-      const matchCat = pickerCategoryFilter === 'All' ? true : p.category === pickerCategoryFilter;
-      const matchSearch = p.name.toLowerCase().includes(pickerSearch.toLowerCase()) ||
-        (p.id || '').toLowerCase().includes(pickerSearch.toLowerCase()) ||
-        (p.category || '').toLowerCase().includes(pickerSearch.toLowerCase());
-      return matchCat && matchSearch;
-    });
-  }, [products, pickerCategoryFilter, pickerSearch]);
-
-  // Unique categories list with counts for picker
-  const pickerCategories = useMemo(() => {
-    const catMap = {};
-    products.forEach(p => {
-      const c = p.category || 'Other';
-      catMap[c] = (catMap[c] || 0) + 1;
-    });
-    return Object.entries(catMap).map(([name, count]) => ({ name, count }));
-  }, [products]);
-
-  // Catalog total products count
-  const totalStoreProducts = products.length > 0 ? products.length : 70;
+  if (!isAuthorized) {
+    return (
+      <div className="bg-white rounded-2xl border border-rose-200 p-8 text-center space-y-4 shadow-sm">
+        <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+          <AlertTriangle size={24} />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Content Management Access Restricted</h2>
+        <p className="text-xs text-slate-500 max-w-md mx-auto">
+          Your current administrative role does not have permission to modify storefront content. Please contact a Super Admin or Content Manager.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 relative pb-16 font-sans">
-      {/* Toast notification */}
+    <div className="space-y-6 relative pb-20 font-sans">
+      {/* ── Toast Notification ── */}
       {toast && (
         <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-2xl border border-slate-700 animate-[fadeInUp_0.25s_ease-out]">
           <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
@@ -568,43 +283,86 @@ export default function ContentPage() {
         </div>
       )}
 
-      {/* Page Header */}
+      {/* ── Page Header with Status & Top Actions ── */}
       <AdminPageHeader
-        title="Homepage Content"
-        subtitle="Manage and customize your storefront homepage — control layout, promotional banners, hero slides, and featured sections from one place."
+        title="Content Management"
+        subtitle="Manage the content shown across the Suka Fashions storefront."
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+          {/* Status Badge */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-white shadow-2xs">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                status === 'DRAFT' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+              }`}
+            />
+            <div className="text-[11px] leading-tight">
+              <span className="font-bold text-slate-800">
+                {status === 'DRAFT' ? 'DRAFT CHANGES' : 'PUBLISHED'}
+              </span>
+              <span className="text-[10px] text-slate-400 block">
+                Last: {lastPublishedAt}
+              </span>
+            </div>
+          </div>
+
+          {/* Version History Button */}
           <button
-            onClick={promptReset}
-            className="flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 text-xs font-semibold text-slate-600 hover:text-red-600 hover:border-red-200 rounded-xl hover:bg-red-50/50 transition-colors shadow-2xs cursor-pointer bg-white"
+            onClick={() => setIsHistoryModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs bg-white cursor-pointer"
+            title="View content version history"
           >
-            <RotateCcw size={13} /> Reset Defaults
+            <History size={13} /> History
           </button>
+
+          {/* Preview Store Button */}
+          <a
+            href="/?preview=true"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3.5 py-2 border border-brand-teal/40 text-xs font-bold text-brand-teal bg-brand-powder/40 hover:bg-brand-powder rounded-xl transition-all shadow-2xs"
+          >
+            <Eye size={13} /> Preview Store
+          </a>
+
+          {/* Open Live Store Button */}
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm hover:shadow"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs bg-white"
           >
-            <ExternalLink size={13} /> View Live Store
+            <ExternalLink size={13} /> Live Store
           </a>
+
+          {/* Save Draft Button */}
+          <button
+            onClick={handleSaveDraft}
+            className="flex items-center gap-1.5 px-3.5 py-2 border border-slate-300 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 rounded-xl transition-all shadow-2xs cursor-pointer"
+          >
+            <Save size={13} /> Save Draft
+          </button>
+
+          {/* Publish Changes Button */}
+          <button
+            onClick={() => setIsPublishModalOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
+          >
+            <Send size={13} /> Publish Changes
+          </button>
         </div>
       </AdminPageHeader>
 
-      {/* Top Navigation Tabs Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+      {/* ── Navigation Tabs Grid (wraps naturally, no horizontal scroll) ── */}
+      <div className="flex flex-wrap gap-2">
         {topTabs.map((tab) => {
           const TabIcon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setSearch('');
-                setStatusFilter('All');
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-slate-900 text-white shadow-md'
                   : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50 hover:border-slate-300 shadow-2xs'
@@ -612,2003 +370,2662 @@ export default function ContentPage() {
             >
               <TabIcon size={14} className={isActive ? 'text-emerald-400' : 'text-slate-500'} />
               <span>{tab.label}</span>
+              {tab.badge && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                  isActive ? 'bg-slate-800 text-emerald-300' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {tab.badge}
+                </span>
+              )}
             </button>
           );
         })}
+
+        {/* Hidden sections hint */}
+        {hiddenSectionCount > 0 && (
+          <button
+            onClick={() => setActiveTab('layout')}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-medium whitespace-nowrap bg-slate-50 text-slate-400 border border-dashed border-slate-200 hover:border-slate-300 hover:text-slate-600 transition-all cursor-pointer"
+            title="Hidden sections are not shown here. Open Homepage Layout to enable them."
+          >
+            <EyeOff size={13} />
+            <span>{hiddenSectionCount} section{hiddenSectionCount > 1 ? 's' : ''} hidden — enable in Layout</span>
+          </button>
+        )}
       </div>
 
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── TAB 1: SHOP BY CATEGORY (IMAGE 5) ─── */}
+      {/* ─── TAB: HOMEPAGE LAYOUT & SECTION ORDER OVERVIEW ─── */}
       {/* ════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'categories' && (
+      {activeTab === 'layout' && (
         <div className="space-y-6">
-          {/* Section Header */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5">
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight">Shop By Category Management</h2>
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight">Homepage Sections & Display Order</h2>
                 <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                  {categoryTiles.length} Tiles
+                  {draftSections.length} Manageable Sections
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-3xl">
-                Configure the categories and collection cards displayed in the "Shop By Category" section of the homepage. Customise tile labels, routing, colors, background gradients, and imagery in real-time.
+              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+                Enable or disable sections, drag to reorder their appearance on the customer landing page, and click Edit to customize individual section content.
               </p>
             </div>
 
             <div className="flex items-center gap-2.5">
               <button
-                onClick={promptReset}
-                className="flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-all cursor-pointer bg-white shadow-2xs"
+                onClick={handlePromptReset}
+                className="flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 text-xs font-semibold text-slate-600 hover:text-red-600 hover:border-red-200 rounded-xl hover:bg-red-50/50 transition-colors shadow-2xs cursor-pointer bg-white"
               >
                 <RotateCcw size={13} /> Reset Defaults
-              </button>
-              <button
-                onClick={handleOpenAddCategory}
-                className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
-              >
-                <Plus size={14} /> Add Category Tile
               </button>
             </div>
           </div>
 
-          {/* LIVE STOREFRONT PREVIEW CONTAINER (IMAGE 5) */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2 text-indigo-900 text-xs font-bold uppercase tracking-wider">
-                <Sparkles size={14} className="text-indigo-600" />
-                <span>LIVE STOREFRONT PREVIEW</span>
+          {/* Section List Table / Cards */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div className="divide-y divide-slate-100">
+              {draftSections.map((sec, idx) => {
+                const isEnabled = sec.enabled !== false && sec.active !== false;
+                const isDragging = draggedIdx === idx;
+                const isOver = dragOverIdx === idx;
+
+                return (
+                  <div
+                    key={sec.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, idx)}
+                    onDragOver={(e) => handleDragOver(e, idx)}
+                    onDrop={(e) => handleDrop(e, idx)}
+                    className={`p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
+                      isDragging ? 'opacity-40 bg-slate-50' : isOver ? 'bg-indigo-50/60 border-indigo-200' : 'hover:bg-slate-50/50'
+                    }`}
+                  >
+                    {/* Left: Grab Handle, Order Number, Title & Info */}
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      {/* Drag Handle */}
+                      <div className="text-slate-400 hover:text-slate-700 cursor-grab active:cursor-grabbing p-1">
+                        <GripVertical size={16} />
+                      </div>
+
+                      {/* Order Badge */}
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                        {idx + 1}
+                      </div>
+
+                      {/* Section Info */}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm text-slate-900">{sec.label}</span>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                              isEnabled
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-slate-100 text-slate-500 border border-slate-200'
+                            }`}
+                          >
+                            {isEnabled ? 'Active' : 'Hidden'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 truncate mt-0.5">{sec.desc}</p>
+                      </div>
+                    </div>
+
+                    {/* Right: Reorder Arrows, Visibility Toggle & Edit Button */}
+                    <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-center flex-shrink-0">
+                      {/* Move Up / Down Buttons */}
+                      <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white shadow-2xs">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => moveSectionUp(sec.id)}
+                          aria-label="Move section up"
+                          className="p-1.5 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                          title="Move Up"
+                        >
+                          <ArrowUp size={13} />
+                        </button>
+                        <div className="w-px h-4 bg-slate-200" />
+                        <button
+                          type="button"
+                          disabled={idx === draftSections.length - 1}
+                          onClick={() => moveSectionDown(sec.id)}
+                          aria-label="Move section down"
+                          className="p-1.5 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                          title="Move Down"
+                        >
+                          <ArrowDown size={13} />
+                        </button>
+                      </div>
+
+                      {/* Visibility Toggle Button */}
+                      <button
+                        onClick={() => {
+                          toggleSection(sec.id);
+                          showToast(`"${sec.label}" visibility toggled.`);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors cursor-pointer ${
+                          isEnabled
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                            : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {isEnabled ? <Eye size={13} /> : <EyeOff size={13} />}
+                        <span>{isEnabled ? 'Visible on Store' : 'Hidden'}</span>
+                      </button>
+
+                      {/* Edit Section Button */}
+                      <button
+                        onClick={() => setActiveTab(sec.id)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-all shadow-xs cursor-pointer"
+                      >
+                        <Edit size={12} /> Edit
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ─── TAB: ANNOUNCEMENT BAR (SECTION 1) ─── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'announcement' && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Announcement Bar Settings</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Control header alert messages, speed, and brand-safe color theme.</p>
+            </div>
+            <button
+              onClick={() => toggleSection('announcement')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold border cursor-pointer ${
+                currentSection?.enabled !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'
+              }`}
+            >
+              {currentSection?.enabled !== false ? 'Enabled' : 'Disabled'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Color Theme Preset
+              </label>
+              <select
+                value={currentSection?.content?.theme || 'default'}
+                onChange={(e) => updateSectionContent('announcement', { theme: e.target.value })}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white focus:outline-none focus:border-brand-teal"
+              >
+                <option value="default">Default Teal (Brand Signature)</option>
+                <option value="light">Light (Soft Cream & Navy)</option>
+                <option value="dark">Dark (Deep Midnight Navy)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Mobile Rotation Speed (Seconds)
+              </label>
+              <input
+                type="number"
+                min="2"
+                max="15"
+                value={currentSection?.content?.speedSeconds || 4}
+                onChange={(e) => updateSectionContent('announcement', { speedSeconds: Number(e.target.value) })}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white focus:outline-none focus:border-brand-teal"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-2">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Announcement Messages (3 Max)</h3>
+            {(currentSection?.content?.items || []).map((item, idx) => (
+              <div key={item.id || idx} className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <span className="text-xs font-bold text-slate-400 w-6">#{idx + 1}</span>
+                <input
+                  type="text"
+                  value={item.text}
+                  onChange={(e) => {
+                    const newItems = [...(currentSection?.content?.items || [])];
+                    newItems[idx] = { ...newItems[idx], text: e.target.value };
+                    updateSectionContent('announcement', { items: newItems });
+                  }}
+                  className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-medium"
+                  placeholder="e.g. FREE SHIPPING ABOVE ₹1999"
+                />
+                <select
+                  value={item.icon || 'Truck'}
+                  onChange={(e) => {
+                    const newItems = [...(currentSection?.content?.items || [])];
+                    newItems[idx] = { ...newItems[idx], icon: e.target.value };
+                    updateSectionContent('announcement', { items: newItems });
+                  }}
+                  className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800"
+                >
+                  <option value="Truck">Truck (Delivery)</option>
+                  <option value="RefreshCcw">RefreshCcw (Returns)</option>
+                  <option value="Banknote">Banknote (Cash on Delivery)</option>
+                  <option value="Sparkles">Sparkles (Festive Offer)</option>
+                  <option value="Tag">Tag (Discount)</option>
+                  <option value="Award">Award (Quality)</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newItems = [...(currentSection?.content?.items || [])];
+                    newItems[idx] = { ...newItems[idx], enabled: !newItems[idx].enabled };
+                    updateSectionContent('announcement', { items: newItems });
+                  }}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold border cursor-pointer ${
+                    item.enabled !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                  }`}
+                >
+                  {item.enabled !== false ? 'Active' : 'Disabled'}
+                </button>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Customer View Synchronized</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ─── TAB: HERO SLIDER (SECTION 2 WITH LIVE PREVIEW) ─── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'hero' && (
+        <div className="space-y-6">
+          {/* Header & Controls */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Hero Slider Editor & Live Preview</h2>
+                <p className="text-xs text-slate-500 mt-0.5">Customize hero slides, imagery, and button actions with real-time preview.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const currentSlides = currentSection?.content?.slides || [];
+                    const newSlide = {
+                      id: Date.now(),
+                      eyebrow: 'NEW COLLECTION',
+                      headingLine1: 'Timeless',
+                      headingLine2: 'Elegance.',
+                      subtitle: 'Intricate embroideries. Handcrafted with love.',
+                      ctaText: 'SHOP COLLECTION',
+                      ctaLink: '/products',
+                      secondaryCtaText: 'EXPLORE',
+                      secondaryCtaLink: '/category/sarees',
+                      mainImage: sareeGolden,
+                      detailImageLeft: sareeBeigeMaroon,
+                      detailImageRight: sareeBeigeOrange,
+                      mainLabel: 'Timeless Elegance.',
+                      leftEyebrow: 'DETAILS',
+                      leftTitle: 'Handcrafted\nembroidery',
+                      rightEyebrow: 'THE EDIT',
+                      rightTitle: 'Modern festive\nsilhouettes',
+                      accentBg: '#EBF5F5',
+                      enabled: true,
+                    };
+                    updateSectionContent('hero', { slides: [...currentSlides, newSlide] });
+                    setActiveHeroSlideIdx(currentSlides.length);
+                    showToast('New hero slide added.');
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+                >
+                  <Plus size={13} /> Add Slide
+                </button>
               </div>
             </div>
 
-            {/* Live Storefront Component Preview Box */}
-            <div className="p-6 sm:p-8 bg-white rounded-2xl border border-slate-200/80 shadow-inner overflow-hidden">
-              {/* Landing Page Category Heading */}
-              <div className="text-center mb-5 sm:mb-6">
-                <p className="font-sans text-[9.5px] sm:text-[10.5px] tracking-[0.28em] text-brand-teal uppercase font-semibold mb-1 sm:mb-1.5">
-                  {categoriesSection?.content?.eyebrow || 'COLLECTIONS'}
-                </p>
-                <h3 className="font-serif text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase">
-                  {categoriesSection?.content?.title || 'SHOP BY CATEGORY'}
-                </h3>
-                <div className="w-9 h-[2px] bg-brand-teal mx-auto mt-2" />
-              </div>
+            {/* Slide Selection Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+              {(currentSection?.content?.slides || []).map((slide, sIdx) => (
+                <button
+                  key={slide.id || sIdx}
+                  onClick={() => setActiveHeroSlideIdx(sIdx)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                    activeHeroSlideIdx === sIdx
+                      ? 'bg-brand-teal text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  <span>Slide {sIdx + 1}</span>
+                  <span className={`w-2 h-2 rounded-full ${slide.enabled !== false ? 'bg-emerald-300' : 'bg-rose-300'}`} />
+                </button>
+              ))}
+            </div>
+          </div>
 
-              {/* Circular Categories Row (Exact Match to Landing Page) */}
-              <div className="flex items-start justify-start sm:justify-center gap-3 min-[390px]:gap-4 sm:gap-6 md:gap-7 lg:gap-8 pb-3 px-2 overflow-x-auto no-scrollbar scroll-smooth">
-                {categoryTiles.map((tile) => (
+          {/* ── LIVE HERO PREVIEW COMPONENT ── */}
+          {(() => {
+            const currentSlides = currentSection?.content?.slides || [];
+            const slide = currentSlides[activeHeroSlideIdx] || currentSlides[0] || {};
+            const headingLines = slide.headingLine1 || slide.headingLine2
+              ? [slide.headingLine1 || '', slide.headingLine2 || '']
+              : ['Grace in', 'Every Drape.'];
+
+            return (
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2 text-indigo-900 text-xs font-bold uppercase tracking-wider">
+                    <Sparkles size={14} className="text-indigo-600" />
+                    <span>LIVE HERO PREVIEW (SLIDE {activeHeroSlideIdx + 1})</span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                    Live Reactive
+                  </span>
+                </div>
+
+                {/* Scaled Preview Box */}
+                <div
+                  className="rounded-xl border border-slate-200 overflow-hidden relative p-6 sm:p-8"
+                  style={{ background: `linear-gradient(140deg, #FAFAF8 52%, ${slide.accentBg || '#EBF5F5'} 100%)` }}
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6 items-center">
+                    {/* Left text */}
+                    <div className="space-y-3">
+                      <span className="text-[10px] font-bold tracking-[0.25em] text-brand-teal uppercase block">
+                        {slide.eyebrow || 'FESTIVE COUTURE'}
+                      </span>
+                      <h3 className="font-serif text-2xl sm:text-4xl text-brand-navy leading-tight">
+                        {headingLines.join(' ')}
+                      </h3>
+                      <p className="text-xs text-brand-navy/70 leading-relaxed max-w-sm">
+                        {slide.subtitle || 'Experience exquisite weaves and handcrafted bridal luxury.'}
+                      </p>
+                      <div className="flex items-center gap-2 pt-2">
+                        <span className="bg-brand-teal text-white text-[10px] font-bold uppercase tracking-wider py-2 px-4 rounded-sm">
+                          {slide.ctaText || 'SHOP NEW ARRIVALS'}
+                        </span>
+                        <span className="border border-brand-navy/30 text-brand-navy text-[10px] font-bold uppercase tracking-wider py-2 px-3 rounded-sm bg-white/60">
+                          {slide.secondaryCtaText || 'EXPLORE'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right Card Trio Preview */}
+                    <div className="flex items-center justify-center gap-2 relative h-48 sm:h-56">
+                      <img
+                        src={slide.detailImageLeft || sareeBeigeMaroon}
+                        alt="Left detail"
+                        className="w-20 h-32 object-cover rounded-lg shadow-md border border-white"
+                      />
+                      <img
+                        src={slide.mainImage || sareeGolden}
+                        alt="Main preview"
+                        className="w-32 h-48 object-cover rounded-xl shadow-xl border-2 border-white z-10 scale-105"
+                      />
+                      <img
+                        src={slide.detailImageRight || sareeBeigeOrange}
+                        alt="Right detail"
+                        className="w-20 h-32 object-cover rounded-lg shadow-md border border-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── CURRENT SLIDE FORM EDITOR ── */}
+          {(() => {
+            const currentSlides = currentSection?.content?.slides || [];
+            const slide = currentSlides[activeHeroSlideIdx];
+            if (!slide) return null;
+
+            const updateCurrentSlide = (fields) => {
+              const updatedSlides = currentSlides.map((s, idx) =>
+                idx === activeHeroSlideIdx ? { ...s, ...fields } : s
+              );
+              updateSectionContent('hero', { slides: updatedSlides });
+            };
+
+            return (
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <h3 className="font-bold text-slate-900 text-sm">Editing Slide #{activeHeroSlideIdx + 1}</h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateCurrentSlide({ enabled: slide.enabled === false ? true : false })}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border cursor-pointer ${
+                        slide.enabled !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}
+                    >
+                      {slide.enabled !== false ? 'Slide Active' : 'Slide Hidden'}
+                    </button>
+                    {currentSlides.length > 1 && (
+                      <button
+                        onClick={() => {
+                          const filtered = currentSlides.filter((_, idx) => idx !== activeHeroSlideIdx);
+                          updateSectionContent('hero', { slides: filtered });
+                          setActiveHeroSlideIdx(Math.max(0, activeHeroSlideIdx - 1));
+                          showToast('Slide deleted.');
+                        }}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        title="Delete Slide"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Form Fields Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Eyebrow Tag
+                    </label>
+                    <input
+                      type="text"
+                      value={slide.eyebrow || ''}
+                      onChange={(e) => updateCurrentSlide({ eyebrow: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                      placeholder="e.g. FESTIVE COUTURE"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Social Proof Text
+                    </label>
+                    <input
+                      type="text"
+                      value={currentSection?.content?.socialProofText || 'Loved by 10,000+ Women'}
+                      onChange={(e) => updateSectionContent('hero', { socialProofText: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Heading Line 1
+                    </label>
+                    <input
+                      type="text"
+                      value={slide.headingLine1 || ''}
+                      onChange={(e) => updateCurrentSlide({ headingLine1: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                      placeholder="e.g. Grace in"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Heading Line 2
+                    </label>
+                    <input
+                      type="text"
+                      value={slide.headingLine2 || ''}
+                      onChange={(e) => updateCurrentSlide({ headingLine2: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                      placeholder="e.g. Every Drape."
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Subtitle / Description
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={slide.subtitle || ''}
+                      onChange={(e) => updateCurrentSlide({ subtitle: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                      placeholder="Enter editorial description..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Primary Button Text
+                    </label>
+                    <input
+                      type="text"
+                      value={slide.ctaText || ''}
+                      onChange={(e) => updateCurrentSlide({ ctaText: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Primary Button Link
+                    </label>
+                    <input
+                      type="text"
+                      value={slide.ctaLink || ''}
+                      onChange={(e) => updateCurrentSlide({ ctaLink: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Secondary Button Text
+                    </label>
+                    <input
+                      type="text"
+                      value={slide.secondaryCtaText || ''}
+                      onChange={(e) => updateCurrentSlide({ secondaryCtaText: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Secondary Button Link
+                    </label>
+                    <input
+                      type="text"
+                      value={slide.secondaryCtaLink || ''}
+                      onChange={(e) => updateCurrentSlide({ secondaryCtaLink: e.target.value })}
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* ── Images Selection Row with Dimensions Guidance ── */}
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Hero Slide Images</h4>
+                    <span className="text-[11px] text-slate-500 font-medium">Recommended aspect ratio: Portrait 4:5</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Main Image */}
+                    <div className="p-3 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2">
+                      <span className="text-[11px] font-bold text-slate-700 block">Main Center Image (1200×1500)</span>
+                      <div className="aspect-[3/4] rounded-lg overflow-hidden border border-slate-200 bg-white">
+                        <img src={slide.mainImage} alt="Main" className="w-full h-full object-cover" />
+                      </div>
+                      <button
+                        onClick={() => setImageModal({
+                          title: 'Select Main Hero Image',
+                          currentUrl: slide.mainImage,
+                          onSelect: (url) => updateCurrentSlide({ mainImage: url }),
+                        })}
+                        className="w-full py-1.5 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 cursor-pointer shadow-2xs"
+                      >
+                        Change Image
+                      </button>
+                    </div>
+
+                    {/* Left Detail Image */}
+                    <div className="p-3 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2">
+                      <span className="text-[11px] font-bold text-slate-700 block">Left Supporting (800×1000)</span>
+                      <div className="aspect-[3/4] rounded-lg overflow-hidden border border-slate-200 bg-white">
+                        <img src={slide.detailImageLeft} alt="Left" className="w-full h-full object-cover" />
+                      </div>
+                      <button
+                        onClick={() => setImageModal({
+                          title: 'Select Left Supporting Image',
+                          currentUrl: slide.detailImageLeft,
+                          onSelect: (url) => updateCurrentSlide({ detailImageLeft: url }),
+                        })}
+                        className="w-full py-1.5 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 cursor-pointer shadow-2xs"
+                      >
+                        Change Image
+                      </button>
+                    </div>
+
+                    {/* Right Detail Image */}
+                    <div className="p-3 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2">
+                      <span className="text-[11px] font-bold text-slate-700 block">Right Supporting (800×1000)</span>
+                      <div className="aspect-[3/4] rounded-lg overflow-hidden border border-slate-200 bg-white">
+                        <img src={slide.detailImageRight} alt="Right" className="w-full h-full object-cover" />
+                      </div>
+                      <button
+                        onClick={() => setImageModal({
+                          title: 'Select Right Supporting Image',
+                          currentUrl: slide.detailImageRight,
+                          onSelect: (url) => updateCurrentSlide({ detailImageRight: url }),
+                        })}
+                        className="w-full py-1.5 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 cursor-pointer shadow-2xs"
+                      >
+                        Change Image
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ─── TAB: SHOP BY CATEGORY (SECTION 3) ─── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'categories' && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Shop By Category Configuration</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Manage circular category bubbles, titles, images, and target routes.</p>
+            </div>
+            <button
+              onClick={() => {
+                const currentTiles = currentSection?.content?.tiles || [];
+                const newTile = {
+                  id: `cat-${Date.now()}`,
+                  categoryId: 'CAT-CUSTOM',
+                  name: 'New Collection',
+                  link: '/products',
+                  image: sareeGolden,
+                  themeColor: 'Teal Elegance',
+                  order: currentTiles.length + 1,
+                  enabled: true,
+                };
+                updateSectionContent('categories', { tiles: [...currentTiles, newTile] });
+                showToast('New category tile added.');
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+            >
+              <Plus size={13} /> Add Category Tile
+            </button>
+          </div>
+
+          {/* Tiles Grid / Table */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {(currentSection?.content?.tiles || []).map((tile, tIdx) => (
+              <div key={tile.id || tIdx} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-400">#{tIdx + 1}</span>
                   <button
-                    key={tile.id}
-                    type="button"
-                    onClick={() => handleOpenEditCategory(tile)}
-                    title={`Click to edit "${tile.name}"`}
-                    className={`flex-shrink-0 w-[74px] min-[390px]:w-[80px] sm:w-[95px] md:w-[105px] lg:w-[115px] flex flex-col items-center group cursor-pointer transition-all ${
-                      tile.active ? 'opacity-100' : 'opacity-45 hover:opacity-80'
+                    onClick={() => {
+                      const updated = (currentSection?.content?.tiles || []).map((t, idx) =>
+                        idx === tIdx ? { ...t, enabled: t.enabled === false ? true : false } : t
+                      );
+                      updateSectionContent('categories', { tiles: updated });
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                      tile.enabled !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
                     }`}
                   >
-                    {/* Circle Container */}
-                    <div className="relative w-[70px] h-[70px] min-[390px]:w-[76px] min-[390px]:h-[76px] sm:w-[92px] sm:h-[92px] md:w-[102px] md:h-[102px] lg:w-[112px] lg:h-[112px] rounded-full overflow-hidden border-2 border-brand-powder bg-brand-cream/30 shadow-xs group-hover:border-brand-teal group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
-                      <img
-                        src={tile.image}
-                        alt={tile.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    {tile.enabled !== false ? 'Active' : 'Hidden'}
+                  </button>
+                </div>
+
+                {/* Circle Image & Selector */}
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-full overflow-hidden border border-slate-200 bg-white flex-shrink-0">
+                    <img src={tile.image} alt={tile.name} className="w-full h-full object-cover" />
+                  </div>
+                  <button
+                    onClick={() => setImageModal({
+                      title: `Select Image for ${tile.name}`,
+                      currentUrl: tile.image,
+                      onSelect: (url) => {
+                        const updated = (currentSection?.content?.tiles || []).map((t, idx) =>
+                          idx === tIdx ? { ...t, image: url } : t
+                        );
+                        updateSectionContent('categories', { tiles: updated });
+                      }
+                    })}
+                    className="text-xs font-semibold text-brand-teal hover:underline"
+                  >
+                    Change Image
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Display Name</label>
+                  <input
+                    type="text"
+                    value={tile.name}
+                    onChange={(e) => {
+                      const updated = (currentSection?.content?.tiles || []).map((t, idx) =>
+                        idx === tIdx ? { ...t, name: e.target.value } : t
+                      );
+                      updateSectionContent('categories', { tiles: updated });
+                    }}
+                    className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Target Route</label>
+                  <input
+                    type="text"
+                    value={tile.link || ''}
+                    onChange={(e) => {
+                      const updated = (currentSection?.content?.tiles || []).map((t, idx) =>
+                        idx === tIdx ? { ...t, link: e.target.value } : t
+                      );
+                      updateSectionContent('categories', { tiles: updated });
+                    }}
+                    className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white font-mono"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ─── TAB: NEW ARRIVALS & BEST SELLERS (SECTIONS 4 & 5) ─── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {(activeTab === 'new-arrivals' || activeTab === 'best-sellers') && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">
+                {activeTab === 'new-arrivals' ? 'New Arrivals Showcase' : 'Best Sellers Showcase'}
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Switch between Automatic (catalog flag driven) and Manual (specific curated product IDs).
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => toggleSection(activeTab)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border cursor-pointer ${
+                  currentSection?.enabled !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'
+                }`}
+              >
+                {currentSection?.enabled !== false ? 'Section Visible' : 'Section Hidden'}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Section Eyebrow
+              </label>
+              <input
+                type="text"
+                value={currentSection?.content?.eyebrow || ''}
+                onChange={(e) => updateSectionContent(activeTab, { eyebrow: e.target.value })}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Section Heading
+              </label>
+              <input
+                type="text"
+                value={currentSection?.content?.title || ''}
+                onChange={(e) => updateSectionContent(activeTab, { title: e.target.value })}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Data Mode
+              </label>
+              <select
+                value={currentSection?.content?.dataMode || 'Automatic'}
+                onChange={(e) => updateSectionContent(activeTab, { dataMode: e.target.value })}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white font-bold"
+              >
+                <option value="Automatic">Automatic (Live isNew / isBestSeller flag)</option>
+                <option value="Manual">Manual (Select Specific Product IDs)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Product Picker & ID List */}
+          <div className="pt-4 border-t border-slate-100 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Selected Catalog Products</h3>
+                <p className="text-xs text-slate-500">
+                  {currentSection?.content?.dataMode === 'Automatic'
+                    ? 'In Automatic mode, products marked with appropriate badges in Product Catalog will automatically display.'
+                    : 'Curate exact product order for this showcase.'}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setProductPickerModal({
+                  sectionId: activeTab,
+                  selectedIds: currentSection?.content?.selectedProductIds || [],
+                })}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+              >
+                <Plus size={13} /> Select Products
+              </button>
+            </div>
+
+            {/* Product IDs Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              {(currentSection?.content?.selectedProductIds || []).map((pId) => {
+                const pObj = products.find(p => p.id === pId || p.slug === pId);
+                const imgSrc = pObj?.colors?.[0]?.images?.[0]?.url || sareeGolden;
+
+                return (
+                  <div key={pId} className="p-3 rounded-xl border border-slate-200 bg-slate-50/60 relative group">
+                    <div className="aspect-[3/4] rounded-lg overflow-hidden bg-white mb-2 border border-slate-200">
+                      <img src={imgSrc} alt={pObj?.name || pId} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-800 block truncate">{pObj?.name || pId}</span>
+                    <span className="text-[10px] text-slate-400 block font-mono">{pId}</span>
+                    <button
+                      onClick={() => {
+                        const filtered = (currentSection?.content?.selectedProductIds || []).filter(id => id !== pId);
+                        updateSectionContent(activeTab, { selectedProductIds: filtered });
+                      }}
+                      className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 text-red-600 shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ─── TAB: PROMOTIONAL BANNERS (SECTION 6) ─── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'promo-banners' && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Promotional Banners</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Manage full-width campaign banners, titles, and CTA redirects.</p>
+            </div>
+            <button
+              onClick={() => {
+                const currentBanners = currentSection?.content?.banners || [];
+                const newB = {
+                  id: `promo-${Date.now()}`,
+                  order: currentBanners.length + 1,
+                  title: 'Special Festive Campaign',
+                  subtitle: 'Exclusive Handcrafted Sarees',
+                  description: 'Explore limited edition designs at celebratory prices.',
+                  type: 'PROMOTION',
+                  ctaText: 'SHOP NOW',
+                  ctaLink: '/products',
+                  image: sareeGolden,
+                  enabled: true,
+                };
+                updateSectionContent('promo-banners', { banners: [...currentBanners, newB] });
+                showToast('Promotional banner added.');
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+            >
+              <Plus size={13} /> Add Banner
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {(currentSection?.content?.banners || []).map((b, bIdx) => (
+              <div key={b.id || bIdx} className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800">Banner #{bIdx + 1}: {b.title}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const updated = (currentSection?.content?.banners || []).map((item, idx) =>
+                          idx === bIdx ? { ...item, enabled: item.enabled === false ? true : false } : item
+                        );
+                        updateSectionContent('promo-banners', { banners: updated });
+                      }}
+                      className={`px-2.5 py-1 rounded text-xs font-bold border ${
+                        b.enabled !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}
+                    >
+                      {b.enabled !== false ? 'Active' : 'Hidden'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const filtered = (currentSection?.content?.banners || []).filter((_, idx) => idx !== bIdx);
+                        updateSectionContent('promo-banners', { banners: filtered });
+                        showToast('Banner removed.');
+                      }}
+                      className="text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="aspect-[16/7] rounded-xl overflow-hidden border border-slate-200 relative group">
+                    <img src={b.image} alt={b.title} className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => setImageModal({
+                        title: 'Select Banner Image (Recommended 1600×700)',
+                        currentUrl: b.image,
+                        onSelect: (url) => {
+                          const updated = (currentSection?.content?.banners || []).map((item, idx) =>
+                            idx === bIdx ? { ...item, image: url } : item
+                          );
+                          updateSectionContent('promo-banners', { banners: updated });
+                        }
+                      })}
+                      className="absolute inset-0 bg-slate-900/60 text-white text-xs font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                    >
+                      Change Image
+                    </button>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Headline</label>
+                        <input
+                          type="text"
+                          value={b.title}
+                          onChange={(e) => {
+                            const updated = (currentSection?.content?.banners || []).map((item, idx) =>
+                              idx === bIdx ? { ...item, title: e.target.value } : item
+                            );
+                            updateSectionContent('promo-banners', { banners: updated });
+                          }}
+                          className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Subtitle</label>
+                        <input
+                          type="text"
+                          value={b.subtitle || ''}
+                          onChange={(e) => {
+                            const updated = (currentSection?.content?.banners || []).map((item, idx) =>
+                              idx === bIdx ? { ...item, subtitle: e.target.value } : item
+                            );
+                            updateSectionContent('promo-banners', { banners: updated });
+                          }}
+                          className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">CTA Text</label>
+                        <input
+                          type="text"
+                          value={b.ctaText || 'SHOP NOW'}
+                          onChange={(e) => {
+                            const updated = (currentSection?.content?.banners || []).map((item, idx) =>
+                              idx === bIdx ? { ...item, ctaText: e.target.value } : item
+                            );
+                            updateSectionContent('promo-banners', { banners: updated });
+                          }}
+                          className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">CTA Link</label>
+                        <input
+                          type="text"
+                          value={b.ctaLink || '/products'}
+                          onChange={(e) => {
+                            const updated = (currentSection?.content?.banners || []).map((item, idx) =>
+                              idx === bIdx ? { ...item, ctaLink: e.target.value } : item
+                            );
+                            updateSectionContent('promo-banners', { banners: updated });
+                          }}
+                          className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 bg-white font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ─── TAB: TESTIMONIALS (SECTION 12 INTEGRATED WITH ADMIN REVIEWS) ─── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'testimonials' && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Homepage Testimonials & Client Reviews</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Directly connected to the Admin Reviews system. Select which verified reviews appear on the homepage.
+              </p>
+            </div>
+            <button
+              onClick={() => toggleSection('testimonials')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold border cursor-pointer ${
+                currentSection?.enabled !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'
+              }`}
+            >
+              {currentSection?.enabled !== false ? 'Section Active' : 'Section Hidden'}
+            </button>
+          </div>
+
+          {/* Approved Reviews Selector */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Approved Client Reviews ({adminReviews.filter(r => r.status === 'approved').length} Available)
+            </h3>
+
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-white">
+              {adminReviews.filter(r => r.status === 'approved').map((rev) => {
+                const currentFeaturedIds = currentSection?.content?.featuredReviewIds || [];
+                const isFeatured = currentFeaturedIds.includes(rev.id);
+
+                return (
+                  <div key={rev.id} className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50/60 transition-colors">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-slate-900">{rev.customerName}</span>
+                        <div className="flex text-amber-400">
+                          {[...Array(rev.rating || 5)].map((_, i) => (
+                            <Star key={i} size={11} className="fill-amber-400" />
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-slate-400">· {rev.productName}</span>
+                      </div>
+                      <p className="text-xs text-slate-600 truncate mt-1 max-w-xl">"{rev.review}"</p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const nextIds = isFeatured
+                          ? currentFeaturedIds.filter(id => id !== rev.id)
+                          : [...currentFeaturedIds, rev.id];
+                        updateSectionContent('testimonials', { featuredReviewIds: nextIds });
+                        showToast(isFeatured ? 'Review removed from homepage' : 'Review featured on homepage');
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer whitespace-nowrap ${
+                        isFeatured
+                          ? 'bg-brand-powder text-brand-teal border-brand-teal/40'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {isFeatured ? 'Featured on Home' : '+ Feature Review'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ─── TAB: INSTAGRAM MARQUEE (SECTION 13) ─── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'instagram' && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Instagram Marquee & Social Feed</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Control the continuous infinite scrolling marquee images and handle settings.</p>
+            </div>
+            <button
+              onClick={() => {
+                const currentImages = currentSection?.content?.images || [];
+                const newImg = {
+                  id: `ig-${Date.now()}`,
+                  url: sareeGolden,
+                  alt: 'Suka fashion look',
+                  enabled: true,
+                };
+                updateSectionContent('instagram', { images: [...currentImages, newImg] });
+                showToast('Instagram image added to marquee.');
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+            >
+              <Plus size={13} /> Add Instagram Image
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Instagram Handle</label>
+              <input
+                type="text"
+                value={currentSection?.content?.handle || '@sukafashions'}
+                onChange={(e) => updateSectionContent('instagram', { handle: e.target.value })}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Profile URL</label>
+              <input
+                type="text"
+                value={currentSection?.content?.url || 'https://instagram.com/sukafashions'}
+                onChange={(e) => updateSectionContent('instagram', { url: e.target.value })}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Marquee Speed</label>
+              <select
+                value={currentSection?.content?.marqueeSpeed || 'Normal'}
+                onChange={(e) => updateSectionContent('instagram', { marqueeSpeed: e.target.value })}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white font-bold"
+              >
+                <option value="Slow">Slow (Gentle scroll - 50s)</option>
+                <option value="Normal">Normal (Smooth cadence - 32s)</option>
+                <option value="Fast">Fast (Energetic - 20s)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Marquee Images Grid */}
+          <div className="pt-4 border-t border-slate-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Marquee Image Track ({(currentSection?.content?.images || []).length} Images)
+              </h3>
+              <span className="text-[11px] text-slate-400">Square 1:1 or 4:5 recommended (1000×1000)</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+              {(currentSection?.content?.images || []).map((img, iIdx) => {
+                const imgUrl = typeof img === 'string' ? img : img.url;
+                return (
+                  <div key={img.id || iIdx} className="p-2 rounded-xl border border-slate-200 bg-slate-50/60 relative group">
+                    <div className="aspect-[3/4] rounded-lg overflow-hidden bg-white mb-2 border border-slate-200">
+                      <img src={imgUrl} alt="Instagram thumb" className="w-full h-full object-cover" />
+                    </div>
+                    <button
+                      onClick={() => setImageModal({
+                        title: 'Select Instagram Photo',
+                        currentUrl: imgUrl,
+                        onSelect: (url) => {
+                          const updated = (currentSection?.content?.images || []).map((item, idx) =>
+                            idx === iIdx ? (typeof item === 'string' ? url : { ...item, url }) : item
+                          );
+                          updateSectionContent('instagram', { images: updated });
+                        }
+                      })}
+                      className="w-full py-1 bg-white border border-slate-200 text-[10px] font-bold text-slate-700 rounded hover:bg-slate-50 shadow-2xs"
+                    >
+                      Change
+                    </button>
+                    <button
+                      onClick={() => {
+                        const filtered = (currentSection?.content?.images || []).filter((_, idx) => idx !== iIdx);
+                        updateSectionContent('instagram', { images: filtered });
+                      }}
+                      className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white text-red-600 shadow flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={11} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ─── TAB: OTHER SECTIONS (BRAND STORY, CRAFTSMANSHIP, ETC.) ─── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {['trending', 'occasion', 'collections', 'brand-story', 'craftsmanship', 'four-pillars', 'newsletter', 'footer'].includes(activeTab) && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">{currentSection?.label || 'Section Editor'}</h2>
+              <p className="text-xs text-slate-500 mt-0.5">{currentSection?.desc}</p>
+            </div>
+            <button
+              onClick={() => toggleSection(activeTab)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold border cursor-pointer ${
+                currentSection?.enabled !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'
+              }`}
+            >
+              {currentSection?.enabled !== false ? 'Section Visible' : 'Section Hidden'}
+            </button>
+          </div>
+
+          {/* Section Dynamic Forms */}
+          {/* ── 1. Trending Now Editor ── */}
+          {activeTab === 'trending' && (() => {
+            const tc = currentSection?.content || {};
+            const items = tc.items || [];
+            const updateField = (k, v) => updateSectionContent('trending', { [k]: v });
+            const updateItems = (newItems) => updateSectionContent('trending', { items: newItems });
+
+            return (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Eyebrow Tagline
+                    </label>
+                    <input
+                      type="text"
+                      value={tc.eyebrow ?? ''}
+                      onChange={(e) => updateField('eyebrow', e.target.value)}
+                      placeholder="e.g. IN THE SPOTLIGHT"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Section Title
+                    </label>
+                    <input
+                      type="text"
+                      value={tc.title ?? ''}
+                      onChange={(e) => updateField('title', e.target.value)}
+                      placeholder="e.g. TRENDING NOW"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800">Spotlight Cards ({items.length})</h3>
+                    <p className="text-xs text-slate-500">Feature top curated trends with custom photos, titles, and links</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newItem = {
+                        id: `trend-${Date.now()}`,
+                        title: 'New Spotlight Edit',
+                        subtitle: 'Curated for the modern festive season.',
+                        image: ASSET_LIBRARY[0]?.url || '',
+                        link: '/category/sarees',
+                        order: items.length + 1,
+                        enabled: true,
+                      };
+                      updateItems([...items, newItem]);
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-brand-teal text-white rounded-xl text-xs font-bold hover:bg-brand-tealDark transition shadow-xs cursor-pointer"
+                  >
+                    <Plus size={14} /> Add Card
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {items.map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className={`p-4 rounded-xl border transition-all ${
+                        item.enabled !== false ? 'bg-white border-slate-200 shadow-2xs' : 'bg-slate-50 border-slate-200 opacity-60'
+                      }`}
+                    >
+                      <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-100 border border-slate-200 mb-3 group">
+                        {item.image ? (
+                          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">No image</div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setImageModal({
+                            title: `Select Image for ${item.title || 'Spotlight Card'}`,
+                            currentUrl: item.image,
+                            onSelect: (url) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, image: url } : it);
+                              updateItems(updated);
+                            }
+                          })}
+                          className="absolute inset-0 bg-black/40 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          <Upload size={14} className="mr-1.5" /> Change Photo
+                        </button>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Title</label>
+                          <input
+                            type="text"
+                            value={item.title || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, title: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 bg-white font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Subtitle</label>
+                          <input
+                            type="text"
+                            value={item.subtitle || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, subtitle: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Link URL</label>
+                          <input
+                            type="text"
+                            value={item.link || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, link: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            placeholder="/category/kurtis"
+                            className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 bg-white font-mono"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, enabled: it.enabled === false ? true : false } : it);
+                              updateItems(updated);
+                            }}
+                            className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded cursor-pointer ${
+                              item.enabled !== false ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 bg-slate-100'
+                            }`}
+                          >
+                            {item.enabled !== false ? <Eye size={12} /> : <EyeOff size={12} />}
+                            {item.enabled !== false ? 'Active' : 'Hidden'}
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => {
+                                const copy = [...items];
+                                [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+                                updateItems(copy);
+                              }}
+                              className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                              title="Move Left"
+                            >
+                              <ArrowUp size={14} className="-rotate-90" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === items.length - 1}
+                              onClick={() => {
+                                const copy = [...items];
+                                [copy[idx + 1], copy[idx]] = [copy[idx], copy[idx + 1]];
+                                updateItems(copy);
+                              }}
+                              className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                              title="Move Right"
+                            >
+                              <ArrowDown size={14} className="-rotate-90" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateItems(items.filter((_, i) => i !== idx));
+                              }}
+                              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer"
+                              title="Delete Card"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── 2. Shop By Occasion Editor ── */}
+          {activeTab === 'occasion' && (() => {
+            const oc = currentSection?.content || {};
+            const items = oc.items || [];
+            const updateField = (k, v) => updateSectionContent('occasion', { [k]: v });
+            const updateItems = (newItems) => updateSectionContent('occasion', { items: newItems });
+            const availableIcons = ['Gem', 'Sparkles', 'Music2', 'Coffee', 'Briefcase', 'Flower2', 'Heart', 'Tag', 'Gift', 'ShoppingBag'];
+
+            return (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Eyebrow Tagline
+                    </label>
+                    <input
+                      type="text"
+                      value={oc.eyebrow ?? ''}
+                      onChange={(e) => updateField('eyebrow', e.target.value)}
+                      placeholder="e.g. STYLE FOR EVERY MOMENT"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Section Title
+                    </label>
+                    <input
+                      type="text"
+                      value={oc.title ?? ''}
+                      onChange={(e) => updateField('title', e.target.value)}
+                      placeholder="e.g. SHOP BY OCCASION"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800">Occasions List ({items.length})</h3>
+                    <p className="text-xs text-slate-500">Define curated occasions with custom photos, icons, and category destinations</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newItem = {
+                        id: `occ-${Date.now()}`,
+                        name: 'New Occasion',
+                        subtitle: 'Curated Celebrations',
+                        icon: 'Sparkles',
+                        link: '/category/occasion',
+                        image: ASSET_LIBRARY[1]?.url || '',
+                        order: items.length + 1,
+                        enabled: true,
+                      };
+                      updateItems([...items, newItem]);
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-brand-teal text-white rounded-xl text-xs font-bold hover:bg-brand-tealDark transition shadow-xs cursor-pointer"
+                  >
+                    <Plus size={14} /> Add Occasion
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {items.map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className={`p-4 rounded-xl border transition-all ${
+                        item.enabled !== false ? 'bg-white border-slate-200 shadow-2xs' : 'bg-slate-50 border-slate-200 opacity-60'
+                      }`}
+                    >
+                      <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-slate-100 border border-slate-200 mb-3 group">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">No image</div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setImageModal({
+                            title: `Select Photo for ${item.name || 'Occasion'}`,
+                            currentUrl: item.image,
+                            onSelect: (url) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, image: url } : it);
+                              updateItems(updated);
+                            }
+                          })}
+                          className="absolute inset-0 bg-black/40 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          <Upload size={14} className="mr-1.5" /> Change Photo
+                        </button>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Name</label>
+                            <input
+                              type="text"
+                              value={item.name || ''}
+                              onChange={(e) => {
+                                const updated = items.map((it, i) => i === idx ? { ...it, name: e.target.value } : it);
+                                updateItems(updated);
+                              }}
+                              className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white font-semibold"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Icon</label>
+                            <select
+                              value={item.icon || 'Sparkles'}
+                              onChange={(e) => {
+                                const updated = items.map((it, i) => i === idx ? { ...it, icon: e.target.value } : it);
+                                updateItems(updated);
+                              }}
+                              className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white"
+                            >
+                              {availableIcons.map(ic => (
+                                <option key={ic} value={ic}>{ic}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Subtitle</label>
+                          <input
+                            type="text"
+                            value={item.subtitle || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, subtitle: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Target Link</label>
+                          <input
+                            type="text"
+                            value={item.link || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, link: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white font-mono"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, enabled: it.enabled === false ? true : false } : it);
+                              updateItems(updated);
+                            }}
+                            className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded cursor-pointer ${
+                              item.enabled !== false ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 bg-slate-100'
+                            }`}
+                          >
+                            {item.enabled !== false ? <Eye size={12} /> : <EyeOff size={12} />}
+                            {item.enabled !== false ? 'Active' : 'Hidden'}
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => {
+                                const copy = [...items];
+                                [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+                                updateItems(copy);
+                              }}
+                              className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                              title="Move Left"
+                            >
+                              <ArrowUp size={14} className="-rotate-90" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === items.length - 1}
+                              onClick={() => {
+                                const copy = [...items];
+                                [copy[idx + 1], copy[idx]] = [copy[idx], copy[idx + 1]];
+                                updateItems(copy);
+                              }}
+                              className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                              title="Move Right"
+                            >
+                              <ArrowDown size={14} className="-rotate-90" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateItems(items.filter((_, i) => i !== idx));
+                              }}
+                              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer"
+                              title="Delete Occasion"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── 3. Curated Collections Editor ── */}
+          {activeTab === 'collections' && (() => {
+            const cc = currentSection?.content || {};
+            const items = cc.items || [];
+            const updateField = (k, v) => updateSectionContent('collections', { [k]: v });
+            const updateItems = (newItems) => updateSectionContent('collections', { items: newItems });
+
+            return (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Eyebrow</label>
+                    <input
+                      type="text"
+                      value={cc.eyebrow ?? ''}
+                      onChange={(e) => updateField('eyebrow', e.target.value)}
+                      placeholder="HANDPICKED FOR YOU"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={cc.title ?? ''}
+                      onChange={(e) => updateField('title', e.target.value)}
+                      placeholder="CURATED COLLECTIONS"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Button Text</label>
+                    <input
+                      type="text"
+                      value={cc.ctaText ?? ''}
+                      onChange={(e) => updateField('ctaText', e.target.value)}
+                      placeholder="DISCOVER ALL"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Button Link</label>
+                    <input
+                      type="text"
+                      value={cc.ctaLink ?? ''}
+                      onChange={(e) => updateField('ctaLink', e.target.value)}
+                      placeholder="/products"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800">Collections Cards ({items.length})</h3>
+                    <p className="text-xs text-slate-500">Edit thematic collections like Under ₹1999, New Season, Wedding Guest</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newItem = {
+                        id: `col-${Date.now()}`,
+                        title: 'New Collection',
+                        subtitle: 'Handcrafted Perfection',
+                        image: ASSET_LIBRARY[2]?.url || '',
+                        link: '/products',
+                        order: items.length + 1,
+                        enabled: true,
+                      };
+                      updateItems([...items, newItem]);
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-brand-teal text-white rounded-xl text-xs font-bold hover:bg-brand-tealDark transition shadow-xs cursor-pointer"
+                  >
+                    <Plus size={14} /> Add Card
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {items.map((item, idx) => (
+                    <div key={item.id || idx} className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-3">
+                      <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-100 border border-slate-200 group">
+                        {item.image ? (
+                          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">No image</div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setImageModal({
+                            title: `Select Image for ${item.title || 'Collection'}`,
+                            currentUrl: item.image,
+                            onSelect: (url) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, image: url } : it);
+                              updateItems(updated);
+                            }
+                          })}
+                          className="absolute inset-0 bg-black/40 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          <Upload size={14} className="mr-1.5" /> Change Photo
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Title</label>
+                          <input
+                            type="text"
+                            value={item.title || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, title: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Subtitle</label>
+                          <input
+                            type="text"
+                            value={item.subtitle || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, subtitle: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Link URL</label>
+                          <input
+                            type="text"
+                            value={item.link || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, link: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white font-mono"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, enabled: it.enabled === false ? true : false } : it);
+                              updateItems(updated);
+                            }}
+                            className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded cursor-pointer ${
+                              item.enabled !== false ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 bg-slate-100'
+                            }`}
+                          >
+                            {item.enabled !== false ? <Eye size={12} /> : <EyeOff size={12} />}
+                            {item.enabled !== false ? 'Active' : 'Hidden'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateItems(items.filter((_, i) => i !== idx))}
+                            className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── 4. Four Pillars & Benefits Editor ── */}
+          {activeTab === 'four-pillars' && (() => {
+            const fp = currentSection?.content || {};
+            const items = fp.items || [];
+            const updateField = (k, v) => updateSectionContent('four-pillars', { [k]: v });
+            const updateItems = (newItems) => updateSectionContent('four-pillars', { items: newItems });
+            const pillarIcons = ['Users', 'Feather', 'Compass', 'Award', 'ShieldCheck', 'Sparkles', 'Heart', 'CheckCircle2'];
+
+            return (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Eyebrow</label>
+                    <input
+                      type="text"
+                      value={fp.eyebrow ?? ''}
+                      onChange={(e) => updateField('eyebrow', e.target.value)}
+                      placeholder="THE SUKA PROMISE"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Section Title</label>
+                    <input
+                      type="text"
+                      value={fp.title ?? ''}
+                      onChange={(e) => updateField('title', e.target.value)}
+                      placeholder="THE FOUR PILLARS"
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Subtitle</label>
+                    <input
+                      type="text"
+                      value={fp.subtitle ?? ''}
+                      onChange={(e) => updateField('subtitle', e.target.value)}
+                      placeholder="A luxury women's fashion house..."
+                      className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <h3 className="text-sm font-bold text-slate-800">Brand Value Pillars ({items.length})</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {items.map((item, idx) => (
+                    <div key={item.id || idx} className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-brand-teal px-2 py-0.5 bg-brand-teal/10 rounded-full font-mono">
+                          {item.num || `0${idx + 1}`}
+                        </span>
+                        <select
+                          value={item.icon || 'Award'}
+                          onChange={(e) => {
+                            const updated = items.map((it, i) => i === idx ? { ...it, icon: e.target.value } : it);
+                            updateItems(updated);
+                          }}
+                          className="border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-700 bg-white"
+                        >
+                          {pillarIcons.map(ic => (
+                            <option key={ic} value={ic}>{ic}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-0.5">Highlight Tag</label>
+                          <input
+                            type="text"
+                            value={item.tag || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, tag: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-0.5">Pillar Name</label>
+                          <input
+                            type="text"
+                            value={item.title || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, title: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-0.5">Description</label>
+                          <textarea
+                            rows={3}
+                            value={item.desc || ''}
+                            onChange={(e) => {
+                              const updated = items.map((it, i) => i === idx ? { ...it, desc: e.target.value } : it);
+                              updateItems(updated);
+                            }}
+                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 bg-white resize-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {activeTab === 'brand-story' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Eyebrow</label>
+                  <input
+                    type="text"
+                    value={currentSection?.content?.eyebrow || ''}
+                    onChange={(e) => updateSectionContent('brand-story', { eyebrow: e.target.value })}
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Heading Line 1</label>
+                  <input
+                    type="text"
+                    value={currentSection?.content?.headingLine1 || ''}
+                    onChange={(e) => updateSectionContent('brand-story', { headingLine1: e.target.value })}
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Heading Line 2</label>
+                  <input
+                    type="text"
+                    value={currentSection?.content?.headingLine2 || ''}
+                    onChange={(e) => updateSectionContent('brand-story', { headingLine2: e.target.value })}
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Button Text</label>
+                  <input
+                    type="text"
+                    value={currentSection?.content?.ctaText || ''}
+                    onChange={(e) => updateSectionContent('brand-story', { ctaText: e.target.value })}
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Paragraph 1</label>
+                <textarea
+                  rows={2}
+                  value={currentSection?.content?.paragraph1 || ''}
+                  onChange={(e) => updateSectionContent('brand-story', { paragraph1: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Paragraph 2</label>
+                <textarea
+                  rows={2}
+                  value={currentSection?.content?.paragraph2 || ''}
+                  onChange={(e) => updateSectionContent('brand-story', { paragraph2: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'craftsmanship' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Section Eyebrow</label>
+                  <input
+                    type="text"
+                    value={currentSection?.content?.eyebrow || ''}
+                    onChange={(e) => updateSectionContent('craftsmanship', { eyebrow: e.target.value })}
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Section Title</label>
+                  <input
+                    type="text"
+                    value={currentSection?.content?.title || ''}
+                    onChange={(e) => updateSectionContent('craftsmanship', { title: e.target.value })}
+                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                {(currentSection?.content?.items || []).map((item, cIdx) => (
+                  <div key={item.id || cIdx} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
+                    <span className="text-xs font-bold text-slate-800">Pillar #{cIdx + 1}</span>
+                    <input
+                      type="text"
+                      value={item.title}
+                      onChange={(e) => {
+                        const updated = (currentSection?.content?.items || []).map((p, idx) =>
+                          idx === cIdx ? { ...p, title: e.target.value } : p
+                        );
+                        updateSectionContent('craftsmanship', { items: updated });
+                      }}
+                      className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 bg-white font-bold"
+                    />
+                    <textarea
+                      rows={3}
+                      value={item.description}
+                      onChange={(e) => {
+                        const updated = (currentSection?.content?.items || []).map((p, idx) =>
+                          idx === cIdx ? { ...p, description: e.target.value } : p
+                        );
+                        updateSectionContent('craftsmanship', { items: updated });
+                      }}
+                      className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 bg-white"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'newsletter' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Eyebrow</label>
+                <input
+                  type="text"
+                  value={currentSection?.content?.eyebrow || ''}
+                  onChange={(e) => updateSectionContent('newsletter', { eyebrow: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Title</label>
+                <input
+                  type="text"
+                  value={currentSection?.content?.title || ''}
+                  onChange={(e) => updateSectionContent('newsletter', { title: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Subtitle / Benefits</label>
+                <textarea
+                  rows={2}
+                  value={currentSection?.content?.subtitle || ''}
+                  onChange={(e) => updateSectionContent('newsletter', { subtitle: e.target.value })}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 bg-white"
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'footer' && (() => {
+            const fc = currentSection?.content || {};
+            const sl = fc.socialLinks || {};
+            const field = (key, val) => updateSectionContent('footer', { [key]: val });
+            const social = (key, val) => updateSectionContent('footer', {
+              socialLinks: { ...sl, [key]: val },
+            });
+
+            return (
+              <div className="space-y-6">
+
+                {/* ── Brand Identity ── */}
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-2 pb-1 border-b border-slate-200">
+                    <div className="w-7 h-7 rounded-lg bg-brand-tealDark/10 flex items-center justify-center">
+                      <BookOpen size={14} className="text-brand-tealDark" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-800">Brand Identity</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Brand Tagline</label>
+                      <input
+                        type="text"
+                        value={fc.brandTagline || 'Women Based • Women Empowered'}
+                        onChange={(e) => field('brandTagline', e.target.value)}
+                        placeholder="Women Based • Women Empowered"
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Shown under the logo in bold caps</p>
+                    </div>
+                    <div className="sm:col-span-1">
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Brand Description</label>
+                      <textarea
+                        rows={3}
+                        value={fc.brandDescription || ''}
+                        onChange={(e) => field('brandDescription', e.target.value)}
+                        placeholder="A luxury women's clothing brand dedicated to celebrating femininity..."
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition resize-none"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Short blurb shown below the tagline</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Customer Care ── */}
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-2 pb-1 border-b border-slate-200">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
+                      <Phone size={14} className="text-emerald-600" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-800">Customer Care</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                        📞 Support Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={fc.supportPhone || '+91 9488463850'}
+                        onChange={(e) => field('supportPhone', e.target.value)}
+                        placeholder="+91 9488463850"
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Clickable tel: link in footer</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                        ✉️ Support Email
+                      </label>
+                      <input
+                        type="email"
+                        value={fc.supportEmail || 'care@sukafashions.com'}
+                        onChange={(e) => field('supportEmail', e.target.value)}
+                        placeholder="care@sukafashions.com"
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Clickable mailto: link in footer</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                        🕐 Working Hours
+                      </label>
+                      <input
+                        type="text"
+                        value={fc.workingHours || 'Mon–Sat, 10 AM – 7 PM'}
+                        onChange={(e) => field('workingHours', e.target.value)}
+                        placeholder="Mon–Sat, 10 AM – 7 PM"
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-brand-teal/20 focus:border-brand-teal outline-none transition"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Shown as availability info</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Social Media Links ── */}
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-2 pb-1 border-b border-slate-200">
+                    <div className="w-7 h-7 rounded-lg bg-pink-50 flex items-center justify-center">
+                      <Instagram size={14} className="text-pink-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-800">Social Media Links</h3>
+                      <p className="text-[10px] text-slate-400">Enter full URLs (e.g. https://instagram.com/yourhandle). Used for footer icons and Customer Care DM link.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                    {/* Instagram */}
+                    <div>
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                        <span className="w-5 h-5 rounded bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center text-white text-[9px]">
+                          <Instagram size={11} />
+                        </span>
+                        Instagram URL
+                      </label>
+                      <input
+                        type="url"
+                        value={sl.instagram || ''}
+                        onChange={(e) => social('instagram', e.target.value)}
+                        placeholder="https://instagram.com/sukafashions"
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-pink-200 focus:border-pink-400 outline-none transition"
                       />
                     </div>
 
-                    {/* Category Name */}
-                    <span className="mt-2.5 font-sans text-[9px] min-[390px]:text-[10px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.14em] font-medium text-brand-navy group-hover:text-brand-teal text-center leading-tight transition-colors line-clamp-2 px-0.5">
-                      {tile.name}
-                    </span>
+                    {/* Facebook */}
+                    <div>
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                        <span className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center text-white text-[9px] font-bold">f</span>
+                        Facebook URL
+                      </label>
+                      <input
+                        type="url"
+                        value={sl.facebook || ''}
+                        onChange={(e) => social('facebook', e.target.value)}
+                        placeholder="https://facebook.com/sukafashions"
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none transition"
+                      />
+                    </div>
 
-                    {/* Hidden Badge if Inactive */}
-                    {!tile.active && (
-                      <span className="mt-1 text-[8.5px] sm:text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100">
-                        Hidden
+                    {/* Pinterest */}
+                    <div>
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                        <span className="w-5 h-5 rounded bg-red-600 flex items-center justify-center text-white text-[9px] font-bold">P</span>
+                        Pinterest URL
+                      </label>
+                      <input
+                        type="url"
+                        value={sl.pinterest || ''}
+                        onChange={(e) => social('pinterest', e.target.value)}
+                        placeholder="https://pinterest.com/sukafashions"
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-red-200 focus:border-red-400 outline-none transition"
+                      />
+                    </div>
+
+                    {/* YouTube */}
+                    <div>
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                        <span className="w-5 h-5 rounded bg-red-500 flex items-center justify-center text-white text-[8px] font-bold">▶</span>
+                        YouTube URL
+                      </label>
+                      <input
+                        type="url"
+                        value={sl.youtube || ''}
+                        onChange={(e) => social('youtube', e.target.value)}
+                        placeholder="https://youtube.com/@sukafashions"
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-red-200 focus:border-red-400 outline-none transition"
+                      />
+                    </div>
+
+                    {/* WhatsApp */}
+                    <div>
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                        <span className="w-5 h-5 rounded bg-green-500 flex items-center justify-center text-white text-[9px] font-bold">W</span>
+                        WhatsApp Link
+                      </label>
+                      <input
+                        type="url"
+                        value={sl.whatsapp || ''}
+                        onChange={(e) => social('whatsapp', e.target.value)}
+                        placeholder="https://wa.me/919488463850"
+                        className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 bg-white focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none transition"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Format: https://wa.me/91XXXXXXXXXX</p>
+                    </div>
+
+                  </div>
+
+                  {/* Live preview of footer social icons */}
+                  <div className="pt-3 border-t border-slate-200">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Live Preview — Footer Social Icons</p>
+                    <div className="flex items-center gap-2">
+                      {[
+                        { label: 'Instagram', url: sl.instagram || 'https://instagram.com/sukafashions', bg: 'bg-gradient-to-br from-pink-500 to-orange-400' },
+                        { label: 'Facebook',  url: sl.facebook  || 'https://facebook.com/sukafashions',  bg: 'bg-blue-600' },
+                        { label: 'Pinterest', url: sl.pinterest || 'https://pinterest.com/sukafashions',  bg: 'bg-red-600' },
+                        { label: 'YouTube',   url: sl.youtube   || 'https://youtube.com/sukafashions',    bg: 'bg-red-500' },
+                        { label: 'WhatsApp',  url: sl.whatsapp  || 'https://wa.me/919488463850',          bg: 'bg-green-500' },
+                      ].map(({ label, url, bg }) => (
+                        <a
+                          key={label}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`${label}: ${url}`}
+                          className={`w-8 h-8 rounded-full ${bg} text-white flex items-center justify-center text-[9px] font-bold hover:scale-110 transition-transform shadow-sm`}
+                        >
+                          {label.charAt(0)}
+                        </a>
+                      ))}
+                      <span className="text-[10px] text-slate-400 ml-1">Hover to preview URL</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ─── MODALS ─── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+
+      {/* 1. Publish Confirmation Modal */}
+      {isPublishModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-[scaleIn_0.2s_ease-out]">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+              <Send size={24} />
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-slate-900">Publish Homepage Changes?</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                These changes will immediately become live and visible to all customers visiting the Suka Fashions website.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-3">
+              <button
+                onClick={() => setIsPublishModalOpen(false)}
+                className="flex-1 py-2.5 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePublish}
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md"
+              >
+                Publish Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Version History Modal */}
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-8 shadow-2xl space-y-5 animate-[scaleIn_0.2s_ease-out]">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <History size={20} className="text-slate-700" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Content Version History</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Restore a previous published version of the homepage</p>
+                </div>
+              </div>
+              <button onClick={() => setIsHistoryModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="divide-y divide-slate-100 max-h-[65vh] overflow-y-auto pr-2">
+              {(versionHistory.length > 0 ? versionHistory : [
+                { versionId: 'v12', publishedAt: '11 Sep 2026, 09:15 AM', publishedBy: 'Aditi Sharma', status: 'Current' },
+                { versionId: 'v11', publishedAt: '08 Sep 2026, 05:40 PM', publishedBy: 'Aditi Sharma', status: 'Archived' },
+                { versionId: 'v10', publishedAt: '01 Sep 2026, 11:20 AM', publishedBy: 'Super Admin', status: 'Archived' },
+              ]).map((v) => (
+                <div key={v.versionId} className="py-4 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-bold text-sm text-slate-900">{v.versionId}</span>
+                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                        v.status === 'Current' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'
+                      }`}>
+                        {v.status}
                       </span>
-                    )}
+                    </div>
+                    <span className="text-sm text-slate-500 block mt-1">
+                      {v.publishedAt} · {v.publishedBy}
+                    </span>
+                  </div>
+
+                  {v.status !== 'Current' && (
+                    <button
+                      onClick={async () => {
+                        await restoreVersion(v.versionId, admin?.name || 'Aditi Sharma');
+                        setIsHistoryModalOpen(false);
+                        showToast(`Restored version ${v.versionId} successfully.`);
+                      }}
+                      className="px-5 py-2 text-sm font-bold text-brand-teal hover:bg-brand-powder rounded-xl transition-colors border border-brand-teal/30 whitespace-nowrap"
+                    >
+                      Restore
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Image Library & Upload Modal */}
+      {imageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-4xl w-full p-8 shadow-2xl space-y-5 animate-[scaleIn_0.2s_ease-out]">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">{imageModal.title}</h3>
+                <p className="text-sm text-slate-400 mt-0.5">Select from verified Suka high-resolution assets</p>
+              </div>
+              <button onClick={() => setImageModal(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto p-1">
+                {ASSET_LIBRARY.map((item) => (
+                  <button
+                    key={item.name}
+                    onClick={() => {
+                      imageModal.onSelect(item.url);
+                      setImageModal(null);
+                      showToast('Image selected.');
+                    }}
+                    className="group flex flex-col items-center gap-2 p-2 rounded-xl border border-slate-200 hover:border-brand-teal hover:shadow-md transition-all text-left cursor-pointer"
+                  >
+                    <div className="aspect-[3/4] w-full rounded-lg overflow-hidden bg-slate-100">
+                      <img src={item.url} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    </div>
+                    <span className="text-xs font-medium text-slate-700 truncate w-full text-center">{item.name}</span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* 4 KPI STAT CARDS */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">TOTAL CATEGORIES</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-slate-900 tracking-tight">{categoryTiles.length}</span>
-                <p className="text-[11px] text-slate-400 mt-1">Configured for storefront</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">ACTIVE & VISIBLE</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-emerald-600 tracking-tight">
-                  {categoryTiles.filter(t => t.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Shown to customers</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">HIDDEN / INACTIVE</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-rose-600 tracking-tight">
-                  {categoryTiles.filter(t => !t.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Not shown on homepage</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">DISPLAY ORDER</span>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-2xl font-bold text-indigo-900 flex items-center gap-1.5">
-                  <span className="font-mono">≡</span> Drag
-                </span>
-                <span className="text-[10px] bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded-md border border-indigo-100">
-                  Live
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1">Grab handle to reorder</p>
-            </div>
-          </div>
-
-          {/* Search & Filter Bar */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex flex-wrap gap-3 items-center justify-between">
-            <div className="flex items-center gap-2.5 bg-slate-50/80 border border-slate-200/80 rounded-xl px-3.5 py-2 flex-1 min-w-[220px] max-w-md focus-within:bg-white focus-within:border-emerald-600 transition-all">
-              <Search size={14} className="text-slate-400" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search categories..."
-                className="bg-transparent text-xs text-slate-800 placeholder-slate-400 outline-none w-full"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600">
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-xs text-slate-600">
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 bg-white focus:outline-none focus:border-emerald-600 shadow-2xs font-medium"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          {/* CATEGORY TILES TABLE */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] font-bold text-indigo-900 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 w-16 text-center">#</th>
-                    <th className="py-3.5 px-4">PREVIEW</th>
-                    <th className="py-3.5 px-4">CATEGORY NAME</th>
-                    <th className="py-3.5 px-4">DESTINATION ROUTE</th>
-                    <th className="py-3.5 px-4">THEME / COLOR</th>
-                    <th className="py-3.5 px-4">STATUS</th>
-                    <th className="py-3.5 px-4 text-right">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {filteredCategories.map((tile, idx) => {
-                    const actualIdx = categoryTiles.findIndex(t => t.id === tile.id);
-                    const isDragging = draggedIdx === actualIdx;
-                    const isDragOver = dragOverIdx === actualIdx;
-
-                    return (
-                      <tr
-                        key={tile.id}
-                        draggable
-                        onDragStart={(e) => {
-                          setDraggedIdx(actualIdx);
-                          e.dataTransfer.setData('text/plain', actualIdx);
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          if (dragOverIdx !== actualIdx) setDragOverIdx(actualIdx);
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          if (draggedIdx !== null) handleReorderCategoryTiles(draggedIdx, actualIdx);
-                          setDraggedIdx(null);
-                          setDragOverIdx(null);
-                        }}
-                        onDragEnd={() => {
-                          setDraggedIdx(null);
-                          setDragOverIdx(null);
-                        }}
-                        className={`hover:bg-slate-50/70 transition-colors ${
-                          isDragging ? 'opacity-30 bg-indigo-50' : isDragOver ? 'bg-indigo-50/80' : ''
-                        }`}
-                      >
-                        {/* Drag Handle & Order */}
-                        <td className="py-3.5 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-700 p-1">
-                              <GripVertical size={14} />
-                            </div>
-                            <span className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-[11px] flex items-center justify-center">
-                              #{actualIdx + 1}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Preview Thumbnail */}
-                        <td className="py-3.5 px-4">
-                          <div className="w-11 h-11 rounded-full border-2 border-brand-powder/80 bg-brand-cream/30 overflow-hidden shadow-2xs flex items-center justify-center p-0.5">
-                            <img src={tile.image} alt={tile.name} className="w-full h-full object-cover rounded-full" />
-                          </div>
-                        </td>
-
-                        {/* Category Name */}
-                        <td className="py-3.5 px-4">
-                          <span className="font-bold text-slate-900 text-xs sm:text-sm">
-                            {tile.name}
-                          </span>
-                        </td>
-
-                        {/* Destination Route */}
-                        <td className="py-3.5 px-4 text-slate-600 font-mono text-xs">
-                          {tile.link || `/category/${tile.targetRoute || tile.name.toLowerCase()}`}
-                        </td>
-
-                        {/* Theme / Color Badge */}
-                        <td className="py-3.5 px-4">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200">
-                            <span
-                              className="w-2.5 h-2.5 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  CATEGORY_THEMES.find(ct => ct.name === tile.themeColor)?.dotColor || '#F97316'
-                              }}
-                            />
-                            <span>{tile.themeColor || 'Orange Gradient'}</span>
-                          </span>
-                        </td>
-
-                        {/* Status Toggle Pill */}
-                        <td className="py-3.5 px-4">
-                          <button
-                            onClick={() => handleToggleCategoryActive(tile.id)}
-                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                              tile.active
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                            }`}
-                          >
-                            <CheckCircle2 size={12} className={tile.active ? 'text-emerald-600' : 'text-slate-400'} />
-                            <span>{tile.active ? 'Active' : 'Inactive'}</span>
-                          </button>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleOpenEditCategory(tile)}
-                              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors cursor-pointer"
-                              title="Edit Tile"
-                            >
-                              <Edit size={13} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteCategory(tile.id)}
-                              className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                              title="Delete Tile"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {filteredCategories.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="py-10 text-center text-slate-400">
-                        No categories match your search or filter.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── TAB 2: PROMO BANNERS (IMAGE 1) ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'promo-banners' && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Promo Banners</h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Manage promotional banners and special offer campaigns displayed on the homepage.
-              </p>
-            </div>
-
-            <button
-              onClick={handleOpenAddBanner}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
-            >
-              <Plus size={14} /> Add Promo Banner
-            </button>
-          </div>
-
-          {/* 4 KPI Stat Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Total</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-slate-900 tracking-tight">{promoBanners.length}</span>
-                <p className="text-[11px] text-slate-400 mt-1">Configured in system</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Active</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-emerald-600 tracking-tight">
-                  {promoBanners.filter(b => b.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Live on storefront</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Inactive</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-rose-600 tracking-tight">
-                  {promoBanners.filter(b => !b.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Hidden from customers</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-500">Types</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
-                  Manage Types
-                </span>
-              </div>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-indigo-950 tracking-tight">4</span>
-                <p className="text-[11px] text-slate-400 mt-1">Offer, New Arrival, Promotion, Collection</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Search & Filter Bar */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex flex-wrap gap-3 items-center justify-between">
-            <div className="flex items-center gap-2.5 bg-slate-50/80 border border-slate-200/80 rounded-xl px-3.5 py-2 flex-1 min-w-[220px] max-w-md focus-within:bg-white focus-within:border-emerald-600 transition-all">
-              <Search size={14} className="text-slate-400" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search promo banners..."
-                className="bg-transparent text-xs text-slate-800 placeholder-slate-400 outline-none w-full"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600">
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-xs text-slate-600">
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 bg-white focus:outline-none focus:border-emerald-600 shadow-2xs font-medium"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          {/* PROMO BANNERS TABLE */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] font-bold text-indigo-900 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 w-12 text-center">::</th>
-                    <th className="py-3.5 px-4 text-center">ORDER</th>
-                    <th className="py-3.5 px-4">PREVIEW</th>
-                    <th className="py-3.5 px-4">DETAILS</th>
-                    <th className="py-3.5 px-4">TYPE</th>
-                    <th className="py-3.5 px-4">CTA</th>
-                    <th className="py-3.5 px-4">STATUS</th>
-                    <th className="py-3.5 px-4 text-right">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {filteredBanners.map((banner, idx) => {
-                    const actualIdx = promoBanners.findIndex(b => b.id === banner.id);
-                    const isDragging = draggedIdx === actualIdx;
-                    const isDragOver = dragOverIdx === actualIdx;
-
-                    return (
-                      <tr
-                        key={banner.id}
-                        draggable
-                        onDragStart={(e) => {
-                          setDraggedIdx(actualIdx);
-                          e.dataTransfer.setData('text/plain', actualIdx);
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          if (dragOverIdx !== actualIdx) setDragOverIdx(actualIdx);
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          if (draggedIdx !== null) handleReorderPromoBanners(draggedIdx, actualIdx);
-                          setDraggedIdx(null);
-                          setDragOverIdx(null);
-                        }}
-                        onDragEnd={() => {
-                          setDraggedIdx(null);
-                          setDragOverIdx(null);
-                        }}
-                        className={`hover:bg-slate-50/70 transition-colors ${
-                          isDragging ? 'opacity-30 bg-indigo-50' : isDragOver ? 'bg-indigo-50/80' : ''
-                        }`}
-                      >
-                        {/* Drag Handle */}
-                        <td className="py-3.5 px-4 text-center">
-                          <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-700 p-1 flex justify-center">
-                            <GripVertical size={15} />
-                          </div>
-                        </td>
-
-                        {/* Order Badge */}
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[11px]">
-                            #{actualIdx + 1}
-                          </span>
-                        </td>
-
-                        {/* Preview Image */}
-                        <td className="py-3.5 px-4">
-                          <div className="w-16 h-11 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
-                            <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
-                          </div>
-                        </td>
-
-                        {/* Details */}
-                        <td className="py-3.5 px-4 max-w-xs">
-                          <h4 className="font-bold text-indigo-950 text-xs sm:text-sm">{banner.title}</h4>
-                          {banner.subtitle && (
-                            <p className="text-slate-600 text-xs mt-0.5">{banner.subtitle}</p>
-                          )}
-                          {banner.description && (
-                            <p className="text-slate-400 text-[11px] line-clamp-1 mt-0.5">{banner.description}</p>
-                          )}
-                        </td>
-
-                        {/* Type Pill */}
-                        <td className="py-3.5 px-4">
-                          <span className="inline-block font-bold text-[10px] tracking-wider uppercase px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200/80">
-                            {banner.type || 'PROMOTION'}
-                          </span>
-                        </td>
-
-                        {/* CTA */}
-                        <td className="py-3.5 px-4">
-                          <div className="font-bold text-slate-900 text-xs">{banner.ctaText || 'shop now'}</div>
-                          <div className="text-slate-500 text-[11px] mt-0.5">
-                            → {banner.targetRoute || banner.ctaLink || 'mattress'}
-                          </div>
-                        </td>
-
-                        {/* Status Badge */}
-                        <td className="py-3.5 px-4">
-                          <button
-                            onClick={() => handleToggleBannerActive(banner.id)}
-                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                              banner.active
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                            }`}
-                          >
-                            <CheckCircle2 size={12} className={banner.active ? 'text-emerald-600' : 'text-slate-400'} />
-                            <span>{banner.active ? 'Active' : 'Inactive'}</span>
-                          </button>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleOpenEditBanner(banner)}
-                              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors cursor-pointer"
-                              title="Edit Banner"
-                            >
-                              <Edit size={13} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteBanner(banner.id)}
-                              className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                              title="Delete Banner"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {filteredBanners.length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="py-10 text-center text-slate-400">
-                        No promo banners match your search or filter.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── TAB 3: NEW ARRIVALS (IMAGE 2) ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'new-arrivals' && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">New Arrivals</h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Select store products to showcase in the homepage New Arrivals section, set display order, and toggle storefront visibility.
-              </p>
-            </div>
-
-            <button
-              onClick={() => handleOpenProductPicker('new-arrivals')}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
-            >
-              <Plus size={14} /> Add New Arrival
-            </button>
-          </div>
-
-          {/* 4 KPI Stat Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Total New Arrivals</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-slate-900 tracking-tight">{newArrivalsItems.length}</span>
-                <p className="text-[11px] text-slate-400 mt-1">Configured for section</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Active Products</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-emerald-600 tracking-tight">
-                  {newArrivalsItems.filter(p => p.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Live on storefront</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Inactive Products</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-rose-600 tracking-tight">
-                  {newArrivalsItems.filter(p => !p.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Hidden from customers</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Store Catalog</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-indigo-950 tracking-tight">{totalStoreProducts}</span>
-                <p className="text-[11px] text-slate-400 mt-1">Total store products</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Search & Filter Bar */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex flex-wrap gap-3 items-center justify-between">
-            <div className="flex items-center gap-2.5 bg-slate-50/80 border border-slate-200/80 rounded-xl px-3.5 py-2 flex-1 min-w-[220px] max-w-md focus-within:bg-white focus-within:border-emerald-600 transition-all">
-              <Search size={14} className="text-slate-400" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search new arrivals..."
-                className="bg-transparent text-xs text-slate-800 placeholder-slate-400 outline-none w-full"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600">
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-xs text-slate-600">
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 bg-white focus:outline-none focus:border-emerald-600 shadow-2xs font-medium"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          {/* NEW ARRIVALS TABLE */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] font-bold text-indigo-900 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 w-12 text-center">::</th>
-                    <th className="py-3.5 px-4 text-center">ORDER</th>
-                    <th className="py-3.5 px-4">PREVIEW</th>
-                    <th className="py-3.5 px-4">PRODUCT DETAILS</th>
-                    <th className="py-3.5 px-4">CATEGORY</th>
-                    <th className="py-3.5 px-4">PRICE</th>
-                    <th className="py-3.5 px-4">STATUS</th>
-                    <th className="py-3.5 px-4 text-right">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {filteredNewArrivals.map((item, idx) => {
-                    const actualIdx = newArrivalsItems.findIndex(p => p.id === item.id);
-                    const isDragging = draggedIdx === actualIdx;
-                    const isDragOver = dragOverIdx === actualIdx;
-
-                    return (
-                      <tr
-                        key={item.id}
-                        draggable
-                        onDragStart={(e) => {
-                          setDraggedIdx(actualIdx);
-                          e.dataTransfer.setData('text/plain', actualIdx);
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          if (dragOverIdx !== actualIdx) setDragOverIdx(actualIdx);
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          if (draggedIdx !== null) handleReorderSectionProducts('new-arrivals', draggedIdx, actualIdx);
-                          setDraggedIdx(null);
-                          setDragOverIdx(null);
-                        }}
-                        onDragEnd={() => {
-                          setDraggedIdx(null);
-                          setDragOverIdx(null);
-                        }}
-                        className={`hover:bg-slate-50/70 transition-colors ${
-                          isDragging ? 'opacity-30 bg-indigo-50' : isDragOver ? 'bg-indigo-50/80' : ''
-                        }`}
-                      >
-                        {/* Drag Handle */}
-                        <td className="py-3.5 px-4 text-center">
-                          <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-700 p-1 flex justify-center">
-                            <GripVertical size={15} />
-                          </div>
-                        </td>
-
-                        {/* Order Badge */}
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[11px]">
-                            #{actualIdx + 1}
-                          </span>
-                        </td>
-
-                        {/* Product Image */}
-                        <td className="py-3.5 px-4">
-                          <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
-                            <img src={item.image || sareeGolden} alt={item.name} className="w-full h-full object-cover" />
-                          </div>
-                        </td>
-
-                        {/* Product Details */}
-                        <td className="py-3.5 px-4">
-                          <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{item.name}</h4>
-                          <p className="text-slate-400 text-[11px] mt-0.5">Product ID: {item.id}</p>
-                        </td>
-
-                        {/* Category */}
-                        <td className="py-3.5 px-4 text-slate-700 font-medium">
-                          {item.category}
-                        </td>
-
-                        {/* Price */}
-                        <td className="py-3.5 px-4 font-bold text-emerald-700">
-                          ₹{Number(item.price || 0).toLocaleString('en-IN')}
-                        </td>
-
-                        {/* Status */}
-                        <td className="py-3.5 px-4">
-                          <button
-                            onClick={() => handleToggleSectionProductActive('new-arrivals', item.id)}
-                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                              item.active
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                            }`}
-                          >
-                            <CheckCircle2 size={12} className={item.active ? 'text-emerald-600' : 'text-slate-400'} />
-                            <span>{item.active ? 'Active' : 'Inactive'}</span>
-                          </button>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleOpenProductPicker('new-arrivals')}
-                              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors cursor-pointer"
-                              title="Edit Section Selection"
-                            >
-                              <Edit size={13} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteSectionProduct('new-arrivals', item.id)}
-                              className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                              title="Remove Product"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {filteredNewArrivals.length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="py-10 text-center text-slate-400">
-                        No products configured for New Arrivals. Click "+ Add New Arrival" to select products.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── TAB 4: BEST SELLERS (IMAGE 3) ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'best-sellers' && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Best Sellers</h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Select store products to showcase in the homepage Best Sellers section, set display order, and toggle storefront visibility.
-              </p>
-            </div>
-
-            <button
-              onClick={() => handleOpenProductPicker('best-sellers')}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
-            >
-              <Plus size={14} /> Add Best Seller
-            </button>
-          </div>
-
-          {/* 4 KPI Stat Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Total Best Sellers</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-slate-900 tracking-tight">{bestSellersItems.length}</span>
-                <p className="text-[11px] text-slate-400 mt-1">Configured for section</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Active Products</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-emerald-600 tracking-tight">
-                  {bestSellersItems.filter(p => p.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Live on storefront</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Inactive Products</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-rose-600 tracking-tight">
-                  {bestSellersItems.filter(p => !p.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Hidden from customers</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Store Catalog</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-indigo-950 tracking-tight">{totalStoreProducts}</span>
-                <p className="text-[11px] text-slate-400 mt-1">Total store products</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Search & Filter Bar */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex flex-wrap gap-3 items-center justify-between">
-            <div className="flex items-center gap-2.5 bg-slate-50/80 border border-slate-200/80 rounded-xl px-3.5 py-2 flex-1 min-w-[220px] max-w-md focus-within:bg-white focus-within:border-emerald-600 transition-all">
-              <Search size={14} className="text-slate-400" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search best sellers..."
-                className="bg-transparent text-xs text-slate-800 placeholder-slate-400 outline-none w-full"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600">
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-xs text-slate-600">
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 bg-white focus:outline-none focus:border-emerald-600 shadow-2xs font-medium"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          {/* BEST SELLERS TABLE */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] font-bold text-indigo-900 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 w-12 text-center">::</th>
-                    <th className="py-3.5 px-4 text-center">ORDER</th>
-                    <th className="py-3.5 px-4">PREVIEW</th>
-                    <th className="py-3.5 px-4">PRODUCT DETAILS</th>
-                    <th className="py-3.5 px-4">CATEGORY</th>
-                    <th className="py-3.5 px-4">PRICE</th>
-                    <th className="py-3.5 px-4">STATUS</th>
-                    <th className="py-3.5 px-4 text-right">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {filteredBestSellers.map((item, idx) => {
-                    const actualIdx = bestSellersItems.findIndex(p => p.id === item.id);
-                    const isDragging = draggedIdx === actualIdx;
-                    const isDragOver = dragOverIdx === actualIdx;
-
-                    return (
-                      <tr
-                        key={item.id}
-                        draggable
-                        onDragStart={(e) => {
-                          setDraggedIdx(actualIdx);
-                          e.dataTransfer.setData('text/plain', actualIdx);
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          if (dragOverIdx !== actualIdx) setDragOverIdx(actualIdx);
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          if (draggedIdx !== null) handleReorderSectionProducts('best-sellers', draggedIdx, actualIdx);
-                          setDraggedIdx(null);
-                          setDragOverIdx(null);
-                        }}
-                        onDragEnd={() => {
-                          setDraggedIdx(null);
-                          setDragOverIdx(null);
-                        }}
-                        className={`hover:bg-slate-50/70 transition-colors ${
-                          isDragging ? 'opacity-30 bg-indigo-50' : isDragOver ? 'bg-indigo-50/80' : ''
-                        }`}
-                      >
-                        {/* Drag Handle */}
-                        <td className="py-3.5 px-4 text-center">
-                          <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-700 p-1 flex justify-center">
-                            <GripVertical size={15} />
-                          </div>
-                        </td>
-
-                        {/* Order Badge */}
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[11px]">
-                            #{actualIdx + 1}
-                          </span>
-                        </td>
-
-                        {/* Product Image */}
-                        <td className="py-3.5 px-4">
-                          <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
-                            <img src={item.image || sareeGolden} alt={item.name} className="w-full h-full object-cover" />
-                          </div>
-                        </td>
-
-                        {/* Product Details */}
-                        <td className="py-3.5 px-4">
-                          <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{item.name}</h4>
-                          <p className="text-slate-400 text-[11px] mt-0.5">Product ID: {item.id}</p>
-                        </td>
-
-                        {/* Category */}
-                        <td className="py-3.5 px-4 text-slate-700 font-medium">
-                          {item.category}
-                        </td>
-
-                        {/* Price */}
-                        <td className="py-3.5 px-4 font-bold text-emerald-700">
-                          ₹{Number(item.price || 0).toLocaleString('en-IN')}
-                        </td>
-
-                        {/* Status */}
-                        <td className="py-3.5 px-4">
-                          <button
-                            onClick={() => handleToggleSectionProductActive('best-sellers', item.id)}
-                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                              item.active
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                            }`}
-                          >
-                            <CheckCircle2 size={12} className={item.active ? 'text-emerald-600' : 'text-slate-400'} />
-                            <span>{item.active ? 'Active' : 'Inactive'}</span>
-                          </button>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleOpenProductPicker('best-sellers')}
-                              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors cursor-pointer"
-                              title="Edit Section Selection"
-                            >
-                              <Edit size={13} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteSectionProduct('best-sellers', item.id)}
-                              className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                              title="Remove Product"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {filteredBestSellers.length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="py-10 text-center text-slate-400">
-                        No products configured for Best Sellers. Click "+ Add Best Seller" to select products.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── TAB 5: HERO SLIDES ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'hero' && (
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Hero Showcase Slides</h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Customize the high-impact rotating hero slideshow banners displayed at the top of your homepage.
-              </p>
-            </div>
-
-            <button
-              onClick={() => {
-                const newSlide = {
-                  id: Date.now(),
-                  eyebrow: 'NEW COLLECTION',
-                  headingLine1: 'Signature',
-                  headingLine2: 'Celebration.',
-                  subtitle: 'Handpicked couture crafted with pure heritage silks and intricate embroidery.',
-                  ctaText: 'SHOP COLLECTION',
-                  ctaLink: '/products',
-                  secondaryCtaText: 'EXPLORE ALL',
-                  secondaryCtaLink: '/products',
-                  mainImage: sareeGolden,
-                  detailImageLeft: lehengaPink,
-                  detailImageRight: kurtiPurplePrinted,
-                  accentBg: '#EBF5F5',
-                  active: true,
-                };
-                const updated = [...heroSlides, newSlide];
-                updateSectionContent('hero', { slides: updated });
-                showToast('New hero slide added.');
-              }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
-            >
-              <Plus size={14} /> Add Hero Slide
-            </button>
-          </div>
-
-          {/* Hero KPI Stat Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Total Slides</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-slate-900 tracking-tight">{heroSlides.length}</span>
-                <p className="text-[11px] text-slate-400 mt-1">Slides in rotation</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Active Slides</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-emerald-600 tracking-tight">{heroSlides.filter(s => s.active).length}</span>
-                <p className="text-[11px] text-slate-400 mt-1">Live on storefront</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Autoplay Interval</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-indigo-950 tracking-tight">7s</span>
-                <p className="text-[11px] text-slate-400 mt-1">Rotation delay</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Display Order</span>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-2xl font-bold text-indigo-900">≡ Drag</span>
-                <span className="text-[10px] bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded-md">Live</span>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1">Reorder slides</p>
-            </div>
-          </div>
-
-          {/* Hero Slides Table */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] font-bold text-indigo-900 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 w-12 text-center">::</th>
-                    <th className="py-3.5 px-4 text-center">ORDER</th>
-                    <th className="py-3.5 px-4">PREVIEW</th>
-                    <th className="py-3.5 px-4">HEADLINES & SUBTITLE</th>
-                    <th className="py-3.5 px-4">CTA BUTTONS</th>
-                    <th className="py-3.5 px-4">STATUS</th>
-                    <th className="py-3.5 px-4 text-right">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {heroSlides.map((slide, idx) => (
-                    <tr key={slide.id || idx} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3.5 px-4 text-center">
-                        <div className="cursor-grab text-slate-400 hover:text-slate-700 p-1 flex justify-center">
-                          <GripVertical size={15} />
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[11px]">
-                          #{idx + 1}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="w-16 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
-                          <img src={slide.mainImage} alt="Slide Preview" className="w-full h-full object-cover" />
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 max-w-sm">
-                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">
-                          {slide.eyebrow}
-                        </span>
-                        <h4 className="font-bold text-slate-900 text-sm">
-                          {slide.headingLine1} {slide.headingLine2}
-                        </h4>
-                        <p className="text-slate-500 text-xs line-clamp-1 mt-0.5">{slide.subtitle}</p>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-semibold text-slate-800 text-xs">{slide.ctaText}</div>
-                        <div className="text-slate-400 text-[11px]">{slide.ctaLink}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <button
-                          onClick={() => {
-                            const updated = heroSlides.map((s, i) => (i === idx ? { ...s, active: !s.active } : s));
-                            updateSectionContent('hero', { slides: updated });
-                            showToast(`Slide ${idx + 1} status updated.`);
-                          }}
-                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                            slide.active
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                              : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                          }`}
-                        >
-                          <CheckCircle2 size={12} className={slide.active ? 'text-emerald-600' : 'text-slate-400'} />
-                          <span>{slide.active ? 'Active' : 'Inactive'}</span>
-                        </button>
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => {
-                              setHeroSlideModal({ slide, idx });
-                            }}
-                            className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors cursor-pointer"
-                            title="Edit Slide"
-                          >
-                            <Edit size={13} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (heroSlides.length <= 1) {
-                                showToast('Hero slider must have at least one slide.');
-                                return;
-                              }
-                              const updated = heroSlides.filter((_, i) => i !== idx);
-                              updateSectionContent('hero', { slides: updated });
-                              showToast('Hero slide removed.');
-                            }}
-                            className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                            title="Delete Slide"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── TAB 6: HOMEPAGE LAYOUT (REORDERABLE SECTIONS) ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'layout' && (
-        <div className="space-y-6">
-          {/* Summary Stat Cards Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Total Sections</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-slate-900 tracking-tight">{sections.length}</span>
-                <p className="text-[11px] text-slate-400 mt-1">Homepage sections configured</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Visible Sections</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-emerald-600 tracking-tight">
-                  {sections.filter(s => s.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Shown to customers</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Hidden Sections</span>
-              <div className="mt-3">
-                <span className="text-3xl font-black text-rose-600 tracking-tight">
-                  {sections.filter(s => !s.active).length}
-                </span>
-                <p className="text-[11px] text-slate-400 mt-1">Not displayed on homepage</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between">
-              <span className="text-xs font-semibold text-slate-500">Drag to Reorder</span>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-2xl font-bold text-indigo-900 font-mono">☰</span>
-                <span className="text-[10px] bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded-md">Live Sync</span>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1">Grab handle to change order</p>
-            </div>
-          </div>
-
-          {/* Search & Filter Bar */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex flex-wrap gap-3 items-center justify-between">
-            <div className="flex items-center gap-2.5 bg-slate-50/80 border border-slate-200/80 rounded-xl px-3.5 py-2 flex-1 min-w-[220px] max-w-md focus-within:bg-white focus-within:border-emerald-600 transition-all">
-              <Search size={14} className="text-slate-400" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search homepage sections..."
-                className="bg-transparent text-xs text-slate-800 placeholder-slate-400 outline-none w-full"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600">
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-xs text-slate-600">
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 bg-white focus:outline-none focus:border-emerald-600 shadow-2xs font-medium"
-              >
-                <option value="All">All Sections ({sections.length})</option>
-                <option value="Active">Visible ({sections.filter(s => s.active).length})</option>
-                <option value="Hidden">Hidden ({sections.filter(s => !s.active).length})</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Reorderable Section Card List */}
-          <div className="space-y-3">
-            {sections
-              .filter(sec => {
-                const matchSearch = sec.label.toLowerCase().includes(search.toLowerCase()) ||
-                  (sec.desc || '').toLowerCase().includes(search.toLowerCase()) ||
-                  sec.id.toLowerCase().includes(search.toLowerCase());
-                const matchStatus = statusFilter === 'All' ? true : statusFilter === 'Active' ? sec.active : !sec.active;
-                return matchSearch && matchStatus;
-              })
-              .map((section) => {
-                const actualIdx = sections.findIndex(s => s.id === section.id);
-                const IconComponent = ICON_MAP[section.id] || LayoutTemplate;
-                const badgeText = SECTION_BADGES[section.id];
-                const isDragging = draggedIdx === actualIdx;
-                const isDragOver = dragOverIdx === actualIdx;
-
-                return (
-                  <div
-                    key={section.id}
-                    draggable
-                    onDragStart={(e) => {
-                      setDraggedIdx(actualIdx);
-                      e.dataTransfer.setData('text/plain', actualIdx);
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      if (dragOverIdx !== actualIdx) setDragOverIdx(actualIdx);
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (draggedIdx !== null && draggedIdx !== actualIdx) {
-                        const newSections = [...sections];
-                        const [moved] = newSections.splice(draggedIdx, 1);
-                        newSections.splice(actualIdx, 0, moved);
-                        reorderSections(newSections);
-                        showToast('Section order updated.');
-                      }
-                      setDraggedIdx(null);
-                      setDragOverIdx(null);
-                    }}
-                    onDragEnd={() => {
-                      setDraggedIdx(null);
-                      setDragOverIdx(null);
-                    }}
-                    className={`bg-white rounded-2xl border transition-all duration-150 shadow-xs hover:shadow-md flex items-center justify-between p-3.5 sm:p-4 gap-3 ${
-                      isDragging
-                        ? 'opacity-40 border-dashed border-emerald-600 bg-emerald-50/20 scale-[0.99]'
-                        : isDragOver
-                        ? 'border-emerald-600 ring-2 ring-emerald-600/20 bg-emerald-50/10'
-                        : section.active
-                        ? 'border-slate-100'
-                        : 'border-slate-200/70 bg-slate-50/50 opacity-75'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                      <div className="cursor-grab active:cursor-grabbing p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors">
-                        <GripVertical size={16} />
-                      </div>
-
-                      <div className="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs flex items-center justify-center flex-shrink-0 border border-indigo-100">
-                        {actualIdx + 1}
-                      </div>
-
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-100 text-slate-700">
-                        <IconComponent size={18} />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-slate-900 text-sm leading-snug">
-                            {section.label}
-                          </h3>
-                          {badgeText && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
-                              {badgeText}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-slate-500 truncate mt-0.5">{section.desc}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 flex-shrink-0">
-                      <button
-                        onClick={() => setActiveTab(section.id)}
-                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-indigo-900 hover:text-white text-slate-700 text-xs font-semibold rounded-xl transition-all shadow-2xs cursor-pointer"
-                      >
-                        <Edit size={12} /> Manage Content
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          toggleSection(section.id);
-                          showToast(`"${section.label}" is now ${!section.active ? 'visible' : 'hidden'}.`);
-                        }}
-                        className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all cursor-pointer shadow-2xs ${
-                          section.active
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                            : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                        }`}
-                      >
-                        {section.active ? (
-                          <>
-                            <Eye size={13} className="text-emerald-600" />
-                            <span>Visible</span>
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff size={13} className="text-slate-400" />
-                            <span>Hidden</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── TAB 7+: OTHER SPECIALIZED SECTIONS (FOUR PILLARS, ETC.) ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {!['categories', 'promo-banners', 'new-arrivals', 'best-sellers', 'hero', 'layout'].includes(activeTab) && currentSection && (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
-                {React.createElement(ICON_MAP[currentSection.id] || LayoutTemplate, { size: 18 })}
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-base">{currentSection.label}</h3>
-                <p className="text-xs text-slate-500">{currentSection.desc}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  toggleSection(currentSection.id);
-                  showToast(`"${currentSection.label}" updated.`);
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${
-                  currentSection.active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500'
-                }`}
-              >
-                {currentSection.active ? <Eye size={13} /> : <EyeOff size={13} />}
-                <span>{currentSection.active ? 'Visible' : 'Hidden'}</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="p-4 bg-slate-50 rounded-xl text-xs text-slate-600 space-y-3">
-            <p className="font-medium text-slate-800">Direct Section Properties:</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Section Title</label>
-                <input
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none focus:border-indigo-600"
-                  value={currentSection.content?.title || ''}
-                  onChange={(e) => updateSectionContent(currentSection.id, { title: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Eyebrow Tag</label>
-                <input
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none focus:border-indigo-600"
-                  value={currentSection.content?.eyebrow || ''}
-                  onChange={(e) => updateSectionContent(currentSection.id, { eyebrow: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── MODAL 1: PRODUCT SELECTION MODAL (IMAGE 4) ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {productPickerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-[fadeInUp_0.2s_ease-out]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-              <div>
-                <h3 className="font-black text-slate-900 text-lg">
-                  {productPickerModal.targetSection === 'new-arrivals' ? 'Select New Arrivals' : 'Select Best Sellers'}
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Choose products from the store catalog or create a new product.</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <a
-                  href="/admin/products/add"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                >
-                  <Plus size={13} /> Create New Product
-                </a>
+      {/* 4. Product Picker Modal */}
+      {productPickerModal && (() => {
+        // Build list of product categories
+        const categoryTabs = ['All', 'Sarees', 'Kurtis', 'Lehengas', 'Suits', 'Dresses', 'Coords', 'Dupattas'];
+        products.forEach(p => {
+          if (p.category) {
+            const raw = p.category.trim();
+            const formatted = raw.charAt(0).toUpperCase() + raw.slice(1);
+            if (!categoryTabs.some(c => c.toLowerCase() === raw.toLowerCase())) {
+              categoryTabs.push(formatted);
+            }
+          }
+        });
+
+        const isCategoryMatch = (p, target) => {
+          if (!target || target === 'All') return true;
+          const pCat = (p.category || '').toLowerCase().trim();
+          const t = target.toLowerCase().trim();
+          if (pCat === t) return true;
+          if (pCat.includes(t) || t.includes(pCat)) return true;
+          if (t === 'kurtis' || t === 'kurti' || t === 'kurthi') {
+            return pCat.includes('kurti') || pCat.includes('kurthi') || pCat.includes('anarkali');
+          }
+          if (t === 'sarees' || t === 'saree') {
+            return pCat.includes('saree');
+          }
+          if (t === 'lehengas' || t === 'lehenga') {
+            return pCat.includes('lehenga');
+          }
+          if (t === 'suits' || t === 'suit') {
+            return pCat.includes('suit') || pCat.includes('anarkali');
+          }
+          if (t === 'dresses' || t === 'dress') {
+            return pCat.includes('dress');
+          }
+          if (t === 'coords' || t === 'coord') {
+            return pCat.includes('coord');
+          }
+          if (t === 'dupattas' || t === 'dupatta') {
+            return pCat.includes('dupatta');
+          }
+          return false;
+        };
+
+        const getCount = (cat) => {
+          if (cat === 'All') return products.length;
+          return products.filter(p => isCategoryMatch(p, cat)).length;
+        };
+
+        const filteredProducts = products.filter(p => {
+          if (!isCategoryMatch(p, pickerCategory)) return false;
+          if (pickerSearch.trim()) {
+            const q = pickerSearch.toLowerCase().trim();
+            const matchesName = (p.name || '').toLowerCase().includes(q);
+            const matchesId = (p.id || '').toLowerCase().includes(q);
+            const matchesCategory = (p.category || '').toLowerCase().includes(q);
+            const matchesSubcat = (p.subcategory || '').toLowerCase().includes(q);
+            if (!matchesName && !matchesId && !matchesCategory && !matchesSubcat) return false;
+          }
+          return true;
+        });
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-xs">
+            <div className="bg-white rounded-2xl max-w-5xl w-full p-8 shadow-2xl space-y-5 animate-[scaleIn_0.2s_ease-out]">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Product Picker</h3>
+                  <p className="text-sm text-slate-500 mt-0.5">Select catalog products to include in this showcase.</p>
+                </div>
                 <button
                   onClick={() => setProductPickerModal(null)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
-            </div>
 
-            {/* Modal Search & Filter Bar */}
-            <div className="px-6 pt-4 pb-2 flex gap-3 items-center">
-              <div className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                <Search size={14} className="text-slate-400" />
-                <input
-                  value={pickerSearch}
-                  onChange={e => setPickerSearch(e.target.value)}
-                  placeholder="Search store products..."
-                  className="bg-transparent outline-none w-full text-slate-800 placeholder-slate-400"
-                />
-              </div>
-
-              <select
-                value={pickerCategoryFilter}
-                onChange={e => setPickerCategoryFilter(e.target.value)}
-                className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white font-medium outline-none"
-              >
-                <option value="All">All Categories ({products.length})</option>
-                {pickerCategories.map(cat => (
-                  <option key={cat.name} value={cat.name}>
-                    {cat.name} ({cat.count})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Modal Product Items List */}
-            <div className="flex-1 overflow-y-auto px-6 py-3 space-y-2.5">
-              {pickerFilteredProducts.map((prod) => {
-                const isSelected = selectedProductIdsInPicker.includes(prod.id);
-                const prodImage = prod.colors?.[0]?.images?.[0]?.url || sareeGolden;
-
-                return (
-                  <div
-                    key={prod.id}
-                    onClick={() => handleToggleProductInPicker(prod.id)}
-                    className={`flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-indigo-600 bg-indigo-50/50 shadow-2xs'
-                        : 'border-slate-200/80 bg-white hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Checkbox */}
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => {}} // Handled by container click
-                        className="w-4 h-4 rounded text-indigo-600 accent-indigo-600 cursor-pointer"
-                      />
-
-                      {/* Thumbnail */}
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0">
-                        <img src={prodImage} alt={prod.name} className="w-full h-full object-cover" />
-                      </div>
-
-                      {/* Title & Info */}
-                      <div>
-                        <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{prod.name}</h4>
-                        <p className="text-slate-500 text-[11px] mt-0.5">
-                          {prod.category} • ₹{Number(prod.price || 0).toLocaleString('en-IN')}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Selected Badge */}
-                    {isSelected && (
-                      <span className="text-xs font-bold text-indigo-700 pr-2">
-                        Selected
-                      </span>
+              {/* Filter Bar with Search, Type Dropdown, and Quick Category Buttons */}
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  {/* Search Input */}
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 flex-1 focus-within:border-brand-teal focus-within:ring-2 focus-within:ring-brand-teal/10 transition-all">
+                    <Search size={16} className="text-slate-400 shrink-0" />
+                    <input
+                      type="text"
+                      value={pickerSearch}
+                      onChange={(e) => setPickerSearch(e.target.value)}
+                      placeholder="Search products by name, SKU, or category..."
+                      className="bg-transparent text-sm text-slate-800 outline-none w-full placeholder:text-slate-400"
+                    />
+                    {pickerSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setPickerSearch('')}
+                        className="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                      >
+                        <X size={14} />
+                      </button>
                     )}
                   </div>
-                );
-              })}
 
-              {pickerFilteredProducts.length === 0 && (
-                <div className="py-12 text-center text-slate-400 text-xs">
-                  No products found matching your search.
+                  {/* Type Selection Dropdown Button */}
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 shrink-0 focus-within:border-brand-teal focus-within:ring-2 focus-within:ring-brand-teal/10 transition-all">
+                    <Filter size={15} className="text-brand-teal shrink-0" />
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider shrink-0">Type:</span>
+                    <select
+                      value={pickerCategory}
+                      onChange={(e) => setPickerCategory(e.target.value)}
+                      className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer pr-1"
+                    >
+                      {categoryTabs.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat === 'All' ? 'All Product Types' : cat} ({getCount(cat)})
+                        </option>
+                      ))}
+                    </select>
+                    {pickerCategory !== 'All' && (
+                      <button
+                        type="button"
+                        onClick={() => setPickerCategory('All')}
+                        title="Reset to All Types"
+                        className="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer ml-0.5"
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-              <button
-                onClick={() => setProductPickerModal(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSavePickedProducts}
-                className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer"
-              >
-                Add Selected ({selectedProductIdsInPicker.length})
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── MODAL 2: CATEGORY TILE ADD / EDIT MODAL ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {categoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-[fadeInUp_0.2s_ease-out]">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-base">
-                {categoryModal.mode === 'add' ? 'Add Category Tile' : 'Edit Category Tile'}
-              </h3>
-              <button onClick={() => setCategoryModal(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                  Category Name
-                </label>
-                <input
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold outline-none focus:bg-white focus:border-indigo-600"
-                  value={categoryModal.data.name}
-                  onChange={e => setCategoryModal({
-                    ...categoryModal,
-                    data: { ...categoryModal.data, name: e.target.value }
-                  })}
-                  placeholder="e.g. Hybrid, Sarees, Lehengas, Pillows"
-                />
               </div>
 
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                  Destination Route / Link
-                </label>
-                <input
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                  value={categoryModal.data.link}
-                  onChange={e => setCategoryModal({
-                    ...categoryModal,
-                    data: { ...categoryModal.data, link: e.target.value }
-                  })}
-                  placeholder="/category/sarees"
-                />
-              </div>
+              {/* Product List */}
+              {filteredProducts.length === 0 ? (
+                <div className="py-16 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                  <p className="text-sm font-bold text-slate-700">No products found</p>
+                  <p className="text-xs text-slate-400 mt-1">No products match "{pickerSearch || pickerCategory}"</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPickerSearch('');
+                      setPickerCategory('All');
+                    }}
+                    className="mt-3 px-3.5 py-1.5 text-xs font-bold text-brand-teal bg-brand-teal/10 rounded-lg hover:bg-brand-teal/20 transition cursor-pointer"
+                  >
+                    Show All Products
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-h-[60vh] overflow-y-auto p-1">
+                  {filteredProducts.map((p) => {
+                    const pId = p.id || p.slug;
+                    const currentSelected = productPickerModal.selectedIds;
+                    const isSelected = currentSelected.includes(pId);
+                    const imgSrc = p.image || p.colors?.[0]?.images?.[0]?.url || p.colors?.[0]?.images?.[0] || sareeGolden;
 
-              {/* Theme Color Presets */}
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  Theme & Gradient Color Preset
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {CATEGORY_THEMES.map(theme => {
-                    const isSelected = categoryModal.data.themeColor === theme.name;
                     return (
                       <div
-                        key={theme.name}
-                        onClick={() => setCategoryModal({
-                          ...categoryModal,
-                          data: {
-                            ...categoryModal.data,
-                            themeColor: theme.name,
-                            bgGradient: theme.bgGradient,
-                            borderColor: theme.borderColor,
-                            textColor: theme.textColor,
-                          }
-                        })}
-                        className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+                        key={pId}
+                        onClick={() => {
+                          const nextIds = isSelected
+                            ? currentSelected.filter(id => id !== pId)
+                            : [...currentSelected, pId];
+                          setProductPickerModal(prev => ({ ...prev, selectedIds: nextIds }));
+                        }}
+                        className={`p-3 rounded-xl border-2 transition-all cursor-pointer ${
                           isSelected
-                            ? 'border-indigo-600 bg-indigo-50/60 ring-1 ring-indigo-600'
-                            : 'border-slate-200 hover:bg-slate-50'
+                            ? 'border-brand-teal bg-brand-powder/30 shadow-sm'
+                            : 'border-slate-200 hover:border-slate-300 bg-white hover:shadow-sm'
                         }`}
                       >
-                        <span className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ backgroundColor: theme.dotColor }} />
-                        <span className="font-semibold text-slate-800 text-[11px] truncate">{theme.name}</span>
+                        <div className="aspect-[3/4] rounded-lg overflow-hidden bg-slate-50 mb-2.5 relative">
+                          <img src={imgSrc} alt={p.name} className="w-full h-full object-cover" />
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-brand-teal text-white flex items-center justify-center shadow-md">
+                              <Check size={14} strokeWidth={3} />
+                            </div>
+                          )}
+                          {p.category && (
+                            <span className="absolute bottom-2 left-2 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/60 text-white backdrop-blur-xs">
+                              {p.category}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-sm font-bold text-slate-800 block truncate" title={p.name}>{p.name}</span>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-xs text-slate-500 font-mono">₹{p.price}</span>
+                          <span className={`text-[10px] font-bold ${isSelected ? 'text-brand-teal' : 'text-slate-400'}`}>
+                            {isSelected ? 'Selected' : 'Click to add'}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
+              )}
 
-              {/* Thumbnail Image */}
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                  Tile Image URL / Preset
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                    value={categoryModal.data.image}
-                    onChange={e => setCategoryModal({
-                      ...categoryModal,
-                      data: { ...categoryModal.data, image: e.target.value }
-                    })}
-                  />
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0">
-                    <img src={categoryModal.data.image} alt="Preview" className="w-full h-full object-cover" />
-                  </div>
+              {/* Modal Footer Actions */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-slate-700">
+                    <strong className="text-brand-teal font-bold">{productPickerModal.selectedIds.length}</strong> Products Selected
+                  </span>
+                  {productPickerModal.selectedIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setProductPickerModal(prev => ({ ...prev, selectedIds: [] }))}
+                      className="text-xs text-red-500 hover:text-red-700 hover:underline font-semibold cursor-pointer"
+                    >
+                      Clear Selection
+                    </button>
+                  )}
                 </div>
-              </div>
-
-              {/* Active Toggle */}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <span className="font-semibold text-slate-700">Display on Storefront</span>
-                <button
-                  type="button"
-                  onClick={() => setCategoryModal({
-                    ...categoryModal,
-                    data: { ...categoryModal.data, active: !categoryModal.data.active }
-                  })}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    categoryModal.data.active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500'
-                  }`}
-                >
-                  {categoryModal.data.active ? 'Active & Visible' : 'Hidden'}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-              <button
-                onClick={() => setCategoryModal(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleSaveCategory(categoryModal.data)}
-                disabled={!categoryModal.data.name.trim()}
-                className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer"
-              >
-                Save Category Tile
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── MODAL 3: PROMO BANNER ADD / EDIT MODAL ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {bannerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-[fadeInUp_0.2s_ease-out]">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-base">
-                {bannerModal.mode === 'add' ? 'Add Promo Banner' : 'Edit Promo Banner'}
-              </h3>
-              <button onClick={() => setBannerModal(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Banner Title</label>
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold outline-none focus:bg-white focus:border-indigo-600"
-                    value={bannerModal.data.title}
-                    onChange={e => setBannerModal({
-                      ...bannerModal,
-                      data: { ...bannerModal.data, title: e.target.value }
-                    })}
-                    placeholder="e.g. Classic Comfort"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Campaign Type</label>
-                  <select
-                    value={bannerModal.data.type || 'PROMOTION'}
-                    onChange={e => setBannerModal({
-                      ...bannerModal,
-                      data: { ...bannerModal.data, type: e.target.value }
-                    })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold outline-none"
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setProductPickerModal(null)}
+                    className="px-5 py-2.5 border border-slate-200 text-sm font-bold text-slate-700 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
                   >
-                    <option value="PROMOTION">PROMOTION</option>
-                    <option value="OFFER">OFFER</option>
-                    <option value="NEW ARRIVAL">NEW ARRIVAL</option>
-                    <option value="COLLECTION">COLLECTION</option>
-                  </select>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      updateSectionContent(productPickerModal.sectionId, {
+                        selectedProductIds: productPickerModal.selectedIds,
+                      });
+                      setProductPickerModal(null);
+                      showToast('Selected products saved.');
+                    }}
+                    className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-sm transition-colors cursor-pointer"
+                  >
+                    Save Selection
+                  </button>
                 </div>
               </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Subtitle / Highlight</label>
-                <input
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                  value={bannerModal.data.subtitle}
-                  onChange={e => setBannerModal({
-                    ...bannerModal,
-                    data: { ...bannerModal.data, subtitle: e.target.value }
-                  })}
-                  placeholder="e.g. Limited Mattress Event"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Body Description</label>
-                <textarea
-                  rows={2}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:bg-white focus:border-indigo-600 resize-none"
-                  value={bannerModal.data.description}
-                  onChange={e => setBannerModal({
-                    ...bannerModal,
-                    data: { ...bannerModal.data, description: e.target.value }
-                  })}
-                  placeholder="Handcrafted memory foam & hybrid mattresses at up to 60% off."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">CTA Button Text</label>
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                    value={bannerModal.data.ctaText}
-                    onChange={e => setBannerModal({
-                      ...bannerModal,
-                      data: { ...bannerModal.data, ctaText: e.target.value }
-                    })}
-                    placeholder="e.g. shop now"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Target Route Label</label>
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                    value={bannerModal.data.targetRoute}
-                    onChange={e => setBannerModal({
-                      ...bannerModal,
-                      data: { ...bannerModal.data, targetRoute: e.target.value }
-                    })}
-                    placeholder="e.g. mattress, sarees"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Banner Image URL / Preset</label>
-                <div className="flex gap-2">
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                    value={bannerModal.data.image}
-                    onChange={e => setBannerModal({
-                      ...bannerModal,
-                      data: { ...bannerModal.data, image: e.target.value }
-                    })}
-                  />
-                  <div className="w-12 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0">
-                    <img src={bannerModal.data.image} alt="Preview" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-              <button
-                onClick={() => setBannerModal(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleSaveBanner(bannerModal.data)}
-                disabled={!bannerModal.data.title.trim()}
-                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer"
-              >
-                Save Banner
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ─── MODAL 4: HERO SLIDE EDIT MODAL ─── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {heroSlideModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-[fadeInUp_0.2s_ease-out]">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-base">Edit Hero Slide #{heroSlideModal.idx + 1}</h3>
-              <button onClick={() => setHeroSlideModal(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-3.5 text-xs max-h-[75vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Eyebrow Tag</label>
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none"
-                    value={heroSlideModal.slide.eyebrow || ''}
-                    onChange={e => setHeroSlideModal({
-                      ...heroSlideModal,
-                      slide: { ...heroSlideModal.slide, eyebrow: e.target.value }
-                    })}
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Accent Background Tint</label>
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none"
-                    value={heroSlideModal.slide.accentBg || '#EBF5F5'}
-                    onChange={e => setHeroSlideModal({
-                      ...heroSlideModal,
-                      slide: { ...heroSlideModal.slide, accentBg: e.target.value }
-                    })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Heading Line 1</label>
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 font-bold outline-none"
-                    value={heroSlideModal.slide.headingLine1 || ''}
-                    onChange={e => setHeroSlideModal({
-                      ...heroSlideModal,
-                      slide: { ...heroSlideModal.slide, headingLine1: e.target.value }
-                    })}
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Heading Line 2</label>
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 font-bold outline-none"
-                    value={heroSlideModal.slide.headingLine2 || ''}
-                    onChange={e => setHeroSlideModal({
-                      ...heroSlideModal,
-                      slide: { ...heroSlideModal.slide, headingLine2: e.target.value }
-                    })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Subtitle / Story</label>
-                <textarea
-                  rows={2}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none resize-none"
-                  value={heroSlideModal.slide.subtitle || ''}
-                  onChange={e => setHeroSlideModal({
-                    ...heroSlideModal,
-                    slide: { ...heroSlideModal.slide, subtitle: e.target.value }
-                  })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Primary CTA Text</label>
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none"
-                    value={heroSlideModal.slide.ctaText || ''}
-                    onChange={e => setHeroSlideModal({
-                      ...heroSlideModal,
-                      slide: { ...heroSlideModal.slide, ctaText: e.target.value }
-                    })}
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Primary CTA Link</label>
-                  <input
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none"
-                    value={heroSlideModal.slide.ctaLink || ''}
-                    onChange={e => setHeroSlideModal({
-                      ...heroSlideModal,
-                      slide: { ...heroSlideModal.slide, ctaLink: e.target.value }
-                    })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Main Image URL / Asset</label>
-                <input
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 outline-none"
-                  value={heroSlideModal.slide.mainImage || ''}
-                  onChange={e => setHeroSlideModal({
-                    ...heroSlideModal,
-                    slide: { ...heroSlideModal.slide, mainImage: e.target.value }
-                  })}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-              <button
-                onClick={() => setHeroSlideModal(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  const updated = heroSlides.map((s, i) => (i === heroSlideModal.idx ? { ...heroSlideModal.slide } : s));
-                  updateSectionContent('hero', { slides: updated });
-                  showToast('Hero slide saved.');
-                  setHeroSlideModal(null);
-                }}
-                className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer"
-              >
-                Save Slide
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirmation Modal */}
+      {/* 5. General Confirmation Modal */}
       {confirmModal && (
         <ConfirmModal
           isOpen={!!confirmModal}
           onClose={() => setConfirmModal(null)}
-          onConfirm={confirmModal.onConfirm}
+          onConfirm={() => {
+            confirmModal.onConfirm();
+            setConfirmModal(null);
+          }}
           title={confirmModal.title}
           message={confirmModal.message}
           confirmLabel={confirmModal.confirmLabel}

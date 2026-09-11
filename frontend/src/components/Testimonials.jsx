@@ -2,87 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 import { useReveal } from '../hooks/useReveal';
 import { useContent } from '../context/ContentContext';
-
-const defaultTestimonials = [
-  {
-    id: 1,
-    quote: 'The crimson lehenga exceeded all my expectations. The fabric quality and zardozi detailing are magnificent! Suka Fashions is my go-to boutique.',
-    author: 'Ananya Deshmukh',
-    name: 'Ananya Deshmukh',
-    location: 'Mumbai, Maharashtra',
-    city: 'Mumbai',
-    tag: 'Bridal Edit',
-    product: 'Bridal Edit',
-    stars: 5,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120&auto=format&fit=crop&crop=face',
-    date: '3 days ago',
-  },
-  {
-    id: 2,
-    quote: 'I wore the Kanchipuram silk drape for my sister\'s wedding and received non-stop compliments. Truly royal craftsmanship and rich zari.',
-    author: 'Pooja Sundaram',
-    name: 'Pooja Sundaram',
-    location: 'Bengaluru, Karnataka',
-    city: 'Bengaluru',
-    tag: 'Pure Silk Saree',
-    product: 'Pure Silk Saree',
-    stars: 5,
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=120&auto=format&fit=crop&crop=face',
-    date: '1 week ago',
-  },
-  {
-    id: 3,
-    quote: 'The organza saree drapes effortlessly and feels weightless. Suka Fashions delivers unmatched luxury and fine ethnic artistry.',
-    author: 'Ritu Khurana',
-    name: 'Ritu Khurana',
-    location: 'New Delhi, Delhi',
-    city: 'New Delhi',
-    tag: 'Organza Drape',
-    product: 'Organza Drape',
-    stars: 5,
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=120&auto=format&fit=crop&crop=face',
-    date: '2 weeks ago',
-  },
-  {
-    id: 4,
-    quote: 'Ordered the Royal Purple Anarkali set. The embroidery, packaging, and speedy delivery were all top-notch. Absolutely in love with the look!',
-    author: 'Meera Sengupta',
-    name: 'Meera Sengupta',
-    location: 'Kolkata, West Bengal',
-    city: 'Kolkata',
-    tag: 'Anarkali Suits',
-    product: 'Anarkali Suits',
-    stars: 5,
-    avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=120&auto=format&fit=crop&crop=face',
-    date: '3 weeks ago',
-  },
-  {
-    id: 5,
-    quote: 'The printed coord set has become my wardrobe favorite. Breathable modal silk, flawless stitch, and so elegant for gatherings.',
-    author: 'Kavita Menon',
-    name: 'Kavita Menon',
-    location: 'Chennai, Tamil Nadu',
-    city: 'Chennai',
-    tag: 'Modern Co-ords',
-    product: 'Modern Co-ords',
-    stars: 5,
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=120&auto=format&fit=crop&crop=face',
-    date: '1 month ago',
-  },
-  {
-    id: 6,
-    quote: 'The festive suit with Banarasi dupatta is pure opulence. The color richness and handwork border are exactly as shown.',
-    author: 'Shreya Kapoor',
-    name: 'Shreya Kapoor',
-    location: 'Chandigarh, Punjab',
-    city: 'Chandigarh',
-    tag: 'Festive Wear',
-    product: 'Festive Wear',
-    stars: 5,
-    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=120&auto=format&fit=crop&crop=face',
-    date: '1 month ago',
-  },
-];
+import { adminReviews } from '../admin/data/adminReviews';
 
 const AVATAR_FALLBACKS = [
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=120&auto=format&fit=crop&crop=face',
@@ -98,38 +18,106 @@ export default function Testimonials() {
   const { getSectionContent } = useContent();
   const content = getSectionContent('testimonials');
 
-  const eyebrow = content?.eyebrow && content.eyebrow !== 'TESTIMONIALS' && content.eyebrow !== 'Testimonials' ? content.eyebrow : 'CLIENT FEEDBACK';
-  const title = content?.title && content.title !== 'LOVED BY THOUSANDS' && content.title !== 'Loved By Thousands' ? content.title : 'REVIEWS';
+  const eyebrow = content?.eyebrow || 'CLIENT FEEDBACK';
+  const title = content?.title || 'REVIEWS';
 
   const testimonials = useMemo(() => {
+    // 1. If explicit custom reviews exist
     if (content?.items && Array.isArray(content.items) && content.items.length > 0) {
       return content.items.map((item, idx) => ({
-        ...item,
-        author: item.author || item.name || 'Verified Client',
+        id: item.id || idx,
+        author: item.author || item.name || item.customerName || 'Verified Patron',
         location: item.location || item.city || 'India',
-        product: item.product || item.tag || 'Suka Couture',
+        product: item.product || item.productName || item.tag || 'Suka Couture',
+        quote: item.quote || item.review || '',
+        stars: item.stars || item.rating || 5,
         avatar: item.avatar || AVATAR_FALLBACKS[idx % AVATAR_FALLBACKS.length],
-        stars: item.stars || 5,
-        date: item.date || 'Verified Customer',
       }));
     }
-    return defaultTestimonials;
+
+    // 2. Otherwise resolve from featuredReviewIds against approved adminReviews
+    if (content?.featuredReviewIds && Array.isArray(content.featuredReviewIds) && content.featuredReviewIds.length > 0) {
+      const resolved = content.featuredReviewIds
+        .map((revId, idx) => {
+          const found = adminReviews.find(r => r.id === revId && r.status === 'approved');
+          if (!found) return null;
+          return {
+            id: found.id,
+            author: found.customerName,
+            location: 'Verified Buyer',
+            product: found.productName,
+            quote: found.review,
+            stars: found.rating || 5,
+            avatar: found.images?.[0] || AVATAR_FALLBACKS[idx % AVATAR_FALLBACKS.length],
+          };
+        })
+        .filter(Boolean);
+
+      if (resolved.length > 0) return resolved;
+    }
+
+    // 3. Default approved homepage reviews from adminReviews
+    const approvedHomepage = adminReviews
+      .filter(r => r.status === 'approved' && (r.homepageFeatured || r.rating >= 4))
+      .slice(0, 6)
+      .map((r, idx) => ({
+        id: r.id,
+        author: r.customerName,
+        location: 'Verified Buyer',
+        product: r.productName,
+        quote: r.review,
+        stars: r.rating || 5,
+        avatar: r.images?.[0] || AVATAR_FALLBACKS[idx % AVATAR_FALLBACKS.length],
+      }));
+
+    return approvedHomepage.length > 0 ? approvedHomepage : [
+      {
+        id: 'rev-1',
+        author: 'Ananya Deshmukh',
+        location: 'Mumbai, Maharashtra',
+        product: 'Crimson Bridal Lehenga',
+        quote: 'The crimson lehenga exceeded all my expectations. The fabric quality and zardozi detailing are magnificent! Suka Fashions is my go-to boutique.',
+        stars: 5,
+        avatar: AVATAR_FALLBACKS[0],
+      },
+      {
+        id: 'rev-2',
+        author: 'Priya Sharma',
+        location: 'Bengaluru, Karnataka',
+        product: 'Teal Embroidered Organza Saree',
+        quote: 'Absolutely stunning saree! The embroidery is so intricate and the fabric quality is exceptional. Packaging was also very premium. Highly recommend!',
+        stars: 5,
+        avatar: AVATAR_FALLBACKS[1],
+      },
+      {
+        id: 'rev-3',
+        author: 'Kavitha Menon',
+        location: 'Chennai, Tamil Nadu',
+        product: 'Royal Gold Zari Kanchipuram Saree',
+        quote: 'This Kanchipuram saree is truly royal! Worth every rupee. The zari work is exquisite and the silk quality is the best I have seen.',
+        stars: 5,
+        avatar: AVATAR_FALLBACKS[2],
+      },
+    ];
   }, [content]);
 
   const [startIndex, setStartIndex] = useState(0);
 
   const next = useCallback(() => {
+    if (testimonials.length <= 1) return;
     setStartIndex((prev) => (prev + 1) % testimonials.length);
   }, [testimonials.length]);
 
   const prev = useCallback(() => {
+    if (testimonials.length <= 1) return;
     setStartIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   }, [testimonials.length]);
 
   useEffect(() => {
+    if (testimonials.length <= 1) return;
     const timer = setInterval(next, 8000);
     return () => clearInterval(timer);
-  }, [next]);
+  }, [next, testimonials.length]);
 
   const visibleCards = useMemo(() => {
     if (testimonials.length === 0) return [];
@@ -156,7 +144,7 @@ export default function Testimonials() {
             <div className="section-divider-left mt-1.5 sm:mt-2" />
           </div>
 
-          {/* Prominent Overall Rating Badge + Header Next/Prev Buttons */}
+          {/* Overall Rating Badge + Next/Prev Buttons */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 sm:gap-3 bg-white border border-brand-powder/90 px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full shadow-2xs">
               <div className="flex items-center gap-0.5">
@@ -170,7 +158,6 @@ export default function Testimonials() {
               </div>
             </div>
 
-            {/* Header Arrow Controls */}
             {testimonials.length > 1 && (
               <div className="hidden sm:flex items-center gap-1.5">
                 <button
@@ -194,9 +181,8 @@ export default function Testimonials() {
           </div>
         </div>
 
-        {/* Review Cards with Left/Right Navigation Buttons */}
+        {/* Review Cards */}
         <div className="relative px-2 sm:px-4 reveal">
-          {/* Previous Review Button (Left) */}
           {testimonials.length > 1 && (
             <button
               type="button"
@@ -208,7 +194,6 @@ export default function Testimonials() {
             </button>
           )}
 
-          {/* Next Review Button (Right) */}
           {testimonials.length > 1 && (
             <button
               type="button"
@@ -220,7 +205,6 @@ export default function Testimonials() {
             </button>
           )}
 
-          {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
             {visibleCards.map((item, idx) => (
               <div
@@ -229,7 +213,6 @@ export default function Testimonials() {
                   idx === 0 ? 'flex' : idx === 1 ? 'hidden md:flex' : 'hidden lg:flex'
                 }`}
               >
-                {/* Top Row: Stars */}
                 <div>
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className="flex items-center gap-0.5">
@@ -239,22 +222,19 @@ export default function Testimonials() {
                     </div>
                   </div>
 
-                  {/* Quote Text */}
                   <blockquote className="font-serif text-sm sm:text-[15px] font-normal text-brand-navy leading-relaxed mb-3 sm:mb-4 text-left">
                     "{item.quote}"
                   </blockquote>
 
-                  {/* Purchased Product Tag */}
                   {item.product && (
                     <div className="mb-4 sm:mb-5 inline-block bg-brand-cream/60 border border-brand-powder/50 rounded-md px-2.5 py-1 text-left">
                       <span className="font-sans text-[9.5px] sm:text-[10px] text-brand-navy/70 font-medium">
-                        Collection: <span className="text-brand-teal font-semibold">{item.product}</span>
+                        Product: <span className="text-brand-teal font-semibold">{item.product}</span>
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* Bottom Author Row */}
                 <div className="flex items-center gap-3 pt-3.5 sm:pt-4 border-t border-brand-powder/40">
                   <img
                     src={item.avatar}
@@ -272,7 +252,6 @@ export default function Testimonials() {
                   </div>
                 </div>
 
-                {/* Quote Watermark Accent */}
                 <Quote
                   size={42}
                   className="absolute top-4 right-4 text-brand-teal/5 pointer-events-none group-hover:text-brand-teal/10 transition-colors"
@@ -281,7 +260,6 @@ export default function Testimonials() {
             ))}
           </div>
 
-          {/* Indicator Dots */}
           {testimonials.length > 1 && (
             <div className="flex justify-center items-center gap-2 mt-5">
               {testimonials.map((_, i) => (

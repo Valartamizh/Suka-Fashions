@@ -6,6 +6,7 @@ import StatusBadge from '../components/ui/StatusBadge';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { useOrders } from '../../context/OrderContext';
 import OrderFormModal from '../components/orders/OrderFormModal';
+import { useAdminAuth } from '../context/AdminAuthContext';
 
 const STATUS_FLOW = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'];
 
@@ -43,6 +44,13 @@ export default function OrderDetailPage() {
     updateAdminOrder(order.id, updatedData);
   };
 
+  const { canPerform } = useAdminAuth();
+  const canAdvance = nextStatus
+    ? canPerform(`orders.${nextStatus === 'confirmed' ? 'confirm' : nextStatus === 'packed' ? 'pack' : nextStatus === 'shipped' ? 'ship' : 'deliver'}`)
+    : false;
+  const canCancel = canPerform('orders.cancel');
+  const canRefund = canPerform('orders.refund');
+
   return (
     <div className="space-y-5">
       {/* Back & Actions */}
@@ -50,7 +58,7 @@ export default function OrderDetailPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/admin/orders')}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer"
           >
             <ArrowLeft size={15} />
           </button>
@@ -69,28 +77,40 @@ export default function OrderDetailPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
-          >
-            <Edit2 size={13} className="text-brand-teal" />
-            <span>Edit Order</span>
-          </button>
+          {canPerform('orders.confirm') && (
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+            >
+              <Edit2 size={13} className="text-brand-teal" />
+              <span>Edit Order</span>
+            </button>
+          )}
 
-          {['cancelled', 'delivered', 'returned', 'refunded'].includes(currentStatus) ? null : (
+          {['cancelled', 'delivered', 'returned', 'refunded'].includes(currentStatus) ? (
+            currentStatus === 'cancelled' && canRefund && (
+              <button
+                type="button"
+                onClick={() => updateAdminOrder(order.id, { status: 'refunded', timelineNote: 'Refund processed by Admin' })}
+                className="px-3.5 py-2 border border-amber-200 text-amber-700 hover:bg-amber-50 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                Process Refund
+              </button>
+            )
+          ) : (
             <>
-              {nextStatus && (
+              {nextStatus && canAdvance && (
                 <button
                   onClick={advance}
-                  className="flex items-center gap-2 px-4 py-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold rounded-lg transition-colors capitalize shadow-sm shadow-brand-teal/20"
+                  className="flex items-center gap-2 px-4 py-2 bg-brand-teal hover:bg-brand-tealDark text-white text-xs font-semibold rounded-lg transition-colors capitalize shadow-sm shadow-brand-teal/20 cursor-pointer"
                 >
                   Mark as {nextStatus} <ChevronRight size={13} />
                 </button>
               )}
-              {currentStatus !== 'delivered' && (
+              {currentStatus !== 'delivered' && canCancel && (
                 <button
                   onClick={() => setCancelModal(true)}
-                  className="px-3.5 py-2 border border-red-200 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-50 transition-colors"
+                  className="px-3.5 py-2 border border-red-200 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
                 >
                   Cancel Order
                 </button>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Home, Search, Heart, ShoppingBag, User } from 'lucide-react';
 
@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollToTop from './components/ScrollToTop';
+import AppLoader from './components/common/AppLoader';
 
 // Customer Pages
 import Homepage     from './pages/Homepage';
@@ -33,6 +34,7 @@ import TermsConditions from './pages/TermsConditions';
 // ─── Admin System ────────────────────────────────────────────────────────────
 import { AdminAuthProvider } from './admin/context/AdminAuthContext';
 import AdminLayout from './admin/components/layout/AdminLayout';
+import AdminRouteGuard from './admin/components/layout/AdminRouteGuard';
 import AdminLogin from './admin/pages/AdminLogin';
 import AdminDashboard from './admin/pages/AdminDashboard';
 import ProductsPage from './admin/pages/products/ProductsPage';
@@ -163,9 +165,29 @@ function MainLayout() {
 }
 
 export default function App() {
+  const [isAppLoading, setIsAppLoading] = useState(true);
+
+  useEffect(() => {
+    // If testing loader preview via ?loader=preview, keep it mounted
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('loader') === 'preview') {
+        return;
+      }
+    }
+
+    // Initial brand loading animation: 400ms ensures smooth asset preparation without artificial delays
+    const timer = setTimeout(() => {
+      setIsAppLoading(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <ErrorBoundary>
-      <AuthProvider>
+    <>
+      {isAppLoading && <AppLoader fullScreen />}
+      <ErrorBoundary>
+        <AuthProvider>
         <AdminAuthProvider>
           <ProductProvider>
             <CategoryProvider>
@@ -185,19 +207,51 @@ export default function App() {
                                   <Route index element={<AdminDashboard />} />
                                   <Route path="products" element={<ProductsPage />} />
                                   <Route path="products/view/:id" element={<ProductsPage />} />
-                                  <Route path="products/add" element={<AddProductPage />} />
-                                  <Route path="products/edit/:id" element={<AddProductPage />} />
-                                  <Route path="categories" element={<CategoriesPage />} />
-                                  <Route path="filters" element={<FilterCatalogPage />} />
+                                  <Route path="products/add" element={
+                                    <AdminRouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}>
+                                      <AddProductPage />
+                                    </AdminRouteGuard>
+                                  } />
+                                  <Route path="products/edit/:id" element={
+                                    <AdminRouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}>
+                                      <AddProductPage />
+                                    </AdminRouteGuard>
+                                  } />
+                                  <Route path="categories" element={
+                                    <AdminRouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}>
+                                      <CategoriesPage />
+                                    </AdminRouteGuard>
+                                  } />
+                                  <Route path="filters" element={
+                                    <AdminRouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}>
+                                      <FilterCatalogPage />
+                                    </AdminRouteGuard>
+                                  } />
                                   <Route path="inventory" element={<InventoryPage />} />
                                   <Route path="orders" element={<OrdersPage />} />
                                   <Route path="orders/:id" element={<OrderDetailPage />} />
                                   <Route path="customers" element={<CustomersPage />} />
                                   <Route path="customers/:id" element={<CustomerDetailPage />} />
-                                  <Route path="reviews" element={<ReviewsPage />} />
-                                  <Route path="content" element={<ContentPage />} />
-                                  <Route path="users" element={<UsersPage />} />
-                                  <Route path="settings" element={<SettingsPage />} />
+                                  <Route path="reviews" element={
+                                    <AdminRouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN', 'MANAGER']}>
+                                      <ReviewsPage />
+                                    </AdminRouteGuard>
+                                  } />
+                                  <Route path="content" element={
+                                    <AdminRouteGuard requiredModule="content">
+                                      <ContentPage />
+                                    </AdminRouteGuard>
+                                  } />
+                                  <Route path="users" element={
+                                    <AdminRouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+                                      <UsersPage />
+                                    </AdminRouteGuard>
+                                  } />
+                                  <Route path="settings" element={
+                                    <AdminRouteGuard allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+                                      <SettingsPage />
+                                    </AdminRouteGuard>
+                                  } />
                                 </Route>
 
                                 {/* ─── Customer Storefront ────────────────────────────────── */}
@@ -216,5 +270,6 @@ export default function App() {
         </AdminAuthProvider>
       </AuthProvider>
     </ErrorBoundary>
+    </>
   );
 }

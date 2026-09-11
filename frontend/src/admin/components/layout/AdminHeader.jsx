@@ -12,6 +12,7 @@ import { useSettings } from '../../../context/SettingsContext';
 import { adminProducts } from '../../data/adminProducts';
 import StatusBadge from '../ui/StatusBadge';
 import logo from '../../../assets/logo.jpg';
+import { roleLabels, ROLE_BADGE_STYLES, ROLES } from '../../data/adminUsers';
 
 const DEFAULT_NOTIFICATIONS = [
   {
@@ -68,7 +69,7 @@ const DEFAULT_NOTIFICATIONS = [
 
 export default function AdminHeader({ onMenuToggle }) {
   const navigate = useNavigate();
-  const { admin, logout } = useAdminAuth();
+  const { admin, logout, hasPermission } = useAdminAuth();
   const { customers } = useCustomers();
   const { adminOrders } = useOrders();
   const { settings } = useSettings();
@@ -550,57 +551,73 @@ export default function AdminHeader({ onMenuToggle }) {
           <div className="relative" ref={dropRef}>
             <button
               onClick={() => setDropdownOpen(o => !o)}
-              className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-2.5 pl-2 pr-1.5 py-1 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-200/60"
             >
               <div className="w-10 h-10 bg-brand-teal rounded-full flex items-center justify-center text-white font-bold text-xs font-sans flex-shrink-0 shadow-sm">
-                {admin?.avatar || 'AS'}
+                {admin?.avatar || 'SF'}
               </div>
               <div className="hidden sm:block text-left leading-tight">
-                <p className="text-xs font-bold text-slate-800">{admin?.name || 'Aditi Sharma'}</p>
-                <p className="text-[11px] text-slate-400 font-medium mt-0.5">Super Admin</p>
+                <p className="text-xs font-bold text-slate-800">{admin?.name || 'Administrator'}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className={`text-[9.5px] px-2 py-0.2 rounded-full ${ROLE_BADGE_STYLES[admin?.role] || 'bg-slate-100 text-slate-600'}`}>
+                    {roleLabels[admin?.role] || admin?.role}
+                  </span>
+                </div>
               </div>
               <ChevronDown size={14} className="text-slate-400 hidden sm:block ml-0.5" />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 top-12 w-48 bg-white rounded-xl border border-slate-100 shadow-xl z-50 py-1.5 overflow-hidden">
-                <div className="px-4 py-2 border-b border-slate-100 sm:hidden">
-                  <p className="text-xs font-bold text-slate-800">{admin?.name || 'Aditi Sharma'}</p>
-                  <p className="text-[10px] text-slate-400">Super Admin</p>
+              <div className="absolute right-0 top-12 w-72 sm:w-80 bg-white rounded-2xl border border-slate-200/80 shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in zoom-in-95">
+                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                  <p className="text-xs font-bold text-slate-900">{admin?.name}</p>
+                  <p className="text-[11px] text-slate-500 font-medium truncate">{admin?.email}</p>
+                  <div className="mt-2">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full inline-block ${ROLE_BADGE_STYLES[admin?.role]}`}>
+                      {roleLabels[admin?.role]}
+                    </span>
+                  </div>
                 </div>
-                {[
-                  { icon: User, label: 'My Profile', to: '/admin/users' },
-                  { icon: ExternalLink, label: 'View Store', href: '/', external: true },
-                  { icon: Settings, label: 'Settings', to: '/admin/settings' },
-                ].map(item => (
-                  item.external ? (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
-                    >
-                      <item.icon size={14} className="text-slate-400" />
-                      {item.label}
-                    </a>
-                  ) : (
+
+                <div className="py-1">
+                  {hasPermission('users', 'view') && (
                     <Link
-                      key={item.label}
-                      to={item.to}
+                      to="/admin/users"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
                     >
-                      <item.icon size={14} className="text-slate-400" />
-                      {item.label}
+                      <User size={14} className="text-slate-400" />
+                      <span>Users & Roles</span>
                     </Link>
-                  )
-                ))}
+                  )}
+
+                  {(admin?.role === ROLES.SUPER_ADMIN || admin?.role === ROLES.ADMIN) && (
+                    <Link
+                      to="/admin/settings"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      <Settings size={14} className="text-slate-400" />
+                      <span>Settings</span>
+                    </Link>
+                  )}
+
+                  <a
+                    href="/"
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <ExternalLink size={14} className="text-slate-400" />
+                    <span>View Store</span>
+                  </a>
+                </div>
+
                 <div className="border-t border-slate-100 my-1" />
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer font-semibold"
                 >
-                  <LogOut size={14} className="text-red-400" />
-                  Logout
+                  <LogOut size={14} className="text-red-500" />
+                  <span>Logout</span>
                 </button>
               </div>
             )}

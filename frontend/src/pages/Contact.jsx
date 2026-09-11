@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, Mail, Clock, MapPin, Send, CheckCircle2, MessageSquare } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 const InstagramIcon = ({ className = "w-4 h-4 fill-current" }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
@@ -21,7 +22,8 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
-  const supportPhone = settings?.store?.supportPhone || '+91 98765 43210';
+  const supportPhone = settings?.store?.supportPhone || '+91 9488463850';
+  const whatsAppPhone = settings?.store?.whatsappNumber || supportPhone;
   const supportEmail = settings?.store?.supportEmail || 'care@sukafashions.com';
   const storeAddress = settings?.store?.address || '42, Commercial Street, Bengaluru, Karnataka 560001';
 
@@ -163,7 +165,7 @@ export default function Contact() {
                   <p className="font-sans text-[11px] text-emerald-800">Chat live with our fashion concierge.</p>
                 </div>
                 <a
-                  href="https://wa.me/919876543210"
+                  href={getWhatsAppUrl(whatsAppPhone, 'Hi Suka Fashions, I would like to chat with a fashion stylist.')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-sans text-[10px] uppercase font-bold tracking-wider rounded-sm shadow-xs transition-colors whitespace-nowrap"

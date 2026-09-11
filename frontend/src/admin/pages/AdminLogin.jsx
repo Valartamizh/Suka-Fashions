@@ -164,11 +164,38 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        {/* Demo Credentials Info Box */}
-        <div className="mt-6 p-3 bg-brand-powderLight/60 border border-brand-powder/60 rounded-xl text-center">
-          <p className="font-sans text-[10px] text-brand-navy/70 font-medium">
-            🔑 <span className="font-bold text-brand-teal">Demo Credentials:</span> aditi@sukafashions.com | admin123
+        {/* Quick Role Fill Buttons */}
+        <div className="mt-6 p-3.5 bg-brand-powderLight/60 border border-brand-powder/60 rounded-2xl">
+          <p className="font-sans text-[10px] uppercase tracking-wider text-brand-teal font-extrabold text-center mb-2">
+            Quick Fill Accounts (Password: admin123):
           </p>
+          <div className="grid grid-cols-2 gap-1.5 text-left">
+            {[
+              { label: 'Super Admin', email: 'valar@sukafashions.com', desc: 'Technical Admin' },
+              { label: 'Admin', email: 'aditi@sukafashions.com', desc: 'Store Admin' },
+              { label: 'Manager', email: 'priya@sukafashions.com', desc: 'Store Operations' },
+              { label: 'Staff', email: 'anu@sukafashions.com', desc: 'Operational Staff' },
+            ].map((acc) => (
+              <button
+                key={acc.email}
+                type="button"
+                onClick={() => {
+                  setEmail(acc.email);
+                  setPassword('admin123');
+                }}
+                className={`p-2 rounded-xl border text-[10.5px] transition-all cursor-pointer ${
+                  email === acc.email
+                    ? 'bg-brand-teal text-white border-brand-teal shadow-xs'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80'
+                }`}
+              >
+                <span className="font-bold block leading-tight">{acc.label}</span>
+                <span className={`text-[9.5px] block truncate ${email === acc.email ? 'text-brand-powder' : 'text-slate-400'}`}>
+                  {acc.email}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Footer Security Badges & Storefront Link */}

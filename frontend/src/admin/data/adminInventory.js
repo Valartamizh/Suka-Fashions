@@ -37,7 +37,7 @@ export const adminInventory = [
     reserved: 0,
     minimumStock: 5,
     lastUpdated: '2026-08-22',
-    updatedBy: 'Priya (Product Manager)',
+    updatedBy: 'Priya (Manager)',
   },
   {
     id: 'INV004',

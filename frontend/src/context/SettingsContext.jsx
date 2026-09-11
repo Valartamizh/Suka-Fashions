@@ -4,7 +4,8 @@ const defaultSettings = {
   store: {
     storeName: 'Suka Fashions',
     supportEmail: 'support@sukafashions.com',
-    supportPhone: '+91 98765 00000',
+    supportPhone: '+91 9488463850',
+    whatsappNumber: '+91 9488463850',
     address: '42, Commercial Street, Bengaluru, Karnataka 560001',
     gst: '29ABCDE1234F1Z5',
     currency: 'INR',

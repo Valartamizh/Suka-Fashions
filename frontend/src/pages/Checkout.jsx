@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useOrders } from '../context/OrderContext';
 import { useSettings } from '../context/SettingsContext';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 const STEPS = [
   { id: 1, name: 'Address' },
@@ -49,6 +50,8 @@ export default function Checkout() {
   const { isLoggedIn } = useAuth();
   const { cartItems, clearCart } = useCart();
   const { addOrder } = useOrders();
+  const { settings } = useSettings();
+  const storeWhatsAppPhone = settings?.store?.whatsappNumber || settings?.store?.supportPhone || '+91 9488463850';
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -135,7 +138,6 @@ export default function Checkout() {
     }
   }, [selectedAddressId, addresses]);
 
-  const { settings } = useSettings();
   const freeMin = Number(settings?.shipping?.freeShippingMin ?? 1999);
   const stdCharge = Number(settings?.shipping?.standardCharge ?? 99);
 
@@ -364,8 +366,9 @@ export default function Checkout() {
 
       addOrder(createdOrder);
 
-      // Launch WhatsApp chat
-      window.open(`https://wa.me/919876543210?text=${whatsappMsg}`, '_blank');
+      // Launch WhatsApp chat with configured store phone
+      const whatsappUrl = getWhatsAppUrl(storeWhatsAppPhone, whatsappMsg);
+      window.open(whatsappUrl, '_blank');
 
       // Clear cart & navigate to order success screen
       clearCart();
@@ -646,7 +649,7 @@ export default function Checkout() {
                         <div>
                           <p className="font-sans text-xs font-bold uppercase tracking-wider mb-0.5">WhatsApp Redirect Enabled</p>
                           <p className="font-sans text-[11px] text-emerald-800 leading-relaxed">
-                            Clicking <strong>"Place Order on WhatsApp"</strong> below will format your complete order invoice and launch a direct chat with Suka Fashions support (+91 98765 43210) for instant confirmation.
+                            Clicking <strong>"Place Order on WhatsApp"</strong> below will format your complete order invoice and launch a direct chat with Suka Fashions support ({storeWhatsAppPhone}) for instant confirmation.
                           </p>
                         </div>
                       </div>

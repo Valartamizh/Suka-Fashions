@@ -1,38 +1,60 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useReveal } from '../hooks/useReveal';
-import { Feather, Scissors, Sparkles } from 'lucide-react';
+import { Feather, Scissors, Sparkles, Award, ShieldCheck, Heart } from 'lucide-react';
+import { useContent } from '../context/ContentContext';
 
-// Import local assets for 100% reliable image loading
 import dupattaSilk from '../assets/dupatta_silk.jpg';
 import sareeBeigeMaroon from '../assets/saree_beige_maroon.jpg';
 import dressWhite from '../assets/dress_white.jpg';
 
-const craftsmanshipData = [
+const ICON_MAP = {
+  Feather,
+  Scissors,
+  Sparkles,
+  Award,
+  ShieldCheck,
+  Heart,
+};
+
+const defaultCraftsmanship = [
   {
     id: 1,
-    icon: Feather,
+    icon: 'Feather',
     title: 'Thoughtful Fabrics',
     description: 'We source only the finest pure silks, breathable cottons, and lightweight organzas to ensure every piece feels as beautiful as it looks.',
-    image: dupattaSilk
+    image: dupattaSilk,
   },
   {
     id: 2,
-    icon: Scissors,
+    icon: 'Scissors',
     title: 'Fine Craftsmanship',
     description: 'Every stitch, sequin, and zari weave is carefully placed by skilled artisans who have perfected their craft over generations.',
-    image: sareeBeigeMaroon
+    image: sareeBeigeMaroon,
   },
   {
     id: 3,
-    icon: Sparkles,
+    icon: 'Sparkles',
     title: 'Designed for Comfort',
     description: 'True elegance means never compromising on comfort. Our silhouettes are tailored to flatter and move with you gracefully.',
-    image: dressWhite
-  }
+    image: dressWhite,
+  },
 ];
 
 export default function Craftsmanship() {
   const sectionRef = useReveal();
+  const { getSectionContent } = useContent();
+  const content = getSectionContent('craftsmanship');
+
+  const eyebrow = content?.eyebrow || 'THE SUKA STANDARD';
+  const title = content?.title || 'CRAFTED WITH CARE';
+  const subtitle = content?.subtitle || "Our commitment to quality goes beyond the surface. It's woven into every fiber of our collections.";
+
+  const items = useMemo(() => {
+    if (content?.items && Array.isArray(content.items) && content.items.length > 0) {
+      return content.items.filter(item => item.enabled !== false && item.active !== false);
+    }
+    return defaultCraftsmanship;
+  }, [content]);
 
   return (
     <section ref={sectionRef} className="py-6 lg:py-8 bg-white border-y border-brand-powder/50">
@@ -41,28 +63,28 @@ export default function Craftsmanship() {
         {/* Section Heading */}
         <div className="text-center mb-5 reveal">
           <p className="font-sans text-[10px] tracking-[0.3em] text-brand-teal uppercase font-semibold mb-3">
-            The Suka Standard
+            {eyebrow}
           </p>
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light text-brand-navy tracking-wider uppercase mb-4">
-            Crafted With Care
+            {title}
           </h2>
           <div className="w-16 h-[1.5px] bg-brand-teal mx-auto" />
           <p className="mt-4 font-sans text-xs sm:text-sm text-brand-navy/60 font-light max-w-2xl mx-auto leading-relaxed">
-            Our commitment to quality goes beyond the surface. It's woven into every fiber of our collections.
+            {subtitle}
           </p>
         </div>
 
-        {/* 3-Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-          {craftsmanshipData.map((item, index) => {
-            const Icon = item.icon;
+        {/* Column Layout */}
+        <div className={`grid grid-cols-1 md:grid-cols-${Math.min(items.length, 3)} gap-8 lg:gap-12`}>
+          {items.map((item, index) => {
+            const IconComp = (typeof item.icon === 'string' ? ICON_MAP[item.icon] : item.icon) || Sparkles;
             return (
-              <div key={item.id} className={`reveal reveal-delay-${index + 1} flex flex-col items-center text-center group`}>
+              <div key={item.id || index} className={`reveal reveal-delay-${index + 1} flex flex-col items-center text-center group`}>
                 
-                {/* Image Circle (object-top positioning) */}
+                {/* Image Circle */}
                 <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden mb-5 border border-brand-powder shadow-sm relative">
                   <img 
-                    src={item.image} 
+                    src={item.image || dupattaSilk} 
                     alt={item.title}
                     className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
@@ -71,7 +93,7 @@ export default function Craftsmanship() {
                   
                   {/* Floating Icon */}
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg text-brand-teal group-hover:text-brand-tealDark transition-colors duration-300">
-                    <Icon size={22} strokeWidth={1.5} />
+                    <IconComp size={22} strokeWidth={1.5} />
                   </div>
                 </div>
 

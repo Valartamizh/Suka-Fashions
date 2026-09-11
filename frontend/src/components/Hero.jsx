@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import HeroWaves from './HeroWaves';
 import { useContent } from '../context/ContentContext';
 
-// Import local fallback assets for 100% reliable image loading
 import lehengaRed from '../assets/lehenga_red.jpg';
 import lehengaPink from '../assets/lehenga_pink.jpg';
 import lehengaMint from '../assets/lehenga_mint.jpg';
@@ -35,6 +34,7 @@ const defaultSlides = [
     secondaryCtaText: 'EXPLORE SAREES',
     secondaryCtaLink: '/category/sarees',
     accentBg: '#EBF5F5',
+    enabled: true,
   },
   {
     id: 2,
@@ -55,6 +55,7 @@ const defaultSlides = [
     secondaryCtaText: 'NEW ARRIVALS',
     secondaryCtaLink: '/products',
     accentBg: '#E8F3F5',
+    enabled: true,
   },
   {
     id: 3,
@@ -75,6 +76,7 @@ const defaultSlides = [
     secondaryCtaText: 'VIEW ALL',
     secondaryCtaLink: '/products',
     accentBg: '#EBF4F5',
+    enabled: true,
   },
 ];
 
@@ -91,16 +93,19 @@ export default function Hero() {
 
   const slides = useMemo(() => {
     if (heroContent?.slides && Array.isArray(heroContent.slides) && heroContent.slides.length > 0) {
-      return heroContent.slides.map((s, idx) => {
-        const def = defaultSlides[idx % defaultSlides.length];
-        return {
-          ...def,
-          ...s,
-          mainImage: s.mainImage || def.mainImage,
-          detailImageLeft: s.detailImageLeft || def.detailImageLeft,
-          detailImageRight: s.detailImageRight || def.detailImageRight,
-        };
-      });
+      const activeOnly = heroContent.slides.filter(s => s.enabled !== false && s.active !== false);
+      if (activeOnly.length > 0) {
+        return activeOnly.map((s, idx) => {
+          const def = defaultSlides[idx % defaultSlides.length];
+          return {
+            ...def,
+            ...s,
+            mainImage: s.mainImage || def.mainImage,
+            detailImageLeft: s.detailImageLeft || def.detailImageLeft,
+            detailImageRight: s.detailImageRight || def.detailImageRight,
+          };
+        });
+      }
     }
     return defaultSlides;
   }, [heroContent]);
@@ -108,7 +113,7 @@ export default function Hero() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
 
-  // Guard if current index is out of range after slides deletion
+  // Guard if current index is out of range
   useEffect(() => {
     if (current >= slides.length) {
       setCurrent(0);
@@ -116,20 +121,53 @@ export default function Hero() {
   }, [slides.length, current]);
 
   const goTo = useCallback((idx) => {
-    if (animating) return;
+    if (animating || slides.length <= 1) return;
     setAnimating(true);
     setTimeout(() => setAnimating(false), 700);
     setCurrent(idx);
-  }, [animating]);
+  }, [animating, slides.length]);
 
-  const next = useCallback(() => goTo((current + 1) % slides.length), [current, goTo, slides.length]);
-  const prev = useCallback(() => goTo((current - 1 + slides.length) % slides.length), [current, goTo, slides.length]);
+  const next = useCallback(() => {
+    if (slides.length <= 1) return;
+    goTo((current + 1) % slides.length);
+  }, [current, goTo, slides.length]);
+
+  const prev = useCallback(() => {
+    if (slides.length <= 1) return;
+    goTo((current - 1 + slides.length) % slides.length);
+  }, [current, goTo, slides.length]);
+
+  // Touch / swipe support for mobile
+  const touchStartX = React.useRef(null);
+  const touchEndX = React.useRef(null);
+  const SWIPE_THRESHOLD = 50;
+
+  const handleTouchStart = useCallback((e) => {
+    touchStartX.current = e.changedTouches[0].clientX;
+    touchEndX.current = null;
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const delta = touchStartX.current - touchEndX.current;
+    if (Math.abs(delta) >= SWIPE_THRESHOLD) {
+      if (delta > 0) next(); // swiped left → next slide
+      else prev();            // swiped right → prev slide
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  }, [next, prev]);
 
   useEffect(() => {
+    if (slides.length <= 1) return;
     const intervalSeconds = (heroContent?.autoplayInterval || 7) * 1000;
     const t = setInterval(next, intervalSeconds);
     return () => clearInterval(t);
-  }, [next, heroContent?.autoplayInterval]);
+  }, [next, heroContent?.autoplayInterval, slides.length]);
 
   const slide = slides[current] || defaultSlides[0];
 
@@ -138,13 +176,20 @@ export default function Hero() {
     const lines = [];
     if (slide.headingLine1) lines.push(slide.headingLine1);
     if (slide.headingLine2) lines.push(slide.headingLine2);
-    return lines.length > 0 ? lines : ['Royal', 'Occasions.'];
+    if (lines.length > 0) return lines;
+    if (slide.heading && typeof slide.heading === 'string') return slide.heading.split('\n');
+    return ['Grace in', 'Every Drape.'];
   }, [slide]);
 
   return (
     <>
       {/* ── MOBILE / TABLET HERO (Background Image with Overlay) (< lg) ── */}
-      <div className="relative lg:hidden w-full h-[380px] min-[375px]:h-[400px] min-[390px]:h-[425px] min-[430px]:h-[450px] sm:h-[490px] overflow-hidden flex items-end">
+      <div
+        className="relative lg:hidden w-full h-[380px] min-[375px]:h-[400px] min-[390px]:h-[425px] min-[430px]:h-[450px] sm:h-[490px] overflow-hidden flex items-end"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* Background Image with smooth transition */}
         <div className="absolute inset-0 z-0">
           <img
@@ -217,18 +262,20 @@ export default function Hero() {
             </div>
 
             {/* Pagination Dots */}
-            <div className="flex items-center gap-1.5">
-              {slides.map((s, idx) => (
-                <button
-                  key={s.id || idx}
-                  onClick={() => goTo(idx)}
-                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    idx === current ? 'w-5 bg-amber-400' : 'w-1.5 bg-white/50 hover:bg-white'
-                  }`}
-                  aria-label={`Go to slide ${idx + 1}`}
-                />
-              ))}
-            </div>
+            {slides.length > 1 && (
+              <div className="flex items-center gap-1.5">
+                {slides.map((s, idx) => (
+                  <button
+                    key={s.id || idx}
+                    onClick={() => goTo(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      idx === current ? 'w-5 bg-amber-400' : 'w-1.5 bg-white/50 hover:bg-white'
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -388,37 +435,39 @@ export default function Hero() {
             </div>
 
             {/* Slide Navigation Controls */}
-            <div className="flex items-center justify-between mt-6 lg:mt-8 pt-4 border-t border-brand-navy/10 z-20">
-              <div className="flex items-center gap-2">
-                {slides.map((s, idx) => (
-                  <button
-                    key={s.id || idx}
-                    onClick={() => goTo(idx)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      idx === current ? 'w-8 bg-brand-teal' : 'w-2 bg-brand-navy/20 hover:bg-brand-navy/40'
-                    }`}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
-                ))}
-              </div>
+            {slides.length > 1 && (
+              <div className="flex items-center justify-between mt-6 lg:mt-8 pt-4 border-t border-brand-navy/10 z-20">
+                <div className="flex items-center gap-2">
+                  {slides.map((s, idx) => (
+                    <button
+                      key={s.id || idx}
+                      onClick={() => goTo(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        idx === current ? 'w-8 bg-brand-teal' : 'w-2 bg-brand-navy/20 hover:bg-brand-navy/40'
+                      }`}
+                      aria-label={`Go to slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={prev}
-                  className="w-9 h-9 rounded-full border border-brand-navy/20 flex items-center justify-center text-brand-navy hover:bg-brand-teal hover:text-white hover:border-brand-teal transition-all duration-200 cursor-pointer"
-                  aria-label="Previous slide"
-                >
-                  <ArrowLeft size={15} />
-                </button>
-                <button
-                  onClick={next}
-                  className="w-9 h-9 rounded-full border border-brand-navy/20 flex items-center justify-center text-brand-navy hover:bg-brand-teal hover:text-white hover:border-brand-teal transition-all duration-200 cursor-pointer"
-                  aria-label="Next slide"
-                >
-                  <ArrowRight size={15} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={prev}
+                    className="w-9 h-9 rounded-full border border-brand-navy/20 flex items-center justify-center text-brand-navy hover:bg-brand-teal hover:text-white hover:border-brand-teal transition-all duration-200 cursor-pointer"
+                    aria-label="Previous slide"
+                  >
+                    <ArrowLeft size={15} />
+                  </button>
+                  <button
+                    onClick={next}
+                    className="w-9 h-9 rounded-full border border-brand-navy/20 flex items-center justify-center text-brand-navy hover:bg-brand-teal hover:text-white hover:border-brand-teal transition-all duration-200 cursor-pointer"
+                    aria-label="Next slide"
+                  >
+                    <ArrowRight size={15} />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
         </div>

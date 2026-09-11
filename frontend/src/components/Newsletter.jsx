@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { CheckCircle } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
+import { useSettings } from '../context/SettingsContext';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 const WhatsAppIcon = ({ className = "w-4 h-4 fill-current" }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
@@ -10,7 +12,9 @@ const WhatsAppIcon = ({ className = "w-4 h-4 fill-current" }) => (
 
 export default function Newsletter() {
   const { getSectionContent } = useContent();
+  const { settings } = useSettings();
   const content = getSectionContent('newsletter');
+  const storePhone = content?.whatsappNumber || settings?.store?.whatsappNumber || settings?.store?.supportPhone || '+91 9488463850';
 
   const eyebrow = content?.eyebrow || 'VIP WhatsApp Club';
   const title = content?.title || 'Stay in Style on WhatsApp';
@@ -36,7 +40,7 @@ export default function Newsletter() {
     setTimeout(() => {
       setLoading(false);
       setSubscribed(true);
-      window.open(`https://wa.me/919876543210?text=${message}`, '_blank');
+      window.open(getWhatsAppUrl(storePhone, message), '_blank');
       setPhone('');
     }, 600);
   };
