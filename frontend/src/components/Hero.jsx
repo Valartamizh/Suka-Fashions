@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ArrowLeft, ArrowRight, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import HeroWaves from './HeroWaves';
 import { useContent } from '../context/ContentContext';
@@ -442,35 +442,18 @@ export default function Hero() {
 
             {/* Slide Navigation Controls */}
             {slides.length > 1 && (
-              <div className="flex items-center justify-between mt-6 lg:mt-8 pt-4 border-t border-brand-navy/10 z-20">
+              <div className="flex items-center justify-start mt-6 lg:mt-8 pt-4 border-t border-brand-navy/10 z-20">
                 <div className="flex items-center gap-2">
                   {slides.map((s, idx) => (
                     <button
                       key={s.id || idx}
                       onClick={() => goTo(idx)}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                         idx === current ? 'w-8 bg-brand-teal' : 'w-2 bg-brand-navy/20 hover:bg-brand-navy/40'
                       }`}
                       aria-label={`Go to slide ${idx + 1}`}
                     />
                   ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={prev}
-                    className="w-9 h-9 rounded-full border border-brand-navy/20 flex items-center justify-center text-brand-navy hover:bg-brand-teal hover:text-white hover:border-brand-teal transition-all duration-200 cursor-pointer"
-                    aria-label="Previous slide"
-                  >
-                    <ArrowLeft size={15} />
-                  </button>
-                  <button
-                    onClick={next}
-                    className="w-9 h-9 rounded-full border border-brand-navy/20 flex items-center justify-center text-brand-navy hover:bg-brand-teal hover:text-white hover:border-brand-teal transition-all duration-200 cursor-pointer"
-                    aria-label="Next slide"
-                  >
-                    <ArrowRight size={15} />
-                  </button>
                 </div>
               </div>
             )}

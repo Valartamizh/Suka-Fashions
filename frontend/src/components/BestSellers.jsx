@@ -111,42 +111,14 @@ export default function BestSellers() {
             <div className="section-divider-left mt-1.5 sm:mt-2" />
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center">
             <Link
               to={viewAllLink}
-              className="flex items-center gap-1 sm:gap-2 font-sans text-[9.5px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.18em] uppercase text-brand-teal hover:text-brand-tealDark font-bold transition-colors duration-200 group sm:mr-3 whitespace-nowrap"
+              className="flex items-center gap-1 sm:gap-2 font-sans text-[9.5px] sm:text-[11px] tracking-[0.16em] sm:tracking-[0.18em] uppercase text-brand-teal hover:text-brand-tealDark font-bold transition-colors duration-200 group whitespace-nowrap"
             >
               <span>{viewAllText}</span>
               <ArrowRight size={13} strokeWidth={2} className="transform transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
-
-            {/* Header Navigation Arrows - Hidden on mobile */}
-            <div className="hidden sm:flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => scroll('left')}
-                className={`p-2 border rounded-sm transition-all duration-300 cursor-pointer ${
-                  showLeftArrow
-                    ? 'border-brand-navy/30 bg-white text-brand-navy hover:bg-brand-navy hover:text-white shadow-xs'
-                    : 'border-brand-powder/80 bg-white/50 text-brand-navy/30 hover:border-brand-navy/30 hover:text-brand-navy'
-                }`}
-                aria-label="Scroll left"
-              >
-                <ChevronLeft size={17} strokeWidth={2} />
-              </button>
-              <button
-                type="button"
-                onClick={() => scroll('right')}
-                className={`p-2 border rounded-sm transition-all duration-300 cursor-pointer ${
-                  showRightArrow
-                    ? 'border-brand-navy/30 bg-white text-brand-navy hover:bg-brand-navy hover:text-white shadow-xs'
-                    : 'border-brand-powder/80 bg-white/50 text-brand-navy/30 hover:border-brand-navy/30 hover:text-brand-navy'
-                }`}
-                aria-label="Scroll right"
-              >
-                <ChevronRight size={17} strokeWidth={2} />
-              </button>
-            </div>
           </div>
         </div>
 
