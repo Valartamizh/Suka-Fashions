@@ -235,6 +235,10 @@ export default function Navbar() {
 
   const isNavActive = (path) => {
     if (path === '/') return location.pathname === '/';
+    if (path.includes('?')) {
+      const [basePath, search] = path.split('?');
+      return location.pathname === basePath && location.search.includes(search);
+    }
     return location.pathname.startsWith(path);
   };
 
@@ -296,24 +300,24 @@ export default function Navbar() {
           <div className={`${isProductPage ? 'hidden lg:flex' : 'flex'} items-center justify-between transition-all duration-300 h-14 sm:h-16 lg:h-[94px] ${scrolled ? 'lg:h-[76px]' : ''}`}>
 
             {/* ── Logo ─────────────────────────────────────── */}
-            <Link to="/" className="flex items-center gap-2 sm:gap-3 lg:gap-3.5 flex-shrink-0">
+            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 lg:gap-3 flex-shrink-0">
               <img
                 src={logo}
                 alt="Store Logo"
-                className={`rounded-full object-cover border border-brand-powder shadow-sm transition-all duration-300 h-8 w-8 sm:h-9 sm:w-9 ${scrolled ? 'lg:h-11 lg:w-11' : 'lg:h-14 lg:w-14'}`}
+                className={`rounded-full object-cover border border-brand-powder shadow-sm transition-all duration-300 h-8 w-8 sm:h-9 sm:w-9 ${scrolled ? 'lg:h-10 lg:w-10' : 'lg:h-12 lg:w-12 xl:h-14 xl:w-14'}`}
               />
               <div className="flex flex-col leading-none">
-                <span className={`font-serif font-bold tracking-tight sm:tracking-wider text-brand-navy transition-all duration-300 text-lg sm:text-xl ${scrolled ? 'lg:text-2xl' : 'lg:text-3xl'}`}>
+                <span className={`font-serif font-bold tracking-tight sm:tracking-wider text-brand-navy transition-all duration-300 text-lg sm:text-xl ${scrolled ? 'lg:text-xl xl:text-2xl' : 'lg:text-2xl xl:text-3xl'}`}>
                   {settings?.store?.storeName || 'Suka Fashions'}
                 </span>
-                <span className="font-sans text-[7px] sm:text-[8px] lg:text-[9.5px] tracking-[0.25em] sm:tracking-[0.3em] text-brand-teal font-semibold uppercase mt-0.5">
+                <span className="font-sans text-[7px] sm:text-[8px] lg:text-[8.5px] xl:text-[9.5px] tracking-[0.22em] sm:tracking-[0.25em] xl:tracking-[0.3em] text-brand-teal font-semibold uppercase mt-0.5">
                   OFFICIAL STORE
                 </span>
               </div>
             </Link>
 
             {/* ── Desktop Navigation Links ───────────────────── */}
-            <nav className="hidden lg:flex items-center gap-1 xl:gap-2 h-full">
+            <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1.5 h-full flex-shrink-0">
               {navItems.map((item) => {
                 const hasDropdown = Boolean(item.dropdown);
                 const isActive = isNavActive(item.path);
@@ -321,13 +325,13 @@ export default function Navbar() {
                 return (
                   <div
                     key={item.name}
-                    className="relative h-full flex items-center"
+                    className="relative h-full flex items-center flex-shrink-0"
                     onMouseEnter={() => hasDropdown && handleMouseEnter(item.name)}
                     onMouseLeave={hasDropdown ? handleMouseLeave : undefined}
                   >
                     <Link
                       to={item.path}
-                      className={`relative font-sans text-[11px] xl:text-[12px] uppercase tracking-[0.2em] font-semibold transition-colors duration-200 px-3 xl:px-4 py-2 flex items-center gap-1 ${
+                      className={`relative font-sans text-[11px] xl:text-[12px] uppercase tracking-[0.12em] xl:tracking-[0.18em] font-semibold transition-colors duration-200 px-2.5 xl:px-4 py-2 flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${
                         item.highlight
                           ? 'text-red-500 hover:text-red-600 font-bold'
                           : isActive
@@ -346,7 +350,7 @@ export default function Navbar() {
                         />
                       )}
                       {isActive && (
-                        <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-brand-teal rounded-full" />
+                        <span className="absolute bottom-0 left-2.5 right-2.5 xl:left-4 xl:right-4 h-[2px] bg-brand-teal rounded-full" />
                       )}
                     </Link>
 
@@ -401,10 +405,10 @@ export default function Navbar() {
             </nav>
 
             {/* ── Right Section: Integrated Live Search & Account Icons ── */}
-            <div className="flex items-center gap-2 sm:gap-4 lg:gap-5">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-shrink-0">
 
               {/* Desktop & Tablet Live Search Input */}
-              <div className="relative hidden md:block w-48 lg:w-64 xl:w-72" ref={searchRef}>
+              <div className="relative hidden md:block w-40 lg:w-44 xl:w-60 2xl:w-72" ref={searchRef}>
                 <form onSubmit={handleSearchSubmit} className="relative">
                   <input
                     type="text"

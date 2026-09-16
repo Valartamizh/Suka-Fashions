@@ -10,7 +10,7 @@ import BenefitsSection from '../components/BenefitsSection';
 import TrendingNow from '../components/TrendingNow';
 import PromoBanner from '../components/PromoBanner';
 import OccasionSection from '../components/OccasionSection';
-import CuratedCollections from '../components/CuratedCollections';
+
 import BrandStory from '../components/BrandStory';
 import Craftsmanship from '../components/Craftsmanship';
 import Testimonials from '../components/Testimonials';
@@ -53,12 +53,17 @@ export default function Homepage() {
         return <BestSellers key="best-sellers" />;
       case 'promo-banners':
         return <PromoBanner key="promo-banners" />;
+      case 'promo-banner-1':
+        return <PromoBanner key="promo-banner-1" sectionId="promo-banner-1" bannerIndex={0} />;
+      case 'promo-banner-2':
+        return <PromoBanner key="promo-banner-2" sectionId="promo-banner-2" bannerIndex={1} />;
+      case 'promo-banner-3':
+        return <PromoBanner key="promo-banner-3" sectionId="promo-banner-3" bannerIndex={2} />;
       case 'trending':
         return <TrendingNow key="trending" />;
       case 'occasion':
         return <OccasionSection key="occasion" />;
-      case 'collections':
-        return <CuratedCollections key="collections" />;
+
       case 'brand-story':
         return <BrandStory key="brand-story" />;
       case 'craftsmanship':

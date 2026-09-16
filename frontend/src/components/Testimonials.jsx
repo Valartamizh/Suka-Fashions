@@ -24,15 +24,18 @@ export default function Testimonials() {
   const testimonials = useMemo(() => {
     // 1. If explicit custom reviews exist
     if (content?.items && Array.isArray(content.items) && content.items.length > 0) {
-      return content.items.map((item, idx) => ({
-        id: item.id || idx,
-        author: item.author || item.name || item.customerName || 'Verified Patron',
-        location: item.location || item.city || 'India',
-        product: item.product || item.productName || item.tag || 'Suka Couture',
-        quote: item.quote || item.review || '',
-        stars: item.stars || item.rating || 5,
-        avatar: item.avatar || AVATAR_FALLBACKS[idx % AVATAR_FALLBACKS.length],
-      }));
+      const activeItems = content.items.filter(item => item.enabled !== false && item.active !== false);
+      if (activeItems.length > 0) {
+        return activeItems.map((item, idx) => ({
+          id: item.id || idx,
+          author: item.author || item.name || item.customerName || 'Verified Patron',
+          location: item.location || item.city || 'India',
+          product: item.product || item.productName || item.tag || 'Suka Couture',
+          quote: item.quote || item.review || '',
+          stars: item.stars || item.rating || 5,
+          avatar: item.avatar || AVATAR_FALLBACKS[idx % AVATAR_FALLBACKS.length],
+        }));
+      }
     }
 
     // 2. Otherwise resolve from featuredReviewIds against approved adminReviews

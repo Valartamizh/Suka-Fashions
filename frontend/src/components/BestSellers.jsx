@@ -24,6 +24,13 @@ export default function BestSellers() {
   const displayItems = React.useMemo(() => {
     const list = (activeProducts && activeProducts.length > 0) ? activeProducts : (products || []);
 
+    if (content?.dataMode === 'Manual' && content?.selectedProductIds && content.selectedProductIds.length > 0) {
+      const manualItems = content.selectedProductIds
+        .map(id => list.find(p => p.id === id || p.slug === id))
+        .filter(Boolean);
+      if (manualItems.length > 0) return manualItems.slice(0, maxItems);
+    }
+
     if (content?.customItems && content.customItems.length > 0) {
       const activeCustom = content.customItems.filter(item => item.active !== false);
       const mapped = activeCustom.map(item => {
@@ -47,7 +54,7 @@ export default function BestSellers() {
     const otherItems = list.filter((p) => !p.isBestSeller);
     const combined = [...bestItems, ...otherItems];
     return combined.slice(0, maxItems);
-  }, [activeProducts, products, maxItems, content?.customItems]);
+  }, [activeProducts, products, maxItems, content?.customItems, content?.dataMode, content?.selectedProductIds]);
 
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -113,8 +120,8 @@ export default function BestSellers() {
               <ArrowRight size={13} strokeWidth={2} className="transform transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
 
-            {/* Header Navigation Arrows */}
-            <div className="flex items-center gap-1.5">
+            {/* Header Navigation Arrows - Hidden on mobile */}
+            <div className="hidden sm:flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => scroll('left')}

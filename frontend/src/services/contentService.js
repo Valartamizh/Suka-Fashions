@@ -1,10 +1,10 @@
 // contentService.js — Frontend Content Management Service (Prepared for Spring Boot REST API)
 import { initialHomeSections } from '../data/initialHomeContent';
 
-const STORAGE_KEY_PUBLISHED = 'suka_content_published_v2';
-const STORAGE_KEY_DRAFT = 'suka_content_draft_v2';
-const STORAGE_KEY_META = 'suka_content_meta_v2';
-const STORAGE_KEY_HISTORY = 'suka_content_history_v2';
+const STORAGE_KEY_PUBLISHED = 'suka_content_published_v6';
+const STORAGE_KEY_DRAFT = 'suka_content_draft_v6';
+const STORAGE_KEY_META = 'suka_content_meta_v6';
+const STORAGE_KEY_HISTORY = 'suka_content_history_v6';
 
 // Helper to format date in clean editorial format (e.g., "11 Sep 2026, 09:15 AM")
 export function formatPublishedDate(date = new Date()) {
@@ -49,25 +49,98 @@ const defaultInitialHistory = [
   },
 ];
 
-function sanitizeSections(sections) {
-  if (!Array.isArray(sections) || sections.length === 0) {
+function migrateLegacyPromoBanners(sections) {
+  if (!Array.isArray(sections)) return sections;
+  const legacyIdx = sections.findIndex(s => s.id === 'promo-banners');
+  if (legacyIdx === -1) return sections;
+
+  const legacy = sections[legacyIdx];
+  const b1 = legacy.content?.banners?.[0] || {};
+  const b2 = legacy.content?.banners?.[1] || {};
+
+  const sec1 = {
+    id: 'promo-banner-1',
+    type: 'promo-banner',
+    label: 'Promotional Banner 1',
+    desc: 'Primary campaign banner showcase (e.g. Royal Heritage Silks)',
+    enabled: legacy.enabled !== false && b1.enabled !== false,
+    active: legacy.enabled !== false && b1.enabled !== false,
+    order: legacy.order || 4,
+    content: {
+      id: b1.id || 'promo-1',
+      title: b1.title || 'Royal Heritage Silks',
+      subtitle: b1.subtitle || 'Handcrafted Pure Kanchipuram & Organza',
+      description: b1.description || 'Explore authentic handwoven pure silk & organza sarees at up to 40% off.',
+      type: b1.type || 'PROMOTION',
+      ctaText: b1.ctaText || 'SHOP SAREES',
+      ctaLink: b1.ctaLink || '/category/sarees',
+      image: b1.image || '',
+      theme: b1.theme || 'Teal Elegance',
+      enabled: b1.enabled !== false,
+    },
+  };
+
+  const sec2 = {
+    id: 'promo-banner-2',
+    type: 'promo-banner',
+    label: 'Promotional Banner 2',
+    desc: 'Secondary campaign banner showcase (e.g. Bridal & Festive Couture)',
+    enabled: legacy.enabled !== false && b2.enabled !== false,
+    active: legacy.enabled !== false && b2.enabled !== false,
+    order: (legacy.order || 4) + 4,
+    content: {
+      id: b2.id || 'promo-2',
+      title: b2.title || 'Bridal & Festive Couture',
+      subtitle: b2.subtitle || 'Exclusive Zardozi & Velvet Lehengas',
+      description: b2.description || 'Luxury bridal ensembles with intricate handcrafted dori, sequins and cutdana work.',
+      type: b2.type || 'COLLECTION',
+      ctaText: b2.ctaText || 'EXPLORE LEHENGAS',
+      ctaLink: b2.ctaLink || '/category/lehengas',
+      image: b2.image || '',
+      theme: b2.theme || 'Rose Gold',
+      enabled: b2.enabled !== false,
+    },
+  };
+
+  return [
+    ...sections.slice(0, legacyIdx),
+    sec1,
+    ...sections.slice(legacyIdx + 1),
+    sec2,
+  ];
+}
+
+function sanitizeSections(rawSections) {
+  if (!Array.isArray(rawSections) || rawSections.length === 0) {
     return initialHomeSections;
   }
-  // Ensure all 16 sections exist and preserve custom content
-  return initialHomeSections.map(defaultSec => {
-    const matched = sections.find(s => s.id === defaultSec.id);
-    if (!matched) return defaultSec;
+  const sections = migrateLegacyPromoBanners(rawSections);
+
+  // Map over the provided sections to respect user additions, reorderings, and deletions
+  const mapped = sections.map((sec, idx) => {
+    const defaultSec = initialHomeSections.find(s => s.id === sec.id) || {};
     return {
       ...defaultSec,
-      ...matched,
-      enabled: matched.enabled !== undefined ? matched.enabled : defaultSec.enabled,
-      order: matched.order !== undefined ? matched.order : defaultSec.order,
+      ...sec,
+      enabled: sec.enabled !== undefined ? sec.enabled : (defaultSec.enabled !== undefined ? defaultSec.enabled : true),
+      active: sec.active !== undefined ? sec.active : (sec.enabled !== undefined ? sec.enabled : true),
+      order: typeof sec.order === 'number' ? sec.order : idx + 1,
       content: {
-        ...defaultSec.content,
-        ...matched.content,
+        ...(defaultSec.content || {}),
+        ...(sec.content || {}),
       },
     };
-  }).sort((a, b) => (a.order || 0) - (b.order || 0));
+  });
+
+  // Ensure newly introduced standard sections (e.g. promo-banner-3) exist
+  initialHomeSections.forEach(initSec => {
+    if (!mapped.some(s => s.id === initSec.id)) {
+      mapped.push({ ...initSec });
+    }
+  });
+
+  // Sort sections by order and re-index sequentially
+  return mapped.sort((a, b) => (a.order || 0) - (b.order || 0)).map((s, idx) => ({ ...s, order: idx + 1 }));
 }
 
 export const contentService = {

@@ -113,9 +113,27 @@ export default function Hero() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
 
+  // Preload all slide images for buttery-smooth zero-flicker transitions
+  useEffect(() => {
+    slides.forEach((s) => {
+      if (s.mainImage) {
+        const img = new Image();
+        img.src = s.mainImage;
+      }
+      if (s.detailImageLeft) {
+        const img = new Image();
+        img.src = s.detailImageLeft;
+      }
+      if (s.detailImageRight) {
+        const img = new Image();
+        img.src = s.detailImageRight;
+      }
+    });
+  }, [slides]);
+
   // Guard if current index is out of range
   useEffect(() => {
-    if (current >= slides.length) {
+    if (current >= slides.length && slides.length > 0) {
       setCurrent(0);
     }
   }, [slides.length, current]);
@@ -123,19 +141,19 @@ export default function Hero() {
   const goTo = useCallback((idx) => {
     if (animating || slides.length <= 1) return;
     setAnimating(true);
-    setTimeout(() => setAnimating(false), 700);
     setCurrent(idx);
+    setTimeout(() => setAnimating(false), 500);
   }, [animating, slides.length]);
 
   const next = useCallback(() => {
     if (slides.length <= 1) return;
-    goTo((current + 1) % slides.length);
-  }, [current, goTo, slides.length]);
+    setCurrent((prevIdx) => (prevIdx + 1) % slides.length);
+  }, [slides.length]);
 
   const prev = useCallback(() => {
     if (slides.length <= 1) return;
-    goTo((current - 1 + slides.length) % slides.length);
-  }, [current, goTo, slides.length]);
+    setCurrent((prevIdx) => (prevIdx - 1 + slides.length) % slides.length);
+  }, [slides.length]);
 
   // Touch / swipe support for mobile
   const touchStartX = React.useRef(null);
@@ -221,20 +239,26 @@ export default function Hero() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex items-center gap-2 mb-3 min-[390px]:mb-3.5">
-            <Link
-              to={slide.ctaLink || '/products'}
-              className="bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[9.5px] min-[390px]:text-[10px] sm:text-xs font-bold tracking-[0.18em] uppercase py-2.5 px-4 min-[390px]:px-5 transition-all shadow-md rounded-sm whitespace-nowrap"
-            >
-              {slide.ctaText || 'Shop Collection'}
-            </Link>
-            <Link
-              to={slide.secondaryCtaLink || '/category/sarees'}
-              className="border border-white/40 bg-white/10 backdrop-blur-xs text-white hover:bg-white/20 font-sans text-[9.5px] min-[390px]:text-[10px] sm:text-xs font-bold tracking-[0.18em] uppercase py-2.5 px-3.5 min-[390px]:px-4 transition-all rounded-sm whitespace-nowrap"
-            >
-              {slide.secondaryCtaText || 'Explore'}
-            </Link>
-          </div>
+          {(Boolean(slide.ctaText?.trim()) || Boolean(slide.secondaryCtaText?.trim())) && (
+            <div className="flex items-center gap-2 mb-3 min-[390px]:mb-3.5">
+              {Boolean(slide.ctaText?.trim()) && (
+                <Link
+                  to={slide.ctaLink || '/products'}
+                  className="bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[9.5px] min-[390px]:text-[10px] sm:text-xs font-bold tracking-[0.18em] uppercase py-2.5 px-4 min-[390px]:px-5 transition-all shadow-md rounded-sm whitespace-nowrap"
+                >
+                  {slide.ctaText.trim()}
+                </Link>
+              )}
+              {Boolean(slide.secondaryCtaText?.trim()) && (
+                <Link
+                  to={slide.secondaryCtaLink || '/category/sarees'}
+                  className="border border-white/40 bg-white/10 backdrop-blur-xs text-white hover:bg-white/20 font-sans text-[9.5px] min-[390px]:text-[10px] sm:text-xs font-bold tracking-[0.18em] uppercase py-2.5 px-3.5 min-[390px]:px-4 transition-all rounded-sm whitespace-nowrap"
+                >
+                  {slide.secondaryCtaText.trim()}
+                </Link>
+              )}
+            </div>
+          )}
 
           {/* Bottom Bar: Social proof + Dot indicators */}
           <div className="flex items-center justify-between pt-2.5 min-[390px]:pt-3 border-t border-white/20">
@@ -329,20 +353,26 @@ export default function Hero() {
                 </p>
 
                 {/* CTA Buttons */}
-                <div className="flex flex-wrap items-center gap-3.5 mb-8">
-                  <Link
-                    to={slide.ctaLink || '/products'}
-                    className="bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[11px] sm:text-xs font-bold tracking-[0.22em] uppercase py-3.5 px-8 transition-all duration-300 shadow-md hover:shadow-lg rounded-sm"
-                  >
-                    {slide.ctaText || 'SHOP NEW ARRIVALS'}
-                  </Link>
-                  <Link
-                    to={slide.secondaryCtaLink || '/category/sarees'}
-                    className="border border-brand-navy/25 text-brand-navy hover:border-brand-teal hover:text-brand-teal font-sans text-[11px] sm:text-xs font-bold tracking-[0.22em] uppercase py-3.5 px-7 transition-all duration-300 rounded-sm bg-white/60"
-                  >
-                    {slide.secondaryCtaText || 'EXPLORE'}
-                  </Link>
-                </div>
+                {(Boolean(slide.ctaText?.trim()) || Boolean(slide.secondaryCtaText?.trim())) && (
+                  <div className="flex flex-wrap items-center gap-3.5 mb-8">
+                    {Boolean(slide.ctaText?.trim()) && (
+                      <Link
+                        to={slide.ctaLink || '/products'}
+                        className="bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[11px] sm:text-xs font-bold tracking-[0.22em] uppercase py-3.5 px-8 transition-all duration-300 shadow-md hover:shadow-lg rounded-sm"
+                      >
+                        {slide.ctaText.trim()}
+                      </Link>
+                    )}
+                    {Boolean(slide.secondaryCtaText?.trim()) && (
+                      <Link
+                        to={slide.secondaryCtaLink || '/category/sarees'}
+                        className="border border-brand-navy/25 text-brand-navy hover:border-brand-teal hover:text-brand-teal font-sans text-[11px] sm:text-xs font-bold tracking-[0.22em] uppercase py-3.5 px-7 transition-all duration-300 rounded-sm bg-white/60"
+                      >
+                        {slide.secondaryCtaText.trim()}
+                      </Link>
+                    )}
+                  </div>
+                )}
 
                 {/* Social proof */}
                 <div className="flex items-center gap-3.5 pt-3.5 border-t border-brand-navy/10 max-w-md">
@@ -384,14 +414,6 @@ export default function Hero() {
                       alt="Craftsmanship detail"
                       className="w-full h-full object-cover object-top rounded-lg"
                     />
-                    <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-sm p-2.5 shadow-md border-l-2 border-brand-teal rounded-r-xs z-40">
-                      <span className="font-sans text-[8px] tracking-[0.2em] text-brand-teal uppercase font-bold block mb-0.5">
-                        {slide.leftEyebrow || 'DETAILS'}
-                      </span>
-                      <span className="font-serif text-[11px] text-brand-navy leading-tight block whitespace-pre-line font-medium">
-                        {slide.leftTitle || 'Handcrafted embroidery'}
-                      </span>
-                    </div>
                   </div>
 
                   {/* 2. MAIN Fashion Card (Center) */}
@@ -401,14 +423,6 @@ export default function Hero() {
                       alt={slide.mainLabel || 'New Collection'}
                       className="w-full h-full object-cover object-top rounded-xl"
                     />
-                    <div className="absolute bottom-5 left-5 bg-white/95 backdrop-blur-sm px-4 py-2.5 shadow-xl border-l-[3px] border-brand-teal rounded-r-sm max-w-[210px] z-40">
-                      <span className="font-sans text-[8px] tracking-[0.22em] text-brand-teal uppercase font-bold block mb-0.5">
-                        NEW COLLECTION
-                      </span>
-                      <span className="font-serif text-[13px] text-brand-navy leading-snug font-medium block">
-                        {slide.mainLabel || headingLines.join(' ')}
-                      </span>
-                    </div>
                   </div>
 
                   {/* 3. RIGHT Detail Card */}
@@ -418,14 +432,6 @@ export default function Hero() {
                       alt="Fabric styling detail"
                       className="w-full h-full object-cover object-top rounded-lg"
                     />
-                    <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-sm p-2.5 shadow-md border-l-2 border-brand-teal rounded-r-xs z-40">
-                      <span className="font-sans text-[8px] tracking-[0.2em] text-brand-teal uppercase font-bold block mb-0.5">
-                        {slide.rightEyebrow || 'THE EDIT'}
-                      </span>
-                      <span className="font-serif text-[11px] text-brand-navy leading-tight block whitespace-pre-line font-medium">
-                        {slide.rightTitle || 'Timeless celebration wear'}
-                      </span>
-                    </div>
                   </div>
 
                 </div>

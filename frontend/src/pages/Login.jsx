@@ -46,23 +46,26 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-brand-cream/30 via-white to-brand-powderLight/20 py-4 sm:py-6 px-3 sm:px-6 lg:px-10 flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-140px)]">
+    <div className="bg-gradient-to-b from-brand-cream/30 via-white to-brand-powderLight/20 py-2.5 sm:py-6 px-3 sm:px-6 lg:px-10 flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-120px)] sm:min-h-[calc(100vh-140px)]">
 
-      {/* Top Header with Back Button */}
-      <div className="w-full max-w-[1100px] mx-auto flex items-center justify-start mb-3 animate-in fade-in duration-300">
+      {/* Top Navigation Bar with Back Button and Brand Tag */}
+      <div className="w-full max-w-[460px] md:max-w-[1100px] mx-auto flex items-center justify-between mb-2.5 sm:mb-4 animate-in fade-in duration-300">
         <button
           type="button"
           onClick={handleBack}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-brand-powder/80 text-brand-navy hover:text-brand-teal hover:border-brand-teal text-xs font-sans font-semibold shadow-2xs transition-all duration-200 cursor-pointer group"
+          className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white border border-brand-powder/80 text-brand-navy hover:text-brand-teal hover:border-brand-teal text-[11px] sm:text-xs font-sans font-semibold shadow-2xs transition-all duration-200 cursor-pointer group"
           aria-label="Back to Store"
         >
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft size={13} className="group-hover:-translate-x-1 transition-transform" />
           <span>Back</span>
         </button>
+        <span className="sm:hidden font-serif text-sm font-semibold text-brand-navy tracking-wider">
+          Suka <span className="text-brand-teal font-normal">Fashions</span>
+        </span>
       </div>
 
-      {/* Top Luxury Banner / Tagline Header */}
-      <div className="text-center max-w-2xl mx-auto mb-5 animate-in fade-in slide-in-from-top-3 duration-500">
+      {/* Top Luxury Banner / Tagline Header (Desktop only to keep mobile 100% focused and fitted) */}
+      <div className="hidden sm:block text-center max-w-2xl mx-auto mb-5 animate-in fade-in slide-in-from-top-3 duration-500">
         <span className="font-sans text-[9.5px] tracking-[0.35em] text-brand-teal uppercase font-extrabold bg-brand-powderLight/80 border border-brand-powder/60 px-4 py-1.5 rounded-full inline-block mb-2 shadow-2xs">
           SUKA FASHIONS PRIVILEGE CLUB
         </span>
@@ -77,7 +80,7 @@ export default function Login() {
         </p>
       </div>
 
-      <div className="max-w-[1100px] w-full mx-auto bg-white border border-brand-powder/60 rounded-2xl shadow-[0_16px_48px_-12px_rgba(0,107,112,0.12)] lg:flex flex-col md:flex-row overflow-hidden transition-all lg:min-h-[720px] select-none">
+      <div className="max-w-[460px] md:max-w-[1100px] w-full mx-auto bg-white border border-brand-powder/60 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,107,112,0.12)] flex flex-col md:flex-row overflow-hidden transition-all lg:min-h-[700px] select-none">
         {/* Left Side: Fashion Photography Panel (Desktop) */}
         <AuthFashionPanel />
 
@@ -90,7 +93,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setAuthMode('login')}
-                className={`flex-1 py-3.5 font-sans text-xs uppercase tracking-widest font-bold transition-all border-b-2 cursor-pointer ${authMode === 'login'
+                className={`flex-1 py-2.5 sm:py-3.5 font-sans text-[11px] sm:text-xs uppercase tracking-wider sm:tracking-widest font-bold transition-all border-b-2 cursor-pointer ${authMode === 'login'
                   ? 'border-brand-teal text-brand-teal bg-white shadow-2xs'
                   : 'border-transparent text-brand-navy/50 hover:text-brand-navy'
                   }`}
@@ -100,7 +103,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setAuthMode('register')}
-                className={`flex-1 py-3.5 font-sans text-xs uppercase tracking-widest font-bold transition-all border-b-2 cursor-pointer ${authMode === 'register'
+                className={`flex-1 py-2.5 sm:py-3.5 font-sans text-[11px] sm:text-xs uppercase tracking-wider sm:tracking-widest font-bold transition-all border-b-2 cursor-pointer ${authMode === 'register'
                   ? 'border-brand-teal text-brand-teal bg-white shadow-2xs'
                   : 'border-transparent text-brand-navy/50 hover:text-brand-navy'
                   }`}

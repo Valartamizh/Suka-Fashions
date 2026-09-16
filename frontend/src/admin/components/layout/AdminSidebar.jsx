@@ -283,7 +283,7 @@ export default function AdminSidebar({ mobileOpen, onMobileClose }) {
                 {({ isActive }) => (
                   <>
                     <PanelsTopLeft size={20} className={isActive ? 'text-white' : 'text-slate-700'} />
-                    <span>Content Management</span>
+                    <span>Content</span>
                   </>
                 )}
               </NavLink>

@@ -620,19 +620,30 @@ export default function ProductStoreView({
                   {availableSizes.map((sizeItem) => {
                     const sizeName = typeof sizeItem === 'string' ? sizeItem : sizeItem.size;
                     const sStock = typeof sizeItem === 'object' && sizeItem.stock !== undefined ? Number(sizeItem.stock) : Number(product.stock || 0);
+                    const isSelected = selectedSize === sizeName;
+                    const isOutOfStock = sStock === 0;
+
                     return (
                       <button
                         key={sizeName}
                         onClick={() => setSelectedSize(sizeName)}
                         className={`min-w-[70px] px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                          selectedSize === sizeName
-                            ? 'bg-brand-navy text-white border-brand-navy shadow-sm'
-                            : 'bg-white text-slate-700 border-slate-200 hover:border-brand-teal'
-                        } ${sStock === 0 ? 'opacity-60 bg-slate-50' : ''}`}
+                          isSelected
+                            ? 'bg-[#1B2559] text-white border-[#1B2559] shadow-sm ring-2 ring-[#1B2559]/20'
+                            : isOutOfStock
+                            ? 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                            : 'bg-white text-slate-800 border-slate-200 hover:border-brand-teal hover:text-brand-teal'
+                        }`}
                       >
-                        <span>{sizeName}</span>
-                        {sStock === 0 && (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-red-100 text-red-600 font-bold">0</span>
+                        <span className={isSelected ? 'text-white' : isOutOfStock ? 'text-slate-700 font-semibold' : 'text-slate-800'}>
+                          {sizeName}
+                        </span>
+                        {isOutOfStock && (
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                            isSelected ? 'bg-red-500 text-white' : 'bg-red-100 text-red-600'
+                          }`}>
+                            0
+                          </span>
                         )}
                       </button>
                     );

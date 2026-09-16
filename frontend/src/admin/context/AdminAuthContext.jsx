@@ -378,6 +378,14 @@ export function AdminAuthProvider({ children }) {
     const targetUser = users.find((u) => u.id === id);
     if (!targetUser) return { success: false, error: 'User not found' };
 
+    // Safeguard: Prevent self-role modification
+    if (admin && (admin.id === id || admin.email?.toLowerCase() === targetUser.email?.toLowerCase())) {
+      return {
+        success: false,
+        error: 'Self-modification prohibited: You cannot change your own role. Another Super Admin must perform this change.',
+      };
+    }
+
     if (admin?.role === ROLES.ADMIN) {
       if (targetUser.role === ROLES.SUPER_ADMIN) {
         return { success: false, error: 'Access denied: Admin cannot alter Super Admin accounts' };
@@ -435,6 +443,14 @@ export function AdminAuthProvider({ children }) {
   const toggleUserStatus = (id) => {
     const targetUser = users.find((u) => u.id === id);
     if (!targetUser) return { success: false, error: 'User not found' };
+
+    // Safeguard: Prevent disabling own account
+    if (admin && (admin.id === id || admin.email?.toLowerCase() === targetUser.email?.toLowerCase())) {
+      return {
+        success: false,
+        error: 'Operation prohibited: You cannot deactivate your own active account.',
+      };
+    }
 
     if (admin?.role === ROLES.ADMIN && targetUser.role === ROLES.SUPER_ADMIN) {
       return { success: false, error: 'Access denied: Admin cannot disable Super Admin accounts' };

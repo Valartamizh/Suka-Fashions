@@ -54,19 +54,19 @@ export default function OtpVerification({ phone, onChangePhone, onSuccess }) {
   };
 
   return (
-    <div className="w-full h-full min-h-[560px] lg:min-h-[640px] flex flex-col justify-between p-6 sm:p-10 lg:p-12 text-left self-stretch animate-in fade-in duration-300">
+    <div className="w-full h-full min-h-0 sm:min-h-[560px] lg:min-h-[640px] flex flex-col justify-between p-4 sm:p-10 lg:p-12 text-left self-stretch animate-in fade-in duration-300">
 
       <div>
-        {/* Header with back arrow and Big Logo */}
-        <div className="flex items-center justify-between mb-8">
+        {/* Header with back arrow and Logo */}
+        <div className="flex items-center justify-between mb-4 sm:mb-8">
           <button
             type="button"
             onClick={onChangePhone}
-            className="flex items-center gap-2 font-sans text-xs text-brand-navy/70 hover:text-brand-teal font-semibold transition-colors bg-brand-powderLight px-3 py-1.5 rounded-full border border-brand-powder/60"
+            className="flex items-center gap-1.5 font-sans text-xs text-brand-navy/70 hover:text-brand-teal font-semibold transition-colors bg-brand-powderLight px-3 py-1 rounded-full border border-brand-powder/60"
           >
-            <ArrowLeft size={15} /> Back
+            <ArrowLeft size={14} /> Back
           </button>
-          <div className="w-14 h-14 rounded-full p-0.5 border-2 border-brand-teal/30 shadow-md bg-white flex items-center justify-center">
+          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full p-0.5 border-2 border-brand-teal/30 shadow-md bg-white flex items-center justify-center">
             <img src={logo} alt="Suka Logo" className="w-full h-full rounded-full object-cover" />
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function OtpVerification({ phone, onChangePhone, onSuccess }) {
           type="button"
           onClick={handleVerify}
           disabled={!isValidOtp || loading}
-          className={`w-full py-4 rounded-md font-sans text-[11px] font-bold tracking-[0.25em] uppercase transition-all duration-300 shadow-md ${!isValidOtp || loading
+          className={`w-full py-3 sm:py-4 rounded-md font-sans text-[10.5px] sm:text-[11px] font-bold tracking-[0.2em] sm:tracking-[0.25em] uppercase transition-all duration-300 shadow-md ${!isValidOtp || loading
               ? 'bg-brand-powder/70 text-brand-navy/35 cursor-not-allowed shadow-none'
               : 'bg-brand-teal hover:bg-brand-tealDark text-white hover:shadow-xl active:scale-[0.99] shadow-brand-teal/20'
             }`}

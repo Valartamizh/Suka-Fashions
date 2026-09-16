@@ -500,7 +500,7 @@ export default function UsersPage() {
               <tbody className="divide-y divide-slate-100">
                 {users.map((user) => {
                   const isModifiable = canModifyUser(user);
-                  const isCurrentSession = admin?.id === user.id;
+                  const isCurrentSession = admin?.id === user.id || admin?.email?.toLowerCase() === user.email?.toLowerCase();
 
                   return (
                     <tr key={user.id} className="hover:bg-slate-50/60 transition-colors">
@@ -603,8 +603,8 @@ export default function UsersPage() {
                             </button>
                           )}
 
-                          {/* Change Role */}
-                          {isModifiable && assignableRoles.length > 0 && (
+                          {/* Change Role (Only modifiable for OTHER users, not oneself) */}
+                          {isModifiable && assignableRoles.length > 0 && !isCurrentSession && (
                             <button
                               type="button"
                               onClick={() => {
@@ -618,8 +618,8 @@ export default function UsersPage() {
                             </button>
                           )}
 
-                          {/* Deactivate / Reactivate */}
-                          {isModifiable && (
+                          {/* Deactivate / Reactivate (Only for OTHER users, not oneself) */}
+                          {isModifiable && !isCurrentSession && (
                             <button
                               type="button"
                               onClick={() => setStatusToggleModal(user)}
@@ -645,7 +645,7 @@ export default function UsersPage() {
           <div className="md:hidden divide-y divide-slate-100">
             {users.map((user) => {
               const isModifiable = canModifyUser(user);
-              const isCurrentSession = admin?.id === user.id;
+              const isCurrentSession = admin?.id === user.id || admin?.email?.toLowerCase() === user.email?.toLowerCase();
 
               return (
                 <div key={user.id} className="p-4 space-y-3.5 hover:bg-slate-50/40 transition-colors">
@@ -722,7 +722,20 @@ export default function UsersPage() {
                       </button>
                     )}
 
-                    {isModifiable && (
+                    {isModifiable && assignableRoles.length > 0 && !isCurrentSession && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextRole = assignableRoles.find((r) => r !== user.role) || assignableRoles[0];
+                          setRoleChangeModal({ user, targetRole: nextRole });
+                        }}
+                        className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+                      >
+                        Change Role
+                      </button>
+                    )}
+
+                    {isModifiable && !isCurrentSession && (
                       <button
                         type="button"
                         onClick={() => setStatusToggleModal(user)}

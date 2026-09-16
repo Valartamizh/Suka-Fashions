@@ -153,14 +153,16 @@ export function CategoryProvider({ children }) {
       const created = {
         id: newCat.id || newCat.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-'),
         name: newCat.name,
-        image: newCat.image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=80',
-        displayOrder: prev.length + 1,
+        image: newCat.image || sareeGolden,
+        displayOrder: 1,
         active: newCat.active !== undefined ? newCat.active : true,
         showOnHomepage: newCat.showOnHomepage !== undefined ? newCat.showOnHomepage : true,
         subcategories: Array.isArray(newCat.subcategories) ? newCat.subcategories : (newCat.subcategories || '').split(',').map(s => s.trim()).filter(Boolean),
         link: newCat.link || `/category/${newCat.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}`,
       };
-      return [...prev, created];
+      // Stack methodology (LIFO): newly created category is placed at the top (index 0)
+      const updated = [created, ...prev];
+      return updated.map((c, idx) => ({ ...c, displayOrder: idx + 1 }));
     });
   };
 
@@ -211,7 +213,8 @@ export function CategoryProvider({ children }) {
       prev.map(c => {
         if (c.id !== catId) return c;
         if (c.subcategories.includes(subName.trim())) return c;
-        return { ...c, subcategories: [...c.subcategories, subName.trim()] };
+        // Stack methodology: newly added subcategory is placed at the top
+        return { ...c, subcategories: [subName.trim(), ...c.subcategories] };
       })
     );
   };

@@ -132,34 +132,57 @@ export default function ProductDetail() {
   const imgSwipeTouchStartX = useRef(null);
   const imgSwipeTouchCurrentX = useRef(null);
   const [imgDragX, setImgDragX] = useState(0);
-  const IMG_SWIPE_THRESHOLD = 50;
+  const IMG_SWIPE_THRESHOLD = 45;
 
   const handleImgTouchStart = (e) => {
-    imgSwipeTouchStartX.current = e.changedTouches[0].clientX;
-    imgSwipeTouchCurrentX.current = e.changedTouches[0].clientX;
+    if (!e.touches || e.touches.length === 0) return;
+    imgSwipeTouchStartX.current = e.touches[0].clientX;
+    imgSwipeTouchCurrentX.current = e.touches[0].clientX;
     setImgDragX(0);
   };
 
   const handleImgTouchMove = (e) => {
-    if (imgSwipeTouchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - imgSwipeTouchStartX.current;
-    imgSwipeTouchCurrentX.current = e.changedTouches[0].clientX;
-    setImgDragX(dx);
+    if (imgSwipeTouchStartX.current === null || activeGalleryImages.length <= 1) return;
+    if (!e.touches || e.touches.length === 0) return;
+    const currentX = e.touches[0].clientX;
+    imgSwipeTouchCurrentX.current = currentX;
+    const rawDx = currentX - imgSwipeTouchStartX.current;
+
+    // Disallow dragging past edges so white background never exposes
+    if (selectedImageIdx === 0 && rawDx > 0) {
+      // Swiping right on first image: lock to 0
+      setImgDragX(0);
+    } else if (selectedImageIdx === activeGalleryImages.length - 1 && rawDx < 0) {
+      // Swiping left on last image: lock to 0
+      setImgDragX(0);
+    } else {
+      // Allow fluid drag bounded to ±150px
+      const bounded = Math.max(-150, Math.min(150, rawDx));
+      setImgDragX(bounded);
+    }
   };
 
-  const handleImgTouchEnd = () => {
+  const handleImgTouchEnd = (e) => {
     if (imgSwipeTouchStartX.current === null) return;
-    const delta = imgSwipeTouchStartX.current - (imgSwipeTouchCurrentX.current ?? imgSwipeTouchStartX.current);
+    const endX = (e.changedTouches && e.changedTouches[0]?.clientX) ?? imgSwipeTouchCurrentX.current ?? imgSwipeTouchStartX.current;
+    const delta = imgSwipeTouchStartX.current - endX;
     setImgDragX(0);
-    if (Math.abs(delta) >= IMG_SWIPE_THRESHOLD) {
-      if (delta > 0) {
-        // swiped left → next image (clamp at last)
+
+    if (Math.abs(delta) >= IMG_SWIPE_THRESHOLD && activeGalleryImages.length > 1) {
+      if (delta > 0 && selectedImageIdx < activeGalleryImages.length - 1) {
+        // Swiped left → next image
         setSelectedImageIdx((prev) => Math.min(prev + 1, activeGalleryImages.length - 1));
-      } else {
-        // swiped right → previous image (clamp at 0)
+      } else if (delta < 0 && selectedImageIdx > 0) {
+        // Swiped right → previous image
         setSelectedImageIdx((prev) => Math.max(prev - 1, 0));
       }
     }
+    imgSwipeTouchStartX.current = null;
+    imgSwipeTouchCurrentX.current = null;
+  };
+
+  const handleImgTouchCancel = () => {
+    setImgDragX(0);
     imgSwipeTouchStartX.current = null;
     imgSwipeTouchCurrentX.current = null;
   };
@@ -254,36 +277,33 @@ export default function ProductDetail() {
     setIsProductLoading(true);
     const all = products?.length > 0 ? products : fallbackProducts;
     const foundProduct = (getProductById && getProductById(id)) || all.find(p => p.id === id || p.slug === id) || all[0];
-    
-    const timer = setTimeout(() => {
-      setProduct(foundProduct);
-      
-      if (foundProduct) {
-        const defaultColor = foundProduct.colors?.[0];
-        const defaultColorId = defaultColor?.id || (foundProduct.colors?.[0] ? '0' : 'default');
-        setSelectedColorId(defaultColorId);
-        setSelectedImageIdx(0);
-        const firstSize = defaultColor?.variants?.[0]?.size || foundProduct.sizes?.[0] || 'Free Size';
-        setSelectedSize(firstSize);
-        setQuantity(1);
-        setAddedToCart(false);
-        
-        const related = (activeProducts || all).filter(p => p.category === foundProduct.category && p.id !== foundProduct.id).slice(0, 8);
-        setRelatedProducts(related);
 
-        if (Array.isArray(foundProduct.reviews)) {
-          setReviewsList(foundProduct.reviews);
-        } else if (foundProduct.reviewsCount > 0) {
-          setReviewsList(MOCK_PRODUCT_REVIEWS);
-        } else {
-          setReviewsList([]);
-        }
+    setProduct(foundProduct);
+
+    if (foundProduct) {
+      const defaultColor = foundProduct.colors?.[0];
+      const defaultColorId = defaultColor?.id || (foundProduct.colors?.[0] ? '0' : 'default');
+      setSelectedColorId(defaultColorId);
+      setSelectedImageIdx(0);
+      const firstSize = defaultColor?.variants?.[0]?.size || foundProduct.sizes?.[0] || 'Free Size';
+      setSelectedSize(firstSize);
+      setQuantity(1);
+      setAddedToCart(false);
+
+      const related = (activeProducts || all).filter(p => p.category === foundProduct.category && p.id !== foundProduct.id).slice(0, 8);
+      setRelatedProducts(related);
+
+      if (Array.isArray(foundProduct.reviews)) {
+        setReviewsList(foundProduct.reviews);
+      } else if (foundProduct.reviewsCount > 0) {
+        setReviewsList(MOCK_PRODUCT_REVIEWS);
+      } else {
+        setReviewsList([]);
       }
-      setIsProductLoading(false);
-    }, 250);
+    }
+    setIsProductLoading(false);
 
     window.scrollTo({ top: 0, behavior: 'instant' });
-    return () => clearTimeout(timer);
   }, [id, products, getProductById, activeProducts]);
 
   // Derived normalized Color Variants list
@@ -664,10 +684,11 @@ export default function ProductDetail() {
         {/* 1. Full-Bleed Edge-to-Edge Hero Image */}
         <div 
           onClick={() => openPreviewModal(selectedImageIdx)}
-          className="relative w-full aspect-[3/4] sm:aspect-[4/5] bg-brand-cream/40 overflow-hidden cursor-zoom-in"
+          className="relative w-full aspect-[3/4] sm:aspect-[4/5] bg-brand-cream/40 overflow-hidden cursor-zoom-in select-none"
           onTouchStart={handleImgTouchStart}
           onTouchMove={handleImgTouchMove}
           onTouchEnd={handleImgTouchEnd}
+          onTouchCancel={handleImgTouchCancel}
         >
           {/* Horizontal image strip — all images side-by-side, strip slides */}
           <div
@@ -753,35 +774,6 @@ export default function ProductDetail() {
               </button>
             </div>
           </div>
-
-          {/* Floating Next and Prev Navigation Arrows */}
-          {activeGalleryImages.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedImageIdx((prev) => (prev === 0 ? activeGalleryImages.length - 1 : prev - 1));
-                }}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/50 backdrop-blur-xs border border-white/60 shadow-xs text-brand-navy/80 flex items-center justify-center transition-all hover:bg-white/90 hover:text-brand-navy active:scale-90 z-20 cursor-pointer opacity-70 hover:opacity-100"
-                aria-label="Previous image"
-              >
-                <ChevronLeft size={18} strokeWidth={2} />
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedImageIdx((prev) => (prev + 1) % activeGalleryImages.length);
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/50 backdrop-blur-xs border border-white/60 shadow-xs text-brand-navy/80 flex items-center justify-center transition-all hover:bg-white/90 hover:text-brand-navy active:scale-90 z-20 cursor-pointer opacity-70 hover:opacity-100"
-                aria-label="Next image"
-              >
-                <ChevronRight size={18} strokeWidth={2} />
-              </button>
-            </>
-          )}
 
           {/* Image switch indicator dots */}
           {activeGalleryImages.length > 1 && (
@@ -871,10 +863,10 @@ export default function ProductDetail() {
                       onClick={() => setSelectedSize(variant.size)}
                       className={`px-5 py-2 text-xs font-bold rounded-lg transition-all border ${
                         isOutOfStock
-                          ? 'bg-slate-100 text-slate-400 border-slate-200 line-through cursor-not-allowed'
+                          ? 'bg-slate-100 text-slate-600 border-slate-300 line-through cursor-not-allowed font-medium'
                           : isSelected
                           ? 'bg-[#1B2559] text-white border-[#1B2559] shadow-sm'
-                          : 'bg-white text-brand-navy border-slate-300 hover:border-brand-teal'
+                          : 'bg-white text-slate-800 border-slate-300 hover:border-brand-teal'
                       }`}
                     >
                       {variant.size}
@@ -1240,10 +1232,10 @@ export default function ProductDetail() {
                           onClick={() => setSelectedSize(variant.size)}
                           className={`min-w-[48px] h-10 px-3 flex items-center justify-center font-sans text-xs uppercase tracking-wider rounded-sm transition-all duration-200 border cursor-pointer ${
                             isOutOfStock
-                              ? 'bg-slate-100 text-slate-400 border-slate-200 line-through cursor-not-allowed'
+                              ? 'bg-slate-100 text-slate-600 border-slate-300 line-through cursor-not-allowed font-medium'
                               : isSelected
-                              ? 'bg-brand-navy text-white border-brand-navy font-semibold shadow-md'
-                              : 'bg-white text-brand-navy border-brand-powder hover:border-brand-teal hover:text-brand-teal'
+                              ? 'bg-[#1B2559] text-white border-[#1B2559] font-bold shadow-md'
+                              : 'bg-white text-slate-800 border-slate-300 hover:border-brand-teal hover:text-brand-teal'
                           }`}
                         >
                           {variant.size}

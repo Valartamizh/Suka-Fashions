@@ -8,6 +8,7 @@ import {
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { useCustomers } from '../../../context/CustomerContext';
 import { useOrders } from '../../../context/OrderContext';
+import { useProducts } from '../../../context/ProductContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { adminProducts } from '../../data/adminProducts';
 import StatusBadge from '../ui/StatusBadge';
@@ -70,9 +71,10 @@ const DEFAULT_NOTIFICATIONS = [
 export default function AdminHeader({ onMenuToggle }) {
   const navigate = useNavigate();
   const { admin, logout, hasPermission } = useAdminAuth();
-  const { customers } = useCustomers();
-  const { adminOrders } = useOrders();
-  const { settings } = useSettings();
+  const { customers = [] } = useCustomers() || {};
+  const { adminOrders = [] } = useOrders() || {};
+  const { products = [] } = useProducts() || {};
+  const { settings } = useSettings() || {};
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifTab, setNotifTab] = useState('all'); // 'all' | 'unread'
@@ -102,23 +104,28 @@ export default function AdminHeader({ onMenuToggle }) {
   useEffect(() => {
     if (adminOrders && adminOrders.length > 0) {
       const newest = adminOrders[0];
-      setNotifications((prev) => {
-        const exists = prev.some((n) => n.id === `order-${newest.id}`);
-        if (!exists && newest.id) {
-          const newNotif = {
-            id: `order-${newest.id}`,
-            type: 'order',
-            icon: '🛒',
-            title: `New Order #${newest.id}`,
-            message: `${newest.customer?.name || 'Customer'} placed an order for ₹${Number(newest.total || 0).toLocaleString('en-IN')}`,
-            time: 'Just now',
-            unread: true,
-            link: `/admin/orders/${newest.id}`,
-          };
-          return [newNotif, ...prev];
-        }
-        return prev;
-      });
+      if (newest && newest.id) {
+        setNotifications((prev) => {
+          const exists = prev.some((n) => n.id === `order-${newest.id}`);
+          if (!exists) {
+            const custName = typeof newest.customer === 'string'
+              ? newest.customer
+              : (newest.customer?.name || 'Customer');
+            const newNotif = {
+              id: `order-${newest.id}`,
+              type: 'order',
+              icon: '🛒',
+              title: `New Order #${newest.id}`,
+              message: `${custName} placed an order for ₹${Number(newest.total || 0).toLocaleString('en-IN')}`,
+              time: 'Just now',
+              unread: true,
+              link: `/admin/orders/${newest.id}`,
+            };
+            return [newNotif, ...prev];
+          }
+          return prev;
+        });
+      }
     }
   }, [adminOrders]);
 
@@ -172,29 +179,42 @@ export default function AdminHeader({ onMenuToggle }) {
 
   // Compute instant live search results
   const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return { products: [], orders: [], customers: [] };
+    if (!searchQuery || !searchQuery.trim()) {
+      return { products: [], orders: [], customers: [] };
+    }
     const q = searchQuery.toLowerCase().trim();
 
-    const matchedProducts = adminProducts.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      p.sku.toLowerCase().includes(q)
-    ).slice(0, 4);
+    const productPool = (products && products.length > 0) ? products : adminProducts;
+    const matchedProducts = (productPool || []).filter(p => {
+      if (!p) return false;
+      const name = String(p.name || '').toLowerCase();
+      const cat = String(p.category || '').toLowerCase();
+      const sku = String(p.sku || '').toLowerCase();
+      return name.includes(q) || cat.includes(q) || sku.includes(q);
+    }).slice(0, 4);
 
-    const matchedOrders = (adminOrders || []).filter(o =>
-      (o.id && o.id.toLowerCase().includes(q)) ||
-      (o.customer?.name && o.customer.name.toLowerCase().includes(q)) ||
-      (o.customer?.phone && o.customer.phone.includes(q))
-    ).slice(0, 4);
+    const matchedOrders = (adminOrders || []).filter(o => {
+      if (!o) return false;
+      const id = String(o.id || '').toLowerCase();
+      const custName = typeof o.customer === 'string'
+        ? o.customer.toLowerCase()
+        : String(o.customer?.name || '').toLowerCase();
+      const custPhone = typeof o.customer === 'object'
+        ? String(o.customer?.phone || '')
+        : '';
+      return id.includes(q) || custName.includes(q) || custPhone.includes(q);
+    }).slice(0, 4);
 
-    const matchedCustomers = customers.filter(c =>
-      c.name.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q) ||
-      (c.phone && c.phone.includes(q))
-    ).slice(0, 4);
+    const matchedCustomers = (customers || []).filter(c => {
+      if (!c) return false;
+      const name = String(c.name || '').toLowerCase();
+      const email = String(c.email || '').toLowerCase();
+      const phone = String(c.phone || '');
+      return name.includes(q) || email.includes(q) || phone.includes(q);
+    }).slice(0, 4);
 
     return { products: matchedProducts, orders: matchedOrders, customers: matchedCustomers };
-  }, [searchQuery, customers, adminOrders]);
+  }, [searchQuery, customers, adminOrders, products]);
 
   const hasResults =
     searchResults.products.length > 0 ||
@@ -296,23 +316,29 @@ export default function AdminHeader({ onMenuToggle }) {
                         <div className="space-y-1">
                           {searchResults.products.map(p => (
                             <div
-                              key={p.id}
+                              key={p?.id || p?.name}
                               onClick={() => {
-                                navigate(`/admin/products`);
+                                navigate('/admin/products');
                                 setSearchOpen(false);
                               }}
                               className="flex items-center gap-3 p-2 rounded-lg hover:bg-brand-powder/20 cursor-pointer transition-colors group"
                             >
-                              <img
-                                src={p.image}
-                                alt={p.name}
-                                className="w-9 h-11 object-cover rounded-md border border-slate-100 flex-shrink-0"
-                              />
+                              {p?.image ? (
+                                <img
+                                  src={p.image}
+                                  alt={p?.name || 'Product'}
+                                  className="w-9 h-11 object-cover rounded-md border border-slate-100 flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-9 h-11 rounded-md bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 flex-shrink-0">
+                                  <Package size={16} />
+                                </div>
+                              )}
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-slate-800 truncate group-hover:text-brand-teal transition-colors">{p.name}</p>
-                                <p className="text-[10px] text-slate-400 font-mono mt-0.5">{p.sku} · {p.category}</p>
+                                <p className="font-semibold text-slate-800 truncate group-hover:text-brand-teal transition-colors">{p?.name || 'Product'}</p>
+                                <p className="text-[10px] text-slate-400 font-mono mt-0.5">{p?.sku || 'SKU'} · {p?.category || 'Category'}</p>
                               </div>
-                              <span className="font-bold text-slate-900 flex-shrink-0">₹{Number(p.price || 0).toLocaleString('en-IN')}</span>
+                              <span className="font-bold text-slate-900 flex-shrink-0">₹{Number(p?.price || 0).toLocaleString('en-IN')}</span>
                             </div>
                           ))}
                         </div>
@@ -327,25 +353,30 @@ export default function AdminHeader({ onMenuToggle }) {
                           <span>Orders ({searchResults.orders.length})</span>
                         </div>
                         <div className="space-y-1">
-                          {searchResults.orders.map(o => (
-                            <div
-                              key={o.id}
-                              onClick={() => {
-                                navigate(`/admin/orders/${o.id}`);
-                                setSearchOpen(false);
-                              }}
-                              className="flex items-center justify-between p-2 rounded-lg hover:bg-brand-powder/20 cursor-pointer transition-colors group"
-                            >
-                              <div className="min-w-0">
-                                <p className="font-mono font-bold text-brand-teal group-hover:underline">#{o.id}</p>
-                                <p className="text-[10px] text-slate-500 font-medium">{o.customer?.name}</p>
+                          {searchResults.orders.map(o => {
+                            const custName = typeof o?.customer === 'string'
+                              ? o.customer
+                              : (o?.customer?.name || 'Customer');
+                            return (
+                              <div
+                                key={o?.id}
+                                onClick={() => {
+                                  navigate(`/admin/orders/${o?.id}`);
+                                  setSearchOpen(false);
+                                }}
+                                className="flex items-center justify-between p-2 rounded-lg hover:bg-brand-powder/20 cursor-pointer transition-colors group"
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-mono font-bold text-brand-teal group-hover:underline">#{o?.id}</p>
+                                  <p className="text-[10px] text-slate-500 font-medium truncate">{custName}</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  {o?.status && <StatusBadge status={o.status} />}
+                                  <span className="font-bold text-slate-900">₹{Number(o?.total || 0).toLocaleString('en-IN')}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                <StatusBadge status={o.status} />
-                                <span className="font-bold text-slate-900">₹{Number(o.total || 0).toLocaleString('en-IN')}</span>
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -358,27 +389,31 @@ export default function AdminHeader({ onMenuToggle }) {
                           <span>Customers ({searchResults.customers.length})</span>
                         </div>
                         <div className="space-y-1">
-                          {searchResults.customers.map(c => (
-                            <div
-                              key={c.id}
-                              onClick={() => {
-                                navigate(`/admin/customers/${c.id}`);
-                                setSearchOpen(false);
-                              }}
-                              className="flex items-center justify-between p-2 rounded-lg hover:bg-brand-powder/20 cursor-pointer transition-colors group"
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 bg-brand-powder rounded-full flex items-center justify-center text-brand-teal font-bold text-xs">
-                                  {c.name.charAt(0)}
+                          {searchResults.customers.map(c => {
+                            const cName = c?.name || 'Customer';
+                            const cInitial = cName.charAt(0).toUpperCase() || 'C';
+                            return (
+                              <div
+                                key={c?.id || c?.email}
+                                onClick={() => {
+                                  navigate(`/admin/customers/${c?.id || ''}`);
+                                  setSearchOpen(false);
+                                }}
+                                className="flex items-center justify-between p-2 rounded-lg hover:bg-brand-powder/20 cursor-pointer transition-colors group"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-7 h-7 bg-brand-powder rounded-full flex items-center justify-center text-brand-teal font-bold text-xs flex-shrink-0">
+                                    {cInitial}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-slate-800 group-hover:text-brand-teal truncate">{cName}</p>
+                                    <p className="text-[10px] text-slate-400 truncate">{c?.email || ''}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="font-semibold text-slate-800 group-hover:text-brand-teal">{c.name}</p>
-                                  <p className="text-[10px] text-slate-400">{c.email}</p>
-                                </div>
+                                <span className="text-[11px] font-semibold text-slate-500 flex-shrink-0 ml-2">{c?.phone || ''}</span>
                               </div>
-                              <span className="text-[11px] font-semibold text-slate-500">{c.phone}</span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -659,52 +694,66 @@ export default function AdminHeader({ onMenuToggle }) {
                   <>
                     {searchResults.products.map(p => (
                       <div
-                        key={p.id}
+                        key={p?.id || p?.name}
                         onClick={() => {
-                          navigate(`/admin/products`);
+                          navigate('/admin/products');
                           setMobileSearchActive(false);
                         }}
                         className="flex items-center gap-2.5 p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
                       >
-                        <img src={p.image} alt={p.name} className="w-8 h-10 object-cover rounded-md flex-shrink-0" />
+                        {p?.image ? (
+                          <img src={p.image} alt={p?.name || 'Product'} className="w-8 h-10 object-cover rounded-md flex-shrink-0" />
+                        ) : (
+                          <div className="w-8 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0">
+                            <Package size={14} />
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-800 truncate">{p.name}</p>
-                          <p className="text-[10px] text-slate-400">{p.sku} · ₹{Number(p.price || 0).toLocaleString('en-IN')}</p>
+                          <p className="font-semibold text-slate-800 truncate">{p?.name || 'Product'}</p>
+                          <p className="text-[10px] text-slate-400">{p?.sku || 'SKU'} · ₹{Number(p?.price || 0).toLocaleString('en-IN')}</p>
                         </div>
                       </div>
                     ))}
-                    {searchResults.orders.map(o => (
-                      <div
-                        key={o.id}
-                        onClick={() => {
-                          navigate(`/admin/orders/${o.id}`);
-                          setMobileSearchActive(false);
-                        }}
-                        className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
-                      >
-                        <div>
-                          <p className="font-mono font-bold text-brand-teal">#{o.id}</p>
-                          <p className="text-[10px] text-slate-500">{o.customer?.name}</p>
+                    {searchResults.orders.map(o => {
+                      const custName = typeof o?.customer === 'string'
+                        ? o.customer
+                        : (o?.customer?.name || 'Customer');
+                      return (
+                        <div
+                          key={o?.id}
+                          onClick={() => {
+                            navigate(`/admin/orders/${o?.id}`);
+                            setMobileSearchActive(false);
+                          }}
+                          className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
+                        >
+                          <div>
+                            <p className="font-mono font-bold text-brand-teal">#{o?.id}</p>
+                            <p className="text-[10px] text-slate-500">{custName}</p>
+                          </div>
+                          <span className="font-bold text-slate-800">₹{Number(o?.total || 0).toLocaleString('en-IN')}</span>
                         </div>
-                        <span className="font-bold text-slate-800">₹{Number(o.total || 0).toLocaleString('en-IN')}</span>
-                      </div>
-                    ))}
-                    {searchResults.customers.map(c => (
-                      <div
-                        key={c.id}
-                        onClick={() => {
-                          navigate(`/admin/customers/${c.id}`);
-                          setMobileSearchActive(false);
-                        }}
-                        className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
-                      >
-                        <div>
-                          <p className="font-semibold text-slate-800">{c.name}</p>
-                          <p className="text-[10px] text-slate-400">{c.email}</p>
+                      );
+                    })}
+                    {searchResults.customers.map(c => {
+                      const cName = c?.name || 'Customer';
+                      return (
+                        <div
+                          key={c?.id || c?.email}
+                          onClick={() => {
+                            navigate(`/admin/customers/${c?.id || ''}`);
+                            setMobileSearchActive(false);
+                          }}
+                          className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
+                        >
+                          <div>
+                            <p className="font-semibold text-slate-800">{cName}</p>
+                            <p className="text-[10px] text-slate-400">{c?.email || ''}</p>
+                          </div>
+                          <span className="text-[10px] text-slate-500">{c?.phone || ''}</span>
                         </div>
-                        <span className="text-[10px] text-slate-500">{c.phone}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </>
                 ) : (
                   <p className="p-4 text-center text-slate-400 text-xs">No matching results for "{searchQuery}"</p>

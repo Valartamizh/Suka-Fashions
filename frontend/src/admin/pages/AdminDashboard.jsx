@@ -277,7 +277,13 @@ export default function AdminDashboard() {
           change={currentMetrics.revenueChange}
           changeType={currentMetrics.revenueChangeType}
           icon={IndianRupee}
-          to="/admin/orders"
+          onClick={() => {
+            setGraphMode('revenue');
+            const el = document.getElementById('revenue-sales-graph');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }}
         />
         <StatCard
           title="Orders"
@@ -315,7 +321,7 @@ export default function AdminDashboard() {
       {/* Middle row: Sales & Revenue Graph + Order Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Graph Card */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
+        <div id="revenue-sales-graph" className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <div className="flex items-center gap-2.5">

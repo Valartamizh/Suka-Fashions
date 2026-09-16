@@ -1,15 +1,20 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { CheckCircle, Package, ArrowRight, Home } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { CheckCircle, Package, ArrowRight, Home, Truck } from 'lucide-react';
+import { useOrders } from '../context/OrderContext';
 
 export default function OrderSuccess() {
+  const location = useLocation();
+  const { orders } = useOrders();
   
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Generate random order ID
-  const orderId = 'ORD-' + Math.floor(Math.random() * 900000 + 100000);
+  // Retrieve actual placed order ID from navigation state or recent context order
+  const orderId = location.state?.orderId 
+    || location.state?.order?.id 
+    || (orders && orders.length > 0 ? orders[0].id : '#SUK1028');
 
   return (
     <div className="bg-brand-cream/20 min-h-[75vh] flex items-center py-10 lg:py-14">
@@ -36,7 +41,7 @@ export default function OrderSuccess() {
             </h1>
             
             <p className="font-sans text-sm text-brand-navy/60 max-w-md mx-auto leading-relaxed mb-8">
-              We've received your order and are getting it ready to be shipped. We will send you an email with tracking information once your package ships.
+              We've received your order and are getting it ready to be shipped. You can track your package shipment live at any time using your Order ID.
             </p>
 
             {/* Order Details Card */}
@@ -51,7 +56,7 @@ export default function OrderSuccess() {
                 </div>
                 <div>
                   <span className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 block mb-0.5">Estimated Delivery</span>
-                  <span className="font-sans text-xs font-semibold text-brand-navy">Aug 28 - Aug 30, 2026</span>
+                  <span className="font-sans text-xs font-semibold text-brand-navy">Within 3-4 Business Days</span>
                 </div>
               </div>
             </div>
@@ -59,10 +64,16 @@ export default function OrderSuccess() {
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <Link
+                to={`/track-order?id=${encodeURIComponent(orderId)}`}
+                className="flex items-center justify-center gap-2 bg-brand-teal text-white px-8 py-3.5 font-sans text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-brand-tealDark transition-all rounded-sm shadow-md"
+              >
+                <Truck size={14} /> Track Order Live
+              </Link>
+              <Link
                 to="/account/orders"
                 className="flex items-center justify-center gap-2 bg-white border border-brand-powder px-8 py-3.5 font-sans text-[10px] uppercase tracking-[0.2em] font-semibold text-brand-navy hover:text-brand-teal hover:border-brand-teal transition-all rounded-sm shadow-sm"
               >
-                View Order Details
+                View in Account
               </Link>
               <Link
                 to="/"

@@ -19,11 +19,7 @@ const FacebookIcon = () => (
     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
   </svg>
 );
-const PinterestIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
-    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.08 3.16 9.4 7.63 11.16-.1-.95-.2-2.4.04-3.43.22-.93 1.4-5.93 1.4-5.93s-.36-.72-.36-1.77c0-1.66.96-2.9 2.17-2.9 1.02 0 1.51.77 1.51 1.68 0 1.03-.66 2.56-.99 3.98-.28 1.19.6 2.16 1.77 2.16 2.12 0 3.76-2.24 3.76-5.47 0-2.86-2.06-4.86-5-4.86-3.4 0-5.4 2.56-5.4 5.2 0 1.03.4 2.13.9 2.73.1.12.11.23.08.35l-.34 1.39c-.06.23-.18.28-.42.17-1.57-.73-2.55-3.02-2.55-4.86 0-3.95 2.87-7.6 8.3-7.6 4.36 0 7.74 3.1 7.74 7.25 0 4.33-2.73 7.82-6.52 7.82-1.27 0-2.47-.66-2.88-1.44l-.78 2.98c-.28 1.08-1.05 2.44-1.56 3.28 1.13.35 2.33.54 3.58.54 6.63 0 12-5.37 12-12S18.63 0 12 0z"/>
-  </svg>
-);
+
 const YoutubeIcon = () => (
   <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
@@ -134,7 +130,6 @@ export default function Footer() {
   const socials = [
     { SvgIcon: InstagramIcon, href: socialLinks.instagram || 'https://instagram.com/sukafashions', label: 'Instagram' },
     { SvgIcon: FacebookIcon,  href: socialLinks.facebook || 'https://facebook.com/sukafashions',   label: 'Facebook'  },
-    { SvgIcon: PinterestIcon, href: socialLinks.pinterest || 'https://pinterest.com/sukafashions',  label: 'Pinterest' },
     { SvgIcon: YoutubeIcon,   href: socialLinks.youtube || 'https://youtube.com/sukafashions',      label: 'YouTube'   },
     { SvgIcon: WhatsAppIcon,  href: socialLinks.whatsapp ? getWhatsAppUrl(socialLinks.whatsapp) : getWhatsAppUrl(whatsAppPhone), label: 'WhatsApp'  },
   ];

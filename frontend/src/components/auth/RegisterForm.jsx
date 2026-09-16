@@ -56,11 +56,11 @@ export default function RegisterForm({ onSendOtp, onSwitchToLogin }) {
   };
 
   return (
-    <div className="w-full h-full min-h-[560px] lg:min-h-[640px] flex flex-col justify-between p-6 sm:p-10 lg:p-12 text-left self-stretch">
+    <div className="w-full h-full min-h-0 sm:min-h-[560px] lg:min-h-[640px] flex flex-col justify-between p-4 sm:p-10 lg:p-12 text-left self-stretch">
       <div>
-        {/* Brand Logo Header */}
-        <div className="flex flex-col items-center sm:items-start text-center sm:text-left mb-6">
-          <Link to="/" className="group flex flex-col sm:flex-row items-center gap-4 mb-2">
+        {/* Brand Logo Header (Desktop only - Mobile has top bar branding) */}
+        <div className="hidden sm:flex flex-col items-start text-left mb-6">
+          <Link to="/" className="group flex flex-row items-center gap-4 mb-2">
             <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 border-2 border-brand-teal/30 shadow-md group-hover:border-brand-teal transition-all bg-white flex items-center justify-center">
               <img
                 src={logo}
@@ -77,24 +77,24 @@ export default function RegisterForm({ onSendOtp, onSwitchToLogin }) {
               </span>
             </div>
           </Link>
-          <div className="w-12 h-0.5 bg-gradient-to-r from-brand-teal to-brand-powder rounded-full my-1 hidden sm:block" />
+          <div className="w-12 h-0.5 bg-gradient-to-r from-brand-teal to-brand-powder rounded-full my-1" />
         </div>
 
         {/* Heading & Subtitle */}
-        <div className="mb-6">
-          <span className="font-sans text-[9px] uppercase tracking-[0.25em] font-extrabold text-brand-teal bg-brand-teal/10 px-3 py-1 rounded-full inline-block mb-2">
+        <div className="mb-3.5 sm:mb-6">
+          <span className="font-sans text-[8.5px] sm:text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.25em] font-extrabold text-brand-teal bg-brand-teal/10 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full inline-block mb-1 sm:mb-2">
             NEW CUSTOMER REGISTRATION
           </span>
-          <h1 className="font-serif text-2xl sm:text-3xl text-brand-navy font-light mb-1">
+          <h1 className="font-serif text-xl sm:text-3xl text-brand-navy font-light mb-0.5 sm:mb-1">
             Create Your Account
           </h1>
-          <p className="font-sans text-xs text-brand-navy/60 font-light">
+          <p className="font-sans text-[11px] sm:text-xs text-brand-navy/60 font-light">
             Register to enjoy personalized styling, wishlist sync, & exclusive member privileges.
           </p>
         </div>
 
         {/* Registration Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-4">
 
           {/* Full Name */}
           <div>
@@ -193,10 +193,10 @@ export default function RegisterForm({ onSendOtp, onSwitchToLogin }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 mt-2 rounded-md bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[11px] font-bold tracking-[0.25em] uppercase transition-all duration-300 shadow-md hover:shadow-xl active:scale-[0.99] shadow-brand-teal/20 cursor-pointer"
+            className="w-full py-3 sm:py-3.5 mt-1 sm:mt-2 rounded-md bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[10.5px] sm:text-[11px] font-bold tracking-[0.2em] sm:tracking-[0.25em] uppercase transition-all duration-300 shadow-md hover:shadow-xl active:scale-[0.99] shadow-brand-teal/20 cursor-pointer"
           >
             {loading ? (
-              <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="inline-block w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               'REGISTER & VERIFY OTP →'
             )}
@@ -204,25 +204,25 @@ export default function RegisterForm({ onSendOtp, onSwitchToLogin }) {
         </form>
 
         {/* Switch to Sign In */}
-        <div className="mt-5 text-center sm:text-left">
-          <p className="font-sans text-xs text-brand-navy/60">
+        <div className="mt-3 sm:mt-5 text-center sm:text-left">
+          <p className="font-sans text-[11.5px] sm:text-xs text-brand-navy/60">
             Already registered?{' '}
             <button
               type="button"
               onClick={onSwitchToLogin}
               className="font-bold text-brand-teal hover:underline cursor-pointer"
             >
-              Sign In to Your Account
+              Sign In
             </button>
           </p>
         </div>
       </div>
 
       {/* Customer Benefits */}
-      <div className="mt-6 pt-4 border-t border-brand-powder/50 flex flex-wrap items-center justify-between gap-2 text-[9.5px] font-sans text-brand-navy/70 font-semibold uppercase tracking-wider">
-        <span className="flex items-center gap-1.5 bg-brand-powderLight/60 px-2.5 py-1 rounded-full"><Heart size={12} className="text-brand-teal" /> Save Favorites</span>
-        <span className="flex items-center gap-1.5 bg-brand-powderLight/60 px-2.5 py-1 rounded-full"><Package size={12} className="text-brand-teal" /> Live Orders</span>
-        <span className="flex items-center gap-1.5 bg-brand-powderLight/60 px-2.5 py-1 rounded-full"><Zap size={12} className="text-brand-teal" /> Member Perks</span>
+      <div className="mt-3.5 pt-2.5 sm:mt-6 sm:pt-4 border-t border-brand-powder/50 flex flex-wrap items-center justify-center sm:justify-between gap-2 text-[8.5px] sm:text-[9.5px] font-sans text-brand-navy/70 font-semibold uppercase tracking-wider">
+        <span className="flex items-center gap-1 bg-brand-powderLight/60 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full"><Heart size={11} className="text-brand-teal" /> Save Favorites</span>
+        <span className="flex items-center gap-1 bg-brand-powderLight/60 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full"><Package size={11} className="text-brand-teal" /> Live Orders</span>
+        <span className="flex items-center gap-1 bg-brand-powderLight/60 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full"><Zap size={11} className="text-brand-teal" /> Member Perks</span>
       </div>
     </div>
   );

@@ -66,26 +66,66 @@ export function OrderProvider({ children }) {
     }
   }, [adminOrders]);
 
-  // Clear storefront orders when logged out
+  // Save storefront orders to localStorage whenever updated
   useEffect(() => {
-    if (!isLoggedIn) {
-      setOrders([]);
+    try {
+      localStorage.setItem('suka_orders', JSON.stringify(orders));
+    } catch (e) {
+      console.error('Error saving orders to localStorage', e);
     }
-  }, [isLoggedIn]);
-
-  // Save storefront orders to localStorage when logged in
-  useEffect(() => {
-    if (isLoggedIn) {
-      try {
-        localStorage.setItem('suka_orders', JSON.stringify(orders));
-      } catch (e) {
-        console.error('Error saving orders to localStorage', e);
-      }
-    }
-  }, [orders, isLoggedIn]);
+  }, [orders]);
 
   const addOrder = (newOrder) => {
     setOrders((prevOrders) => [newOrder, ...prevOrders]);
+    
+    // Also sync to admin orders for consistent cross-system tracking
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const newAdminOrder = {
+        id: newOrder.id,
+        customer: {
+          id: `CUS000${Math.floor(100 + Math.random() * 900)}`,
+          name: newOrder.address?.name || 'Storefront Customer',
+          phone: newOrder.address?.phone || '',
+          email: newOrder.email || '',
+        },
+        address: {
+          line1: newOrder.address?.street || newOrder.address?.line1 || '',
+          city: newOrder.address?.city || '',
+          state: newOrder.address?.state || '',
+          pincode: newOrder.address?.pincode || '',
+        },
+        items: (newOrder.items || []).map(it => ({
+          productId: it.id || it.productId || 'custom-item',
+          name: it.name,
+          variant: `${it.selectedColor || ''} ${it.selectedSize || ''}`.trim() || 'Standard',
+          qty: it.quantity || 1,
+          price: it.price || 0,
+          image: it.image || (it.images && it.images[0]) || '',
+        })),
+        subtotal: Number(newOrder.subtotal || newOrder.total || 0),
+        discount: Number(newOrder.discount || 0),
+        shipping: Number(newOrder.shipping || 0),
+        tax: Number(newOrder.tax || 0),
+        total: Number(newOrder.total || 0),
+        paymentMethod: newOrder.paymentMethod || 'Online Checkout',
+        paymentStatus: 'paid',
+        status: (newOrder.status || 'processing').toLowerCase(),
+        orderSource: 'Online Storefront',
+        notes: 'Order placed via online store',
+        date: todayStr,
+        timeline: [
+          { status: 'processing', time: `${todayStr} ${timeStr}`, note: 'Order placed & confirmed via Storefront' }
+        ]
+      };
+      setAdminOrders(prev => {
+        const filtered = prev.filter(o => o.id !== newOrder.id);
+        return [newAdminOrder, ...filtered];
+      });
+    } catch (err) {
+      console.warn('Could not sync order to admin orders:', err);
+    }
   };
 
   const clearOrders = () => {
@@ -181,11 +221,12 @@ export function OrderProvider({ children }) {
     return adminOrders.find(o => o.id === id);
   };
 
-  const activeOrders = isLoggedIn ? orders : [];
+  const activeOrders = isLoggedIn ? orders : orders;
 
   return (
     <OrderContext.Provider value={{
       orders: activeOrders,
+      allOrders: [...orders, ...adminOrders],
       addOrder,
       clearOrders,
       adminOrders,

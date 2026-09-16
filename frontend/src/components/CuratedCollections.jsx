@@ -53,7 +53,8 @@ export default function CuratedCollections() {
 
   const collections = useMemo(() => {
     if (content?.items && Array.isArray(content.items) && content.items.length > 0) {
-      return content.items;
+      const activeOnly = content.items.filter(i => i.enabled !== false && i.active !== false);
+      if (activeOnly.length > 0) return activeOnly;
     }
     return defaultCollections;
   }, [content]);

@@ -6,16 +6,97 @@ import { contentService, formatPublishedDate } from '../services/contentService'
 const ContentContext = createContext(null);
 
 export function ContentProvider({ children }) {
-  const [publishedSections, setPublishedSections] = useState(initialHomeSections);
-  const [draftSections, setDraftSections] = useState(initialHomeSections);
-  const [meta, setMeta] = useState({
-    status: 'PUBLISHED',
-    lastPublishedAt: '11 Sep 2026, 09:15 AM',
-    lastPublishedBy: 'Aditi Sharma',
+  const [publishedSections, setPublishedSections] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('suka_content_published_v6');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (_) {}
+    }
+    return initialHomeSections;
   });
+
+  const [draftSections, setDraftSections] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('suka_content_draft_v6');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (_) {}
+    }
+    return initialHomeSections;
+  });
+
+  const [meta, setMeta] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('suka_content_meta_v6');
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+    }
+    return {
+      status: 'PUBLISHED',
+      lastPublishedAt: '11 Sep 2026, 09:15 AM',
+      lastPublishedBy: 'Aditi Sharma',
+    };
+  });
+
   const [versionHistory, setVersionHistory] = useState([]);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('preview') === 'true';
+    }
+    return false;
+  });
   const [isLoading, setIsLoading] = useState(true);
+
+  // Cross-tab synchronization via BroadcastChannel and storage events
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const bc = new BroadcastChannel('suka_cms_channel');
+    bc.onmessage = (event) => {
+      if (event.data?.type === 'DRAFT_UPDATED' && Array.isArray(event.data.draftSections)) {
+        setDraftSections(event.data.draftSections);
+      }
+      if (event.data?.type === 'PUBLISHED_UPDATED' && Array.isArray(event.data.publishedSections)) {
+        setPublishedSections(event.data.publishedSections);
+      }
+      if (event.data?.type === 'META_UPDATED' && event.data.meta) {
+        setMeta(event.data.meta);
+      }
+    };
+    return () => bc.close();
+  }, []);
+
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === 'suka_content_draft_v6' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setDraftSections(parsed);
+        } catch (_) {}
+      }
+      if (e.key === 'suka_content_published_v6' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setPublishedSections(parsed);
+        } catch (_) {}
+      }
+      if (e.key === 'suka_content_meta_v6' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed) setMeta(parsed);
+        } catch (_) {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   // Initialize from contentService
   useEffect(() => {
@@ -44,6 +125,19 @@ export function ContentProvider({ children }) {
       }
     }
   }, []);
+
+  // Auto-sync draftSections to localStorage so any opened preview window sees latest edits
+  useEffect(() => {
+    if (isLoading) return;
+    try {
+      localStorage.setItem('suka_content_draft_v5', JSON.stringify(draftSections));
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('suka_cms_channel');
+        bc.postMessage({ type: 'DRAFT_UPDATED', draftSections });
+        bc.close();
+      }
+    } catch (_) {}
+  }, [draftSections, isLoading]);
 
   // Determine which section list to present to storefront:
   // When in Preview Mode, storefront renders draftSections. Otherwise, publishedSections.
@@ -104,8 +198,20 @@ export function ContentProvider({ children }) {
     setMeta((m) => ({ ...m, status: 'DRAFT' }));
   }, []);
 
+  const deleteSection = useCallback((id) => {
+    setDraftSections((prev) => {
+      const filtered = prev.filter(s => s.id !== id);
+      return filtered.map((s, idx) => ({ ...s, order: idx + 1 }));
+    });
+    setMeta((m) => ({ ...m, status: 'DRAFT' }));
+  }, []);
+
   const reorderSections = useCallback((newOrderedSections) => {
-    const indexed = newOrderedSections.map((sec, idx) => ({
+    // Keep footer permanently fixed as the last section
+    const nonFooter = newOrderedSections.filter(s => s.id !== 'footer');
+    const footerSec = newOrderedSections.find(s => s.id === 'footer');
+    const finalSections = footerSec ? [...nonFooter, footerSec] : nonFooter;
+    const indexed = finalSections.map((sec, idx) => ({
       ...sec,
       order: idx + 1,
     }));
@@ -116,6 +222,10 @@ export function ContentProvider({ children }) {
   const moveSection = useCallback((fromIndex, toIndex) => {
     if (fromIndex < 0 || toIndex < 0 || fromIndex >= draftSections.length || toIndex >= draftSections.length) return;
     setDraftSections((prev) => {
+      // Prevent moving footer or moving any section into/beyond footer position
+      if (prev[fromIndex]?.id === 'footer' || prev[toIndex]?.id === 'footer') {
+        return prev;
+      }
       const next = [...prev];
       const [moved] = next.splice(fromIndex, 1);
       next.splice(toIndex, 0, moved);
@@ -125,13 +235,18 @@ export function ContentProvider({ children }) {
   }, [draftSections.length]);
 
   const moveSectionUp = useCallback((id) => {
+    if (id === 'footer') return; // Footer cannot be moved up
     const idx = draftSections.findIndex(s => s.id === id);
     if (idx > 0) moveSection(idx, idx - 1);
   }, [draftSections, moveSection]);
 
   const moveSectionDown = useCallback((id) => {
+    if (id === 'footer') return; // Footer cannot be moved down
     const idx = draftSections.findIndex(s => s.id === id);
-    if (idx >= 0 && idx < draftSections.length - 1) moveSection(idx, idx + 1);
+    // Don't move down if next section is footer or end of list
+    if (idx >= 0 && idx < draftSections.length - 1 && draftSections[idx + 1]?.id !== 'footer') {
+      moveSection(idx, idx + 1);
+    }
   }, [draftSections, moveSection]);
 
   // Actions
@@ -139,6 +254,12 @@ export function ContentProvider({ children }) {
     const res = await contentService.saveDraftContent(draftSections);
     if (res.success) {
       setMeta(res.meta);
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('suka_cms_channel');
+        bc.postMessage({ type: 'DRAFT_UPDATED', draftSections: res.draft });
+        bc.postMessage({ type: 'META_UPDATED', meta: res.meta });
+        bc.close();
+      }
     }
     return res;
   }, [draftSections]);
@@ -150,6 +271,13 @@ export function ContentProvider({ children }) {
       setDraftSections(res.draft);
       setMeta(res.meta);
       setVersionHistory(res.history);
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('suka_cms_channel');
+        bc.postMessage({ type: 'PUBLISHED_UPDATED', publishedSections: res.published });
+        bc.postMessage({ type: 'DRAFT_UPDATED', draftSections: res.draft });
+        bc.postMessage({ type: 'META_UPDATED', meta: res.meta });
+        bc.close();
+      }
     }
     return res;
   }, [draftSections]);
@@ -161,6 +289,13 @@ export function ContentProvider({ children }) {
       setDraftSections(res.draft);
       setMeta(res.meta);
       setVersionHistory(res.history);
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('suka_cms_channel');
+        bc.postMessage({ type: 'PUBLISHED_UPDATED', publishedSections: res.published });
+        bc.postMessage({ type: 'DRAFT_UPDATED', draftSections: res.draft });
+        bc.postMessage({ type: 'META_UPDATED', meta: res.meta });
+        bc.close();
+      }
     }
     return res;
   }, []);
@@ -171,6 +306,13 @@ export function ContentProvider({ children }) {
     setDraftSections(res.draft);
     setMeta(res.meta);
     setVersionHistory(res.history);
+    if (typeof BroadcastChannel !== 'undefined') {
+      const bc = new BroadcastChannel('suka_cms_channel');
+      bc.postMessage({ type: 'PUBLISHED_UPDATED', publishedSections: res.published });
+      bc.postMessage({ type: 'DRAFT_UPDATED', draftSections: res.draft });
+      bc.postMessage({ type: 'META_UPDATED', meta: res.meta });
+      bc.close();
+    }
     return res;
   }, []);
 
@@ -201,6 +343,7 @@ export function ContentProvider({ children }) {
         moveSection,
         moveSectionUp,
         moveSectionDown,
+        deleteSection,
         saveDraft,
         publishChanges,
         restoreVersion,

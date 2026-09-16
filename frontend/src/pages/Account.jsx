@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Package, MapPin, LogOut, ChevronRight, X, Truck, CheckCircle2, Plus, Edit2, Trash2 as TrashIcon, Check, Lock, LogIn, ShieldCheck } from 'lucide-react';
+import { User, Package, MapPin, LogOut, ChevronRight, X, Truck, CheckCircle2, Plus, Edit2, Trash2 as TrashIcon, Check, Lock, LogIn, ShieldCheck, MessageSquare } from 'lucide-react';
 import { products } from '../data/products';
 import { useOrders } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
@@ -430,63 +430,83 @@ export default function Account() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                  {orders.map((order) => (
-                    <div key={order.id} className="border border-brand-powder/60 rounded-sm overflow-hidden hover:border-brand-teal/40 transition-colors">
+                  {orders.map((order) => {
+                    const firstItem = order?.items?.[0] || {};
+                    const orderTotalFormatted = Number(order?.total || 0).toLocaleString('en-IN');
+                    const isDelivered = (order?.status || '').toLowerCase() === 'delivered';
+
+                    return (
+                    <div key={order?.id || Math.random()} className="border border-brand-powder/60 rounded-sm overflow-hidden hover:border-brand-teal/40 transition-colors">
                       
                       {/* Header summary bar */}
                       <div className="bg-brand-cream/30 p-4 border-b border-brand-powder/60 flex flex-wrap gap-4 justify-between items-center">
                         <div>
                           <span className="font-sans text-[9px] uppercase tracking-wider text-brand-navy/50 block mb-1">Order Placed</span>
-                          <span className="font-sans text-xs font-semibold text-brand-navy">{order.date}</span>
+                          <span className="font-sans text-xs font-semibold text-brand-navy">{order?.date || 'Recent'}</span>
                         </div>
                         <div>
                           <span className="font-sans text-[9px] uppercase tracking-wider text-brand-navy/50 block mb-1">Total</span>
-                          <span className="font-sans text-xs font-semibold text-brand-navy">₹{order.total.toLocaleString('en-IN')}</span>
+                          <span className="font-sans text-xs font-semibold text-brand-navy">₹{orderTotalFormatted}</span>
                         </div>
                         <div>
                           <span className="font-sans text-[9px] uppercase tracking-wider text-brand-navy/50 block mb-1">Order ID</span>
-                          <span className="font-sans text-xs font-semibold text-brand-navy">{order.id}</span>
+                          <span className="font-sans text-xs font-semibold text-brand-navy">{order?.id || '—'}</span>
                         </div>
                         
-                        {/* Interactive View Details Button */}
-                        <button
-                          type="button"
-                          onClick={() => setSelectedOrder(order)}
-                          className="font-sans text-[10px] uppercase tracking-widest text-brand-teal font-bold hover:bg-brand-teal hover:text-white border border-brand-teal px-4 py-2 rounded-sm transition-all duration-200 shadow-xs cursor-pointer"
-                        >
-                          View Details
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/track-order?id=${encodeURIComponent(order?.id || '')}`}
+                            className="font-sans text-[10px] uppercase tracking-widest text-brand-navy hover:text-brand-teal border border-brand-powder hover:border-brand-teal px-3 py-2 rounded-sm transition-all duration-200 shadow-2xs flex items-center gap-1.5"
+                          >
+                            <Truck size={12} /> Track
+                          </Link>
+                          {/* Interactive View Details Button */}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrder(order)}
+                            className="font-sans text-[10px] uppercase tracking-widest text-brand-teal font-bold hover:bg-brand-teal hover:text-white border border-brand-teal px-4 py-2 rounded-sm transition-all duration-200 shadow-xs cursor-pointer"
+                          >
+                            View Details
+                          </button>
+                        </div>
                       </div>
 
                       {/* Items Preview */}
                       <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-6">
                         <div className="w-20 h-24 bg-brand-cream border border-brand-powder/40 flex-shrink-0 rounded-xs overflow-hidden">
-                          <img src={order.items[0].image} alt={order.items[0].name} className="w-full h-full object-cover" />
+                          {firstItem.image ? (
+                            <img src={firstItem.image} alt={firstItem.name || 'Order Item'} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-brand-navy/30">
+                              <Package size={24} />
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
-                            <h3 className="font-serif text-lg text-brand-navy mb-1">{order.items[0].name}</h3>
+                            <h3 className="font-serif text-lg text-brand-navy mb-1">{firstItem.name || 'Suka Fashions Item'}</h3>
                             <p className="font-sans text-[10px] uppercase tracking-wider text-brand-navy/60 mb-2">
-                              Size: {order.items[0].selectedSize} | Qty: {order.items[0].quantity}
-                              {order.items[0].selectedColor ? ` | Color: ${order.items[0].selectedColor}` : ''}
+                              Size: {firstItem.selectedSize || firstItem.variant || 'Free Size'} | Qty: {firstItem.quantity || firstItem.qty || 1}
+                              {firstItem.selectedColor ? ` | Color: ${firstItem.selectedColor}` : ''}
                             </p>
                           </div>
                           
                           <div>
                             <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] uppercase tracking-widest font-bold ${
-                              order.status === 'Delivered' 
+                              isDelivered
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
                                 : 'bg-brand-teal/10 text-brand-teal border-brand-teal/20'
                             }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${order.status === 'Delivered' ? 'bg-emerald-600' : 'bg-brand-teal'}`} />
-                              {order.status}
+                              <span className={`w-1.5 h-1.5 rounded-full ${isDelivered ? 'bg-emerald-600' : 'bg-brand-teal'}`} />
+                              {order?.status || 'Processing'}
                             </span>
                           </div>
                         </div>
                       </div>
 
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
                 )}
               </div>
@@ -687,17 +707,17 @@ export default function Account() {
                 <h2 className="font-serif text-2xl text-brand-navy font-normal flex items-center gap-3">
                   {selectedOrder.id}
                   <span className={`font-sans text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full border ${
-                    selectedOrder.status === 'Delivered' 
+                    (selectedOrder.status || '').toLowerCase() === 'delivered'
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
                       : 'bg-brand-teal/10 text-brand-teal border-brand-teal/20'
                   }`}>
-                    {selectedOrder.status}
+                    {selectedOrder.status || 'Processing'}
                   </span>
                 </h2>
               </div>
               <button 
                 onClick={() => setSelectedOrder(null)}
-                className="p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors"
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
                 aria-label="Close modal"
               >
                 <X size={20} />
@@ -710,21 +730,35 @@ export default function Account() {
                 Shipment Status Timeline
               </h3>
               <div className="space-y-4">
-                {selectedOrder.timeline.map((step, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 ${
-                      step.done ? 'bg-brand-teal text-white shadow-xs' : 'bg-slate-200 text-slate-400 border border-slate-300'
-                    }`}>
-                      {step.done ? '✓' : idx + 1}
+                {(() => {
+                  const timelineItems = (Array.isArray(selectedOrder.timeline) && selectedOrder.timeline.length > 0)
+                    ? selectedOrder.timeline.map((t, i) => ({
+                        done: t.done !== undefined ? t.done : true,
+                        label: t.label || t.status || t.note || `Step ${i + 1}`,
+                        date: t.date || t.time || selectedOrder.date || 'Completed',
+                      }))
+                    : [
+                        { done: true, label: 'Order Placed & Confirmed', date: selectedOrder.date || 'Confirmed' },
+                        { done: ['shipped', 'delivered'].includes((selectedOrder.status || '').toLowerCase()), label: 'Packed & Dispatched from Hub', date: ['shipped', 'delivered'].includes((selectedOrder.status || '').toLowerCase()) ? 'Dispatched' : 'In Progress' },
+                        { done: (selectedOrder.status || '').toLowerCase() === 'delivered', label: 'Out for Delivery & Completed', date: (selectedOrder.status || '').toLowerCase() === 'delivered' ? 'Delivered' : 'Pending' },
+                      ];
+
+                  return timelineItems.map((step, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 ${
+                        step.done ? 'bg-brand-teal text-white shadow-xs' : 'bg-slate-200 text-slate-400 border border-slate-300'
+                      }`}>
+                        {step.done ? '✓' : idx + 1}
+                      </div>
+                      <div className="flex-1 flex justify-between items-baseline border-b border-brand-powder/30 pb-2">
+                        <span className={`font-sans text-xs ${step.done ? 'font-semibold text-brand-navy' : 'text-brand-navy/50'}`}>
+                          {step.label}
+                        </span>
+                        <span className="font-sans text-[10px] text-brand-navy/50 font-medium">{step.date}</span>
+                      </div>
                     </div>
-                    <div className="flex-1 flex justify-between items-baseline border-b border-brand-powder/30 pb-2">
-                      <span className={`font-sans text-xs ${step.done ? 'font-semibold text-brand-navy' : 'text-brand-navy/50'}`}>
-                        {step.label}
-                      </span>
-                      <span className="font-sans text-[10px] text-brand-navy/50 font-medium">{step.date}</span>
-                    </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
 
@@ -734,17 +768,17 @@ export default function Account() {
                 Items Purchased
               </h3>
               <div className="space-y-3">
-                {selectedOrder.items.map((item, idx) => (
+                {(selectedOrder.items || []).map((item, idx) => (
                   <div key={idx} className="flex items-center gap-4 p-3 bg-brand-cream/20 border border-brand-powder/40 rounded-sm">
                     <img src={item.image} alt={item.name} className="w-16 h-20 object-cover rounded-xs border border-brand-powder/40 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-serif text-base text-brand-navy font-medium">{item.name}</h4>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-serif text-base text-brand-navy font-medium truncate">{item.name}</h4>
                       <p className="font-sans text-[10px] text-brand-navy/60 uppercase tracking-wider mt-0.5">
-                        Size: {item.selectedSize || 'Free Size'} | Qty: {item.quantity}
+                        Size: {item.selectedSize || 'Free Size'} | Qty: {item.quantity || item.qty || 1}
                         {item.selectedColor ? ` | Color: ${item.selectedColor}` : ''}
                       </p>
                       <p className="font-sans text-xs font-bold text-brand-navy mt-1">
-                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                        ₹{Number((item.price || 0) * (item.quantity || item.qty || 1)).toLocaleString('en-IN')}
                       </p>
                     </div>
                   </div>
@@ -756,42 +790,72 @@ export default function Account() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <div className="p-4 bg-white border border-brand-powder/50 rounded-sm">
                 <h4 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-brand-navy mb-2">Delivery Address</h4>
-                <p className="font-sans text-xs text-brand-navy/75 leading-relaxed">
-                  <strong>{selectedOrder.address.name}</strong><br />
-                  {selectedOrder.address.street}<br />
-                  {selectedOrder.address.locality}, {selectedOrder.address.city}<br />
-                  {selectedOrder.address.state} - {selectedOrder.address.pincode}<br />
-                  Phone: <span className="font-semibold text-brand-teal">{selectedOrder.address.phone}</span>
-                </p>
+                {selectedOrder.address ? (
+                  typeof selectedOrder.address === 'string' ? (
+                    <p className="font-sans text-xs text-brand-navy/75 leading-relaxed">
+                      {selectedOrder.address}
+                    </p>
+                  ) : (
+                    <p className="font-sans text-xs text-brand-navy/75 leading-relaxed">
+                      <strong>{selectedOrder.address.name || user?.name || 'Customer'}</strong><br />
+                      {selectedOrder.address.street || selectedOrder.address.line1 || ''}
+                      {selectedOrder.address.apartment ? `, ${selectedOrder.address.apartment}` : ''}
+                      {selectedOrder.address.locality ? `, ${selectedOrder.address.locality}` : ''}<br />
+                      {[selectedOrder.address.city, selectedOrder.address.state].filter(Boolean).join(', ')}
+                      {selectedOrder.address.pincode ? ` - ${selectedOrder.address.pincode}` : ''}<br />
+                      {selectedOrder.address.phone && (
+                        <>Phone: <span className="font-semibold text-brand-teal">{selectedOrder.address.phone}</span></>
+                      )}
+                    </p>
+                  )
+                ) : (
+                  <p className="font-sans text-xs text-brand-navy/50">Standard Delivery Address</p>
+                )}
               </div>
 
               <div className="p-4 bg-white border border-brand-powder/50 rounded-sm flex flex-col justify-between">
                 <div>
                   <h4 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-brand-navy mb-2">Payment Breakdown</h4>
                   <div className="space-y-1.5 font-sans text-xs text-brand-navy/70">
-                    <div className="flex justify-between"><span>Subtotal:</span><span>₹{selectedOrder.subtotal.toLocaleString('en-IN')}</span></div>
-                    <div className="flex justify-between"><span>Shipping:</span><span>{selectedOrder.shipping === 0 ? 'Free' : `₹${selectedOrder.shipping}`}</span></div>
-                    <div className="flex justify-between font-bold text-brand-navy border-t border-brand-powder/50 pt-2 mt-2"><span>Total Paid:</span><span>₹{selectedOrder.total.toLocaleString('en-IN')}</span></div>
+                    <div className="flex justify-between">
+                      <span>Subtotal:</span>
+                      <span>₹{Number(selectedOrder.subtotal || selectedOrder.total || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Shipping:</span>
+                      <span>{Number(selectedOrder.shipping || 0) === 0 ? 'Free' : `₹${Number(selectedOrder.shipping).toLocaleString('en-IN')}`}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-brand-navy border-t border-brand-powder/50 pt-2 mt-2">
+                      <span>Total Paid:</span>
+                      <span>₹{Number(selectedOrder.total || 0).toLocaleString('en-IN')}</span>
+                    </div>
                   </div>
                 </div>
-                <p className="font-sans text-[10px] text-brand-navy/50 mt-3">Payment Choice: <strong className="text-brand-navy">{selectedOrder.paymentMethod}</strong></p>
+                <p className="font-sans text-[10px] text-brand-navy/50 mt-3">Payment Choice: <strong className="text-brand-navy">{selectedOrder.paymentMethod || 'Online Order'}</strong></p>
               </div>
             </div>
 
             {/* Action Footer */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-brand-powder/60">
+              <Link
+                to={`/track-order?id=${encodeURIComponent(selectedOrder.id)}`}
+                className="flex items-center justify-center gap-2 bg-brand-teal hover:bg-brand-tealDark text-white py-3.5 px-5 font-sans text-[10px] font-bold uppercase tracking-[0.18em] rounded-sm transition-all shadow-sm"
+              >
+                <Truck size={15} /> Track Live Shipment
+              </Link>
+
               <button
                 onClick={() => {
                   window.open(getWhatsAppUrl(storeWhatsAppPhone, `Hi Suka Fashions, I need live updates or support for my Order ID: ${selectedOrder.id}`), '_blank');
                 }}
-                className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 font-sans text-[10px] font-bold uppercase tracking-[0.18em] rounded-sm transition-all shadow-sm"
+                className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 font-sans text-[10px] font-bold uppercase tracking-[0.18em] rounded-sm transition-all shadow-sm cursor-pointer"
               >
-                <Truck size={15} /> WhatsApp Courier Support
+                <MessageSquare size={15} /> WhatsApp Support
               </button>
               
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="px-6 py-3.5 border border-brand-powder hover:border-brand-navy text-brand-navy font-sans text-[10px] uppercase tracking-widest font-semibold rounded-sm transition-colors"
+                className="px-6 py-3.5 border border-brand-powder hover:border-brand-navy text-brand-navy font-sans text-[10px] uppercase tracking-widest font-semibold rounded-sm transition-colors cursor-pointer"
               >
                 Close
               </button>

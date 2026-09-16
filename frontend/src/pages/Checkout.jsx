@@ -372,7 +372,7 @@ export default function Checkout() {
 
       // Clear cart & navigate to order success screen
       clearCart();
-      navigate('/order-success');
+      navigate('/order-success', { state: { orderId: createdOrder.id, order: createdOrder } });
     }
   };
 
