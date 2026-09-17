@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ArrowLeft, ArrowRight, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import HeroWaves from './HeroWaves';
 import { useContent } from '../context/ContentContext';
@@ -80,11 +80,11 @@ const defaultSlides = [
   },
 ];
 
-const AVATAR_URLS = [
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=80&auto=format&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=80&auto=format&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=80&auto=format&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=80&auto=format&fit=crop&crop=face',
+const SOCIAL_AVATAR_INITIALS = [
+  { initial: 'S', bg: 'bg-brand-teal text-white' },
+  { initial: 'A', bg: 'bg-[#B28756] text-white' },
+  { initial: 'P', bg: 'bg-brand-navy text-white' },
+  { initial: 'K', bg: 'bg-[#8B5A68] text-white' },
 ];
 
 export default function Hero() {
@@ -263,14 +263,14 @@ export default function Hero() {
           {/* Bottom Bar: Social proof + Dot indicators */}
           <div className="flex items-center justify-between pt-2.5 min-[390px]:pt-3 border-t border-white/20">
             <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {AVATAR_URLS.slice(0, 3).map((src, i) => (
-                  <img
+              <div className="flex -space-x-1.5">
+                {SOCIAL_AVATAR_INITIALS.slice(0, 3).map((item, i) => (
+                  <div
                     key={i}
-                    src={src}
-                    alt="Customer"
-                    className="w-6 h-6 rounded-full border border-white object-cover"
-                  />
+                    className={`w-6 h-6 rounded-full border border-white flex items-center justify-center font-serif text-[9px] font-bold shadow-xs select-none ${item.bg}`}
+                  >
+                    {item.initial}
+                  </div>
                 ))}
               </div>
               <div className="flex items-center gap-1">
@@ -306,7 +306,7 @@ export default function Hero() {
 
       {/* ── DESKTOP HERO (2-column editorial with HeroWaves) (lg:flex) ── */}
       <section
-        className="hidden lg:flex relative w-full overflow-hidden min-h-[500px] sm:min-h-[540px] lg:min-h-[580px] items-center py-6 lg:py-8"
+        className="hidden lg:flex relative w-full overflow-hidden min-h-[520px] lg:min-h-[580px] xl:min-h-[640px] 2xl:min-h-[680px] items-center py-6 lg:py-8 2xl:py-12"
         style={{ background: `linear-gradient(140deg, #FAFAF8 52%, ${slide.accentBg || '#EBF5F5'} 100%)` }}
       >
         {/* Teal flowing fabric wave background */}
@@ -316,39 +316,39 @@ export default function Hero() {
 
         {/* Top-right accent glow */}
         <div
-          className="absolute -top-24 -right-24 w-[380px] h-[380px] rounded-full blur-3xl opacity-20 pointer-events-none transition-colors duration-1000 z-0"
+          className="absolute -top-24 -right-24 w-[380px] 2xl:w-[480px] h-[380px] 2xl:h-[480px] rounded-full blur-3xl opacity-20 pointer-events-none transition-colors duration-1000 z-0"
           style={{ background: slide.accentBg || '#EBF5F5' }}
         />
 
         {/* Main content */}
         <div className="relative z-10 w-full">
-          <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20">
+          <div className="max-w-[1720px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20">
 
             <div
               key={slide.id || current}
-              className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-8 lg:gap-10 xl:gap-14 items-center"
+              className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] xl:grid-cols-[0.85fr_1.15fr] 2xl:grid-cols-[1fr_1.2fr] gap-8 lg:gap-10 xl:gap-14 2xl:gap-20 items-center"
               style={{ animation: 'heroFadeIn 0.65s cubic-bezier(0.16,1,0.3,1) both' }}
             >
               {/* ── LEFT: Text Content ───────────────────── */}
-              <div className="flex flex-col justify-center text-left max-w-xl z-10">
+              <div className="flex flex-col justify-center text-left max-w-xl 2xl:max-w-2xl z-10">
 
                 {/* Eyebrow */}
-                <span className="font-sans text-[10px] sm:text-xs font-bold tracking-[0.32em] text-brand-teal uppercase mb-3.5">
+                <span className="font-sans text-[10px] sm:text-xs 2xl:text-sm font-bold tracking-[0.32em] text-brand-teal uppercase mb-3.5">
                   {slide.eyebrow}
                 </span>
 
                 {/* Main heading */}
-                <h1 className="font-serif text-4xl sm:text-5xl lg:text-[3.8rem] xl:text-6xl font-normal text-brand-navy leading-[1.08] mb-3">
+                <h1 className="font-serif text-4xl sm:text-5xl lg:text-[3.6rem] xl:text-6xl 2xl:text-7xl font-normal text-brand-navy leading-[1.08] mb-3">
                   {headingLines.map((line, i) => (
                     <span key={i} className="block">{line}</span>
                   ))}
                 </h1>
 
                 {/* Decorative line */}
-                <div className="w-10 h-[2px] bg-brand-teal mb-4" />
+                <div className="w-10 2xl:w-14 h-[2px] bg-brand-teal mb-4" />
 
                 {/* Subtitle */}
-                <p className="font-sans text-sm lg:text-[15px] text-brand-navy/65 leading-relaxed font-light mb-7 sm:mb-8 max-w-md">
+                <p className="font-sans text-sm lg:text-[15px] 2xl:text-base text-brand-navy/65 leading-relaxed font-light mb-7 sm:mb-8 max-w-md 2xl:max-w-lg">
                   {slide.subtitle}
                 </p>
 
@@ -358,7 +358,7 @@ export default function Hero() {
                     {Boolean(slide.ctaText?.trim()) && (
                       <Link
                         to={slide.ctaLink || '/products'}
-                        className="bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[11px] sm:text-xs font-bold tracking-[0.22em] uppercase py-3.5 px-8 transition-all duration-300 shadow-md hover:shadow-lg rounded-sm"
+                        className="bg-brand-teal hover:bg-brand-tealDark text-white font-sans text-[11px] sm:text-xs 2xl:text-sm font-bold tracking-[0.22em] uppercase py-3.5 2xl:py-4 px-8 2xl:px-10 transition-all duration-300 shadow-md hover:shadow-lg rounded-sm"
                       >
                         {slide.ctaText.trim()}
                       </Link>
@@ -366,7 +366,7 @@ export default function Hero() {
                     {Boolean(slide.secondaryCtaText?.trim()) && (
                       <Link
                         to={slide.secondaryCtaLink || '/category/sarees'}
-                        className="border border-brand-navy/25 text-brand-navy hover:border-brand-teal hover:text-brand-teal font-sans text-[11px] sm:text-xs font-bold tracking-[0.22em] uppercase py-3.5 px-7 transition-all duration-300 rounded-sm bg-white/60"
+                        className="border border-brand-navy/25 text-brand-navy hover:border-brand-teal hover:text-brand-teal font-sans text-[11px] sm:text-xs 2xl:text-sm font-bold tracking-[0.22em] uppercase py-3.5 2xl:py-4 px-7 2xl:px-9 transition-all duration-300 rounded-sm bg-white/60"
                       >
                         {slide.secondaryCtaText.trim()}
                       </Link>
@@ -375,16 +375,15 @@ export default function Hero() {
                 )}
 
                 {/* Social proof */}
-                <div className="flex items-center gap-3.5 pt-3.5 border-t border-brand-navy/10 max-w-md">
-                  <div className="flex -space-x-2.5">
-                    {AVATAR_URLS.map((src, i) => (
-                      <img
+                <div className="flex items-center gap-3.5 pt-3.5 border-t border-brand-navy/10 max-w-md 2xl:max-w-lg">
+                  <div className="flex -space-x-2">
+                    {SOCIAL_AVATAR_INITIALS.map((item, i) => (
+                      <div
                         key={i}
-                        src={src}
-                        alt="Happy Suka customer"
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-white object-cover shadow-sm"
-                        loading="lazy"
-                      />
+                        className={`w-8 h-8 sm:w-9 sm:h-9 2xl:w-10 2xl:h-10 rounded-full border-2 border-white flex items-center justify-center font-serif text-xs sm:text-sm 2xl:text-base font-bold shadow-sm select-none ${item.bg}`}
+                      >
+                        {item.initial}
+                      </div>
                     ))}
                   </div>
                   <div>
@@ -393,7 +392,7 @@ export default function Hero() {
                         <Star key={s} size={11} className="fill-amber-400 text-amber-400" />
                       ))}
                     </div>
-                    <span className="font-sans text-[10px] text-brand-navy/60 tracking-[0.14em] uppercase font-semibold">
+                    <span className="font-sans text-[10px] 2xl:text-xs text-brand-navy/60 tracking-[0.14em] uppercase font-semibold">
                       {heroContent?.socialProofText ? heroContent.socialProofText.toUpperCase() : 'LOVED BY 10,000+ WOMEN'}
                     </span>
                   </div>
@@ -402,13 +401,13 @@ export default function Hero() {
               </div>
 
               {/* ── RIGHT: Editorial Image Composition ────── */}
-              <div className="relative w-full flex items-center justify-center">
+              <div className="relative w-full flex items-center justify-center lg:justify-end">
 
                 {/* Desktop composition (lg:flex) */}
-                <div className="relative flex items-center justify-center w-full h-[480px] xl:h-[530px] select-none">
+                <div className="relative flex items-center justify-center w-full max-w-[560px] xl:max-w-[620px] 2xl:max-w-[720px] h-[480px] xl:h-[530px] 2xl:h-[600px] select-none mx-auto lg:mr-0">
                   
                   {/* 1. LEFT Detail Card */}
-                  <div className="absolute left-0 top-[60px] xl:top-[80px] w-[160px] xl:w-[195px] h-[280px] xl:h-[330px] z-20 rounded-xl overflow-hidden shadow-xl border border-white/40 bg-white p-1.5 transition-transform duration-500">
+                  <div className="absolute left-1 xl:left-0 top-[60px] xl:top-[80px] 2xl:top-[90px] w-[150px] lg:w-[160px] xl:w-[195px] 2xl:w-[230px] h-[270px] lg:h-[280px] xl:h-[330px] 2xl:h-[390px] z-20 rounded-xl overflow-hidden shadow-xl border border-white/40 bg-white p-1.5 transition-transform duration-500 hover:scale-105">
                     <img
                       src={slide.detailImageLeft}
                       alt="Craftsmanship detail"
@@ -417,7 +416,7 @@ export default function Hero() {
                   </div>
 
                   {/* 2. MAIN Fashion Card (Center) */}
-                  <div className="relative z-30 w-[310px] xl:w-[380px] h-[450px] xl:h-[510px] rounded-2xl overflow-hidden shadow-2xl bg-white border border-brand-powder/40 p-2 transform hover:scale-[1.01] transition-transform duration-500">
+                  <div className="relative z-30 w-[290px] lg:w-[310px] xl:w-[370px] 2xl:w-[430px] h-[430px] lg:h-[450px] xl:h-[510px] 2xl:h-[580px] rounded-2xl overflow-hidden shadow-2xl bg-white border border-brand-powder/40 p-2 transform hover:scale-[1.02] transition-transform duration-500">
                     <img
                       src={slide.mainImage}
                       alt={slide.mainLabel || 'New Collection'}
@@ -426,7 +425,7 @@ export default function Hero() {
                   </div>
 
                   {/* 3. RIGHT Detail Card */}
-                  <div className="absolute right-0 top-[70px] xl:top-[90px] w-[165px] xl:w-[200px] h-[290px] xl:h-[340px] z-20 rounded-xl overflow-hidden shadow-xl border border-white/40 bg-white p-1.5 transition-transform duration-500">
+                  <div className="absolute right-1 xl:right-0 top-[70px] xl:top-[90px] 2xl:top-[100px] w-[155px] lg:w-[165px] xl:w-[200px] 2xl:w-[235px] h-[280px] lg:h-[290px] xl:h-[340px] 2xl:h-[400px] z-20 rounded-xl overflow-hidden shadow-xl border border-white/40 bg-white p-1.5 transition-transform duration-500 hover:scale-105">
                     <img
                       src={slide.detailImageRight}
                       alt="Fabric styling detail"
@@ -442,35 +441,18 @@ export default function Hero() {
 
             {/* Slide Navigation Controls */}
             {slides.length > 1 && (
-              <div className="flex items-center justify-between mt-6 lg:mt-8 pt-4 border-t border-brand-navy/10 z-20">
+              <div className="flex items-center justify-start mt-6 lg:mt-8 pt-4 border-t border-brand-navy/10 z-20">
                 <div className="flex items-center gap-2">
                   {slides.map((s, idx) => (
                     <button
                       key={s.id || idx}
                       onClick={() => goTo(idx)}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                         idx === current ? 'w-8 bg-brand-teal' : 'w-2 bg-brand-navy/20 hover:bg-brand-navy/40'
                       }`}
                       aria-label={`Go to slide ${idx + 1}`}
                     />
                   ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={prev}
-                    className="w-9 h-9 rounded-full border border-brand-navy/20 flex items-center justify-center text-brand-navy hover:bg-brand-teal hover:text-white hover:border-brand-teal transition-all duration-200 cursor-pointer"
-                    aria-label="Previous slide"
-                  >
-                    <ArrowLeft size={15} />
-                  </button>
-                  <button
-                    onClick={next}
-                    className="w-9 h-9 rounded-full border border-brand-navy/20 flex items-center justify-center text-brand-navy hover:bg-brand-teal hover:text-white hover:border-brand-teal transition-all duration-200 cursor-pointer"
-                    aria-label="Next slide"
-                  >
-                    <ArrowRight size={15} />
-                  </button>
                 </div>
               </div>
             )}

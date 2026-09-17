@@ -147,8 +147,8 @@ export default function Testimonials() {
             <div className="section-divider-left mt-1.5 sm:mt-2" />
           </div>
 
-          {/* Overall Rating Badge + Next/Prev Buttons */}
-          <div className="flex items-center gap-3">
+          {/* Overall Rating Badge */}
+          <div className="flex items-center">
             <div className="flex items-center gap-2 sm:gap-3 bg-white border border-brand-powder/90 px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full shadow-2xs">
               <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
@@ -160,27 +160,6 @@ export default function Testimonials() {
                 <span className="font-sans text-[10px] sm:text-xs font-semibold text-brand-navy/60 uppercase tracking-wider">/ 5</span>
               </div>
             </div>
-
-            {testimonials.length > 1 && (
-              <div className="hidden sm:flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={prev}
-                  aria-label="Previous review"
-                  className="w-9 h-9 rounded-full bg-white border border-brand-powder/80 shadow-xs text-brand-navy hover:bg-brand-teal hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
-                >
-                  <ChevronLeft size={16} strokeWidth={2} />
-                </button>
-                <button
-                  type="button"
-                  onClick={next}
-                  aria-label="Next review"
-                  className="w-9 h-9 rounded-full bg-white border border-brand-powder/80 shadow-xs text-brand-navy hover:bg-brand-teal hover:text-white flex items-center justify-center transition-all cursor-pointer active:scale-90"
-                >
-                  <ChevronRight size={16} strokeWidth={2} />
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -239,12 +218,9 @@ export default function Testimonials() {
                 </div>
 
                 <div className="flex items-center gap-3 pt-3.5 sm:pt-4 border-t border-brand-powder/40">
-                  <img
-                    src={item.avatar}
-                    alt={item.author}
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-brand-powder shadow-2xs flex-shrink-0"
-                    loading="lazy"
-                  />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand-teal text-white flex items-center justify-center font-serif text-sm sm:text-base font-bold shadow-2xs flex-shrink-0 border-2 border-brand-powder uppercase select-none ring-2 ring-brand-teal/15">
+                    {item.author ? item.author.trim().charAt(0).toUpperCase() : 'S'}
+                  </div>
                   <div className="text-left flex-1 min-w-0">
                     <cite className="font-sans not-italic text-xs font-bold tracking-wider text-brand-navy uppercase block truncate">
                       {item.author}
