@@ -218,12 +218,9 @@ export default function Testimonials() {
                 </div>
 
                 <div className="flex items-center gap-3 pt-3.5 sm:pt-4 border-t border-brand-powder/40">
-                  <img
-                    src={item.avatar}
-                    alt={item.author}
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-brand-powder shadow-2xs flex-shrink-0"
-                    loading="lazy"
-                  />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand-teal text-white flex items-center justify-center font-serif text-sm sm:text-base font-bold shadow-2xs flex-shrink-0 border-2 border-brand-powder uppercase select-none ring-2 ring-brand-teal/15">
+                    {item.author ? item.author.trim().charAt(0).toUpperCase() : 'S'}
+                  </div>
                   <div className="text-left flex-1 min-w-0">
                     <cite className="font-sans not-italic text-xs font-bold tracking-wider text-brand-navy uppercase block truncate">
                       {item.author}

@@ -18,22 +18,22 @@ import lehengaRed from '../assets/lehenga_red.jpg';
 import dressNavy from '../assets/dress_navy.jpg';
 
 export default function Navbar() {
-  const [scrolled, setScrolled]               = useState(false);
-  const [searchOpen, setSearchOpen]           = useState(false);
-  const [mobileOpen, setMobileOpen]           = useState(false);
-  const [activeDropdown, setActiveDropdown]   = useState(null);
-  const [mobileExpanded, setMobileExpanded]   = useState(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [mobileExpanded, setMobileExpanded] = useState(null);
   const [accountDropdown, setAccountDropdown] = useState(false);
 
   // Live Header Search States
-  const [searchQuery, setSearchQuery]         = useState('');
-  const [searchFocused, setSearchFocused]     = useState(false);
-  const searchRef                             = useRef(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchRef = useRef(null);
 
   const location = useLocation();
   const navigate = useNavigate();
   const dropdownTimerRef = useRef(null);
-  const accountRef       = useRef(null);
+  const accountRef = useRef(null);
 
   const { user, isLoggedIn, logout } = useAuth();
   const { wishlistCount } = useWishlist();
@@ -117,30 +117,55 @@ export default function Navbar() {
         megaLink: dressCat?.link || '/category/dresses'
       },
       {
-        name: 'Occasion',
+        name: 'More',
         path: '/category/occasion',
-        dropdown: [
-          { label: 'Wedding',         path: '/products?occasion=Wedding' },
-          { label: 'Festive',         path: '/products?occasion=Festive' },
-          { label: 'Party',           path: '/products?occasion=Party' },
-          { label: 'Casual',          path: '/products?occasion=Casual' },
-          { label: 'Office',          path: '/products?occasion=Office' },
-          { label: 'Haldi / Mehendi',  path: '/products?occasion=Haldi' },
+        sections: [
+          {
+            title: 'Shop By Occasion',
+            items: [
+              { label: 'Wedding Wear', path: '/products?occasion=Wedding' },
+              { label: 'Festive Wear', path: '/products?occasion=Festive' },
+              { label: 'Party Wear', path: '/products?occasion=Party' },
+              { label: 'Casual Wear', path: '/products?occasion=Casual' },
+              { label: 'Office Wear', path: '/products?occasion=Office' },
+              { label: 'Haldi & Mehendi', path: '/products?occasion=Haldi' },
+            ]
+          },
+          {
+            title: 'More Collections',
+            items: otherActiveCats.length > 0
+              ? otherActiveCats.map(c => ({
+                label: c.name,
+                path: c.link || `/category/${c.id || c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+              }))
+              : [
+                { label: 'Co-ords', path: '/category/coords' },
+                { label: 'Dupattas', path: '/category/dupattas' },
+                { label: 'Sale & Offers', path: '/category/sale' },
+              ]
+          }
         ],
+        dropdown: [
+          { label: 'Wedding Wear', path: '/products?occasion=Wedding' },
+          { label: 'Festive Wear', path: '/products?occasion=Festive' },
+          { label: 'Party Wear', path: '/products?occasion=Party' },
+          { label: 'Casual Wear', path: '/products?occasion=Casual' },
+          { label: 'Office Wear', path: '/products?occasion=Office' },
+          { label: 'Haldi & Mehendi', path: '/products?occasion=Haldi' },
+          ...(otherActiveCats.length > 0
+            ? otherActiveCats.map(c => ({
+              label: c.name,
+              path: c.link || `/category/${c.id || c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+            }))
+            : [
+              { label: 'Co-ords', path: '/category/coords' },
+              { label: 'Dupattas', path: '/category/dupattas' },
+              { label: 'Sale & Offers', path: '/category/sale' },
+            ]
+          )
+        ]
       }
     ];
-
-    // If extra categories exist (e.g. Co-ords, Dupattas, Festive Wear, custom), group them cleanly under "More"
-    if (otherActiveCats.length > 0) {
-      items.push({
-        name: 'More',
-        path: otherActiveCats[0]?.link || `/category/${otherActiveCats[0]?.id}`,
-        dropdown: otherActiveCats.map(c => ({
-          label: c.name,
-          path: c.link || `/category/${c.id || c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
-        }))
-      });
-    }
 
     return items;
   }, [categories]);
@@ -151,7 +176,7 @@ export default function Navbar() {
     title: '',
     message: '',
     confirmText: 'Confirm',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const handleLogoutRequest = () => {
@@ -207,11 +232,11 @@ export default function Navbar() {
 
   const searchResults = searchQuery.trim()
     ? products.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.fabric && p.fabric.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (p.occasion && p.occasion.toLowerCase().includes(searchQuery.toLowerCase()))
-      ).slice(0, 5)
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.fabric && p.fabric.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (p.occasion && p.occasion.toLowerCase().includes(searchQuery.toLowerCase()))
+    ).slice(0, 5)
     : [];
 
   const handleSearchSubmit = (e) => {
@@ -247,16 +272,14 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`sticky top-0 z-40 w-full bg-white transition-all duration-300 ${
-          isProductPage ? 'hidden lg:block' : ''
-        } ${
-          scrolled
+        className={`sticky top-0 z-40 w-full bg-white transition-all duration-300 ${isProductPage ? 'hidden lg:block' : ''
+          } ${scrolled
             ? 'shadow-[0_4px_24px_rgba(0,0,0,0.07)] border-b border-brand-powder/60'
             : 'border-b border-brand-powder/40'
-        }`}
+          }`}
       >
         <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
-          
+
           {/* Mobile Product Page Header with Back Button */}
           {isProductPage && (
             <div className="lg:hidden flex items-center justify-between h-14 w-full">
@@ -297,17 +320,17 @@ export default function Navbar() {
           )}
 
           {/* Standard Navigation Bar (Hidden on Mobile Product Pages) */}
-          <div className={`${isProductPage ? 'hidden lg:flex' : 'flex'} items-center justify-between transition-all duration-300 h-14 sm:h-16 lg:h-[94px] ${scrolled ? 'lg:h-[76px]' : ''}`}>
+          <div className={`${isProductPage ? 'hidden lg:flex' : 'flex'} items-center justify-between transition-all duration-300 h-14 sm:h-16 lg:h-[94px]`}>
 
             {/* ── Logo ─────────────────────────────────────── */}
             <Link to="/" className="flex items-center gap-2 sm:gap-2.5 lg:gap-3 flex-shrink-0">
               <img
                 src={logo}
                 alt="Store Logo"
-                className={`rounded-full object-cover border border-brand-powder shadow-sm transition-all duration-300 h-8 w-8 sm:h-9 sm:w-9 ${scrolled ? 'lg:h-10 lg:w-10' : 'lg:h-12 lg:w-12 xl:h-14 xl:w-14'}`}
+                className="rounded-full object-cover border border-brand-powder shadow-sm h-8 w-8 sm:h-9 sm:w-9 lg:h-12 lg:w-12 xl:h-14 xl:w-14"
               />
               <div className="flex flex-col leading-none">
-                <span className={`font-serif font-bold tracking-tight sm:tracking-wider text-brand-navy transition-all duration-300 text-lg sm:text-xl ${scrolled ? 'lg:text-xl xl:text-2xl' : 'lg:text-2xl xl:text-3xl'}`}>
+                <span className="font-serif font-bold tracking-tight sm:tracking-wider text-brand-navy text-lg sm:text-xl lg:text-2xl xl:text-3xl">
                   {settings?.store?.storeName || 'Suka Fashions'}
                 </span>
                 <span className="font-sans text-[7px] sm:text-[8px] lg:text-[8.5px] xl:text-[9.5px] tracking-[0.22em] sm:tracking-[0.25em] xl:tracking-[0.3em] text-brand-teal font-semibold uppercase mt-0.5">
@@ -331,22 +354,20 @@ export default function Navbar() {
                   >
                     <Link
                       to={item.path}
-                      className={`relative font-sans text-[11px] xl:text-[12px] uppercase tracking-[0.12em] xl:tracking-[0.18em] font-semibold transition-colors duration-200 px-2.5 xl:px-4 py-2 flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${
-                        item.highlight
+                      className={`relative font-sans text-[11px] xl:text-[12px] uppercase tracking-[0.12em] xl:tracking-[0.18em] font-semibold transition-colors duration-200 px-2.5 xl:px-4 py-2 flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${item.highlight
                           ? 'text-red-500 hover:text-red-600 font-bold'
                           : isActive
-                          ? 'text-brand-teal font-bold'
-                          : 'text-brand-navy hover:text-brand-teal'
-                      }`}
+                            ? 'text-brand-teal font-bold'
+                            : 'text-brand-navy hover:text-brand-teal'
+                        }`}
                     >
                       {item.name}
                       {hasDropdown && (
                         <ChevronDown
                           size={13}
                           strokeWidth={2}
-                          className={`transition-transform duration-200 ${
-                            activeDropdown === item.name ? 'rotate-180 text-brand-teal' : 'opacity-60'
-                          }`}
+                          className={`transition-transform duration-200 ${activeDropdown === item.name ? 'rotate-180 text-brand-teal' : 'opacity-60'
+                            }`}
                         />
                       )}
                       {isActive && (
@@ -357,46 +378,71 @@ export default function Navbar() {
                     {/* Dropdown / Mega Menu */}
                     {hasDropdown && activeDropdown === item.name && (
                       <div
-                        className="absolute top-full left-1/2 -translate-x-1/2 bg-white border border-brand-powder/60 shadow-2xl rounded-sm p-4 sm:p-5 z-50 animate-in fade-in zoom-in-95 duration-200"
-                        style={{ minWidth: item.megaImage ? '370px' : '220px', maxWidth: '420px' }}
+                        className={`absolute top-full ${item.name === 'More' ? 'right-0' : 'left-1/2 -translate-x-1/2'
+                          } bg-white border border-brand-powder/60 shadow-2xl rounded-sm p-4 sm:p-5 z-50 animate-in fade-in zoom-in-95 duration-200`}
+                        style={{
+                          minWidth: item.sections ? '390px' : item.megaImage ? '370px' : '220px',
+                          maxWidth: item.sections ? '460px' : '420px',
+                        }}
                       >
-                        <div className="flex gap-4 sm:gap-5 items-stretch">
-                          <div className="flex-1 min-w-[150px] flex flex-col gap-1.5 justify-start">
-                            <span className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-teal font-bold border-b border-brand-powder pb-1.5 mb-1 whitespace-nowrap">
-                              Explore {item.name}
-                            </span>
-                            {item.dropdown.map((drop) => (
-                              <Link
-                                key={drop.label}
-                                to={drop.path}
-                                className="font-sans text-xs tracking-wider text-brand-navy/80 hover:text-brand-teal hover:pl-1 transition-all py-1 whitespace-nowrap font-medium"
-                              >
-                                {drop.label}
-                              </Link>
+                        {item.sections ? (
+                          <div className="grid grid-cols-2 gap-5 sm:gap-6 items-start">
+                            {item.sections.map((sec) => (
+                              <div key={sec.title} className="flex flex-col gap-1.5 justify-start">
+                                <span className="font-sans text-[9px] uppercase tracking-[0.22em] text-brand-teal font-bold border-b border-brand-powder pb-1.5 mb-1 whitespace-nowrap">
+                                  {sec.title}
+                                </span>
+                                {sec.items.map((drop) => (
+                                  <Link
+                                    key={drop.label}
+                                    to={drop.path}
+                                    className="font-sans text-xs tracking-wider text-brand-navy/80 hover:text-brand-teal hover:pl-1 transition-all py-1 whitespace-nowrap font-medium"
+                                  >
+                                    {drop.label}
+                                  </Link>
+                                ))}
+                              </div>
                             ))}
                           </div>
+                        ) : (
+                          <div className="flex gap-4 sm:gap-5 items-stretch">
+                            <div className="flex-1 min-w-[150px] flex flex-col gap-1.5 justify-start">
+                              <span className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-teal font-bold border-b border-brand-powder pb-1.5 mb-1 whitespace-nowrap">
+                                Explore {item.name}
+                              </span>
+                              {item.dropdown.map((drop) => (
+                                <Link
+                                  key={drop.label}
+                                  to={drop.path}
+                                  className="font-sans text-xs tracking-wider text-brand-navy/80 hover:text-brand-teal hover:pl-1 transition-all py-1 whitespace-nowrap font-medium"
+                                >
+                                  {drop.label}
+                                </Link>
+                              ))}
+                            </div>
 
-                          {item.megaImage && (
-                            <Link
-                              to={item.megaLink}
-                              className="w-36 sm:w-40 flex-shrink-0 relative overflow-hidden rounded-md group block aspect-[3/4] bg-brand-cream border border-brand-powder/50 self-center"
-                            >
-                              <img
-                                src={item.megaImage}
-                                alt={item.megaTitle}
-                                className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/85 via-transparent to-transparent flex flex-col justify-end p-2.5">
-                                <span className="font-serif text-xs sm:text-sm font-medium text-white leading-tight">
-                                  {item.megaTitle}
-                                </span>
-                                <span className="font-sans text-[9px] uppercase tracking-widest text-brand-powder group-hover:text-white mt-0.5 font-semibold">
-                                  Shop Now →
-                                </span>
-                              </div>
-                            </Link>
-                          )}
-                        </div>
+                            {item.megaImage && (
+                              <Link
+                                to={item.megaLink}
+                                className="w-36 sm:w-40 flex-shrink-0 relative overflow-hidden rounded-md group block aspect-[3/4] bg-brand-cream border border-brand-powder/50 self-center"
+                              >
+                                <img
+                                  src={item.megaImage}
+                                  alt={item.megaTitle}
+                                  className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/85 via-transparent to-transparent flex flex-col justify-end p-2.5">
+                                  <span className="font-serif text-xs sm:text-sm font-medium text-white leading-tight">
+                                    {item.megaTitle}
+                                  </span>
+                                  <span className="font-sans text-[9px] uppercase tracking-widest text-brand-powder group-hover:text-white mt-0.5 font-semibold">
+                                    Shop Now →
+                                  </span>
+                                </div>
+                              </Link>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -436,7 +482,7 @@ export default function Navbar() {
                 {/* Live Results Popover Dropdown */}
                 {searchFocused && (
                   <div className="absolute top-full right-0 mt-2 bg-white border border-brand-powder/70 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 text-left w-[360px] sm:w-[400px]">
-                    
+
                     {searchQuery.trim() === '' ? (
                       /* Initial state: Popular Searches & Quick Categories */
                       <div className="p-4 space-y-4">
@@ -570,27 +616,27 @@ export default function Navbar() {
                   )}
                 </button>
 
-                    {accountDropdown && (
-                      <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-brand-powder/60 shadow-xl rounded-sm py-2 z-50 animate-in fade-in zoom-in-95">
-                        {isLoggedIn ? (
-                          <>
-                            <div className="px-4 py-2 border-b border-brand-powder/40">
-                              <p className="font-sans text-xs font-semibold text-brand-navy truncate">{user?.name || 'Customer'}</p>
-                              <p className="font-sans text-[10px] text-brand-navy/50 truncate">{user?.email}</p>
-                            </div>
-                            <Link to="/account" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">My Profile & Orders</Link>
-                            <Link to="/wishlist" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">Wishlist</Link>
-                            <button onClick={handleLogoutRequest} className="w-full text-left px-4 py-2 font-sans text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-brand-powder/40 mt-1 cursor-pointer">
-                              <LogOut size={13} /> Logout
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <Link to="/login" className="block px-4 py-2.5 font-sans text-xs font-semibold text-brand-teal hover:bg-brand-powderLight">Login / Register</Link>
-                          </>
-                        )}
-                      </div>
+                {accountDropdown && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-brand-powder/60 shadow-xl rounded-sm py-2 z-50 animate-in fade-in zoom-in-95">
+                    {isLoggedIn ? (
+                      <>
+                        <div className="px-4 py-2 border-b border-brand-powder/40">
+                          <p className="font-sans text-xs font-semibold text-brand-navy truncate">{user?.name || 'Customer'}</p>
+                          <p className="font-sans text-[10px] text-brand-navy/50 truncate">{user?.email}</p>
+                        </div>
+                        <Link to="/account" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">My Profile & Orders</Link>
+                        <Link to="/wishlist" className="block px-4 py-2 font-sans text-xs text-brand-navy hover:text-brand-teal hover:bg-brand-powderLight">Wishlist</Link>
+                        <button onClick={handleLogoutRequest} className="w-full text-left px-4 py-2 font-sans text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-brand-powder/40 mt-1 cursor-pointer">
+                          <LogOut size={13} /> Logout
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link to="/login" className="block px-4 py-2.5 font-sans text-xs font-semibold text-brand-teal hover:bg-brand-powderLight">Login / Register</Link>
+                      </>
                     )}
+                  </div>
+                )}
               </div>
 
               {/* Wishlist (Desktop / Tablet) */}
@@ -648,7 +694,7 @@ export default function Navbar() {
               <span className="font-serif text-lg font-bold text-brand-navy">Suka Fashions</span>
               <button onClick={() => setMobileOpen(false)} className="p-1 text-brand-navy/50 hover:text-brand-navy"><X size={20} /></button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {navItems.map(item => (
                 <div key={item.name} className="border-b border-brand-powder/40 pb-3">
@@ -661,10 +707,39 @@ export default function Navbar() {
                     )}
                   </div>
                   {item.dropdown && mobileExpanded === item.name && (
-                    <div className="pl-4 pt-2 space-y-2">
-                      {item.dropdown.map(d => (
-                        <Link key={d.label} to={d.path} className="block font-sans text-xs text-brand-navy/70 py-1">{d.label}</Link>
-                      ))}
+                    <div className="pl-4 pt-2 space-y-3">
+                      {item.sections ? (
+                        item.sections.map((sec) => (
+                          <div key={sec.title} className="space-y-1.5">
+                            <span className="font-sans text-[10px] uppercase tracking-wider text-brand-teal font-bold block pt-1 border-b border-brand-powder/40 pb-1">
+                              {sec.title}
+                            </span>
+                            <div className="pl-2 space-y-1">
+                              {sec.items.map((d) => (
+                                <Link
+                                  key={d.label}
+                                  to={d.path}
+                                  onClick={() => setMobileOpen(false)}
+                                  className="block font-sans text-xs text-brand-navy/80 hover:text-brand-teal py-1"
+                                >
+                                  {d.label}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        item.dropdown.map((d) => (
+                          <Link
+                            key={d.label}
+                            to={d.path}
+                            onClick={() => setMobileOpen(false)}
+                            className="block font-sans text-xs text-brand-navy/70 hover:text-brand-teal py-1"
+                          >
+                            {d.label}
+                          </Link>
+                        ))
+                      )}
                     </div>
                   )}
                 </div>
